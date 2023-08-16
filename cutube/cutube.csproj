@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="FFmpeg.AutoGen" Version="6.0.0.2" />
       <PackageReference Include="YoutubeExplode" Version="6.3.1" />
     </ItemGroup>
 
