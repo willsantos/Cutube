@@ -4,13 +4,16 @@ using cutube;
 using YoutubeExplode;
 using YoutubeExplode.Videos.Streams;
 
-var youtube = new YoutubeClient();
-var videoUrl = "https://www.youtube.com/watch?v=oKmWXD2i3y8";
-var videoStart = 3;
-var videoEnd = 4;
+Menu.Show();
 
-var timeStart = videoStart * 60;
-var timeEnd= videoEnd * 60;
+var youtube = new YoutubeClient();
+
+var videoUrl = Menu.Url;
+var videoStart = Menu.Start;
+var videoEnd = Menu.End;
+
+var timeStart = TimeHelper.GetStartSeconds(videoStart);
+var timeEnd= TimeHelper.GetEndSeconds(videoEnd);
 
 var video = await youtube.Videos.GetAsync(videoUrl);
 
@@ -44,8 +47,6 @@ catch (Exception e)
     Console.WriteLine(e);
     throw;
 }
-
-
 
 
 Console.WriteLine($"O video {videoTitle} foi baixado e cortado, o resultado está em: {Path.GetFullPath(output)}");    
