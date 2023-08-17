@@ -19,9 +19,7 @@ Explorar funcionalidades de processos com FFMpeg.
 - [ ] Adicionar opção de escolher a qualidade do vídeo
 - [ ] Adicionar opção de escolher o nome do arquivo
 - [ ] Adicionar opção de escolher o diretório de destino
-- [ ] Adicionar opção de escolher o idioma do vídeo
 - [ ] Adicionar opção de escolher a legenda do vídeo
-- [ ] Adicionar opção de escolher o idioma da legenda
 - [ ] Implementar barra de progresso do download
 - [x] Implementar barra de progresso do corte
 - [ ] Baixar videos de outras plataformas (e.g. Instagram)
