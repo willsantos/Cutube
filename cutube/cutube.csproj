@@ -13,4 +13,28 @@
       <PackageReference Include="YoutubeExplode.Converter" Version="6.3.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="..\.github\.gitkeep">
+        <Link>.github\.gitkeep</Link>
+      </Content>
+      <Content Include="..\.github\ISSUE_TEMPLATE\bug_report.md">
+        <Link>.github\ISSUE_TEMPLATE\bug_report.md</Link>
+      </Content>
+      <Content Include="..\.github\ISSUE_TEMPLATE\feature_request.md">
+        <Link>.github\ISSUE_TEMPLATE\feature_request.md</Link>
+      </Content>
+      <Content Include="..\.github\pull_request_template.md">
+        <Link>.github\pull_request_template.md</Link>
+      </Content>
+      <Content Include="..\.github\workflows\tags.yml">
+        <Link>.github\workflows\tags.yml</Link>
+      </Content>
+      <Content Include="..\Assets\image.png">
+        <Link>Assets\image.png</Link>
+      </Content>
+      <Content Include="..\README.md">
+        <Link>README.md</Link>
+      </Content>
+    </ItemGroup>
+
 </Project>
