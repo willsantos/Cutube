@@ -2,21 +2,21 @@ namespace cutube;
 
 public class ProgressBar : IDisposable, IProgress<int>
 {
-    private const int blockCount = 10;
-    private readonly TimeSpan animationInterval = TimeSpan.FromSeconds(1.0 / 8);
-    private const string animation = @"|/-\";
+    private const int BlockCount = 100;
+    private readonly TimeSpan _animationInterval = TimeSpan.FromSeconds(1.0 / 8);
+    private const string Animation = @"|/-\";
 
-    private readonly Timer timer;
+    private readonly Timer _timer;
     
-    private double currentProgress = 0;
-    private string currentText = string.Empty;
-    private bool disposed = false;
-    private int animationIndex = 0;
+    private double _currentProgress;
+    private string _currentText = string.Empty;
+    private bool _disposed;
+    private int _animationIndex;
     public string Message { get; set; } = string.Empty;
 
     public ProgressBar()
     {
-        timer = new Timer(TimerHandler);
+        _timer = new Timer(TimerHandler!);
         if (!Console.IsOutputRedirected)
         {
             ResetTimer();
@@ -26,20 +26,18 @@ public class ProgressBar : IDisposable, IProgress<int>
     
     private void ResetTimer()
     {
-        timer.Change(animationInterval, TimeSpan.FromMilliseconds(-1));
+        _timer.Change(_animationInterval, TimeSpan.FromMilliseconds(-1));
     }
     private void TimerHandler(object state)
     {
-        lock (timer)
+        lock (_timer)
         {
-            if (disposed) return;
+            if (_disposed) return;
 
-            int progressBlockCount = (int)(currentProgress / 100 * blockCount);
-            int percent = (int)currentProgress;
-            string text = string.Format("[{0}{1}] {2,3}% {3}",
-                new string('#', progressBlockCount), new string('-', blockCount - progressBlockCount),
-                percent,
-                animation[animationIndex++ % animation.Length]);
+            var progressBlockCount = (int)(_currentProgress / 100 * BlockCount);
+            var percent = (int)_currentProgress;
+            var text =
+                $"[{new string('#', progressBlockCount)}{new string('-', BlockCount - progressBlockCount)}] {percent,3}% {Animation[_animationIndex++ % Animation.Length]}";
             UpdateText(text);
 
             ResetTimer();
@@ -49,15 +47,15 @@ public class ProgressBar : IDisposable, IProgress<int>
     private void UpdateText(string text)
     {
         // Obtém a posição atual do cursor
-        int left = Console.CursorLeft;
-        int top = Console.CursorTop;
+        var left = Console.CursorLeft;
+        var top = Console.CursorTop;
 
         // Move o cursor para a esquerda e escreve o texto
         Console.CursorLeft = 0;
         Console.Write(text);
 
         // Preenche com espaços se o texto for menor que o anterior
-        int length = currentText.Length - text.Length;
+        var length = _currentText.Length - text.Length;
         if (length > 0)
         {
             Console.Write(new string(' ', length));
@@ -68,13 +66,13 @@ public class ProgressBar : IDisposable, IProgress<int>
         Console.CursorTop = top;
 
         // Atualiza o texto atual
-        currentText = text;
+        _currentText = text;
     }
 
     public void Report(int value)
     {
         value = Math.Max(0, Math.Min(100, value));
-        Interlocked.Exchange(ref currentProgress, value);
+        Interlocked.Exchange(ref _currentProgress, value);
         if (!Console.IsOutputRedirected)
         {
             ResetTimer();
@@ -83,9 +81,9 @@ public class ProgressBar : IDisposable, IProgress<int>
     
     public void Dispose()
     {
-        lock (timer)
+        lock (_timer)
         {
-            disposed = true;
+            _disposed = true;
             UpdateText(string.Empty);
         }
     }
