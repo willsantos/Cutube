@@ -5,9 +5,8 @@ namespace cutube;
 
 public class FfmpegHelper
 {
-    
-    public string FfmpegPath { get; set; } 
-    public string FfprobePath { get; set; }
+    private string FfmpegPath { get; set; }
+    private string FfprobePath { get; set; }
     
     private static readonly string[] FfmpegExecutableNames = new string[]
     {
@@ -58,25 +57,25 @@ public class FfmpegHelper
             return true;
         }
 
-        path = null;
+        path = null!;
         return false;
     }
     
     private static bool TryGetFromSystemPath(string executableName, out string path)
     {
         var systemPath = Environment.GetEnvironmentVariable("PATH");
+        if(systemPath == null)
+            throw new Exception("Não foi possível encontrar o PATH do sistema.");
         foreach (var folder in systemPath.Split(Path.PathSeparator))
         {
             var folderExecutablePath = Path.Combine(folder, executableName);
 
-            if (File.Exists(folderExecutablePath))
-            {
-                path = folderExecutablePath;
-                return true;
-            }
+            if (!File.Exists(folderExecutablePath)) continue;
+            path = folderExecutablePath;
+            return true;
         }
 
-        path = null;
+        path = null!;
         return false;
     }
     
@@ -90,79 +89,74 @@ public class FfmpegHelper
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = false,
-            RedirectStandardError = true
-        };        
-        
-        startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH");
-        startInfo.EnvironmentVariables["TEMP"] = Environment.GetEnvironmentVariable("TEMP");
+            RedirectStandardError = true,
+            EnvironmentVariables =
+            {
+                ["PATH"] = Environment.GetEnvironmentVariable("PATH"),
+                ["TEMP"] = Environment.GetEnvironmentVariable("TEMP")
+            }
+        };
 
-        using (var process = new Process { StartInfo = startInfo })
+        using var process = new Process();
+        process.StartInfo = startInfo;
+        try
         {
-            try
+            var duration = TimeSpan.Zero;
+            var durationRegex = new Regex(@"Duration: (\d+):(\d+):(\d+).(\d+)");
+            var progressRegex = new Regex(@"time=(\d+):(\d+):(\d+).(\d+)");
+            process.ErrorDataReceived += (sender, args) =>
             {
-                var duration = TimeSpan.Zero;
-                var durationRegex = new Regex(@"Duration: (\d+):(\d+):(\d+).(\d+)");
-                var progressRegex = new Regex(@"time=(\d+):(\d+):(\d+).(\d+)");
-                process.ErrorDataReceived += (sender, args) =>
+                if (args.Data == null) return;
+                if (args.Data.Contains("Duration"))
                 {
-                    if (args.Data != null)
+                    var matchDuration = durationRegex.Match(args.Data);
+                    if (matchDuration.Success)
                     {
-                        if (args.Data.Contains("Duration"))
-                        {
-                            var matchDuration = durationRegex.Match(args.Data);
-                            if (matchDuration.Success)
-                            {
-                                var hours =
-                                    int.Parse(matchDuration.Groups[1].Value);
-                                var minutes =
-                                    int.Parse(matchDuration.Groups[2].Value);
-                                var seconds =
-                                    int.Parse(matchDuration.Groups[3].Value);
-                                var milliseconds =
-                                    int.Parse(matchDuration.Groups[4].Value);
+                        var hours =
+                            int.Parse(matchDuration.Groups[1].Value);
+                        var minutes =
+                            int.Parse(matchDuration.Groups[2].Value);
+                        var seconds =
+                            int.Parse(matchDuration.Groups[3].Value);
+                        var milliseconds =
+                            int.Parse(matchDuration.Groups[4].Value);
 
-                                duration = new TimeSpan(0, hours, minutes,
-                                    seconds, milliseconds);
-                            }
-                        }
-
-                        if (args.Data.Contains("time"))
-                        {
-                            var matchTime = progressRegex.Match(args.Data);
-                            if (matchTime.Success)
-                            {
-                                var hours =
-                                    int.Parse(matchTime.Groups[1].Value);
-                                var minutes =
-                                    int.Parse(matchTime.Groups[2].Value);
-                                var seconds =
-                                    int.Parse(matchTime.Groups[3].Value);
-                                var milliseconds =
-                                    int.Parse(matchTime.Groups[4].Value);
-
-                                var progress = new TimeSpan(0, hours, minutes,
-                                    seconds, milliseconds);
-                                var percentage =
-                                    (int)(progress.TotalMilliseconds /
-                                        duration.TotalMilliseconds * 100);
-
-                                progressBar.Report(percentage);
-                            }
-                        }
+                        duration = new TimeSpan(0, hours, minutes,
+                            seconds, milliseconds);
                     }
-                };
+                }
 
-                process.Start();
-                process.BeginErrorReadLine();
-                process.WaitForExit();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+                if (!args.Data.Contains("time")) return;
+                {
+                    var matchTime = progressRegex.Match(args.Data);
+                    if (!matchTime.Success) return;
+                    var hours =
+                        int.Parse(matchTime.Groups[1].Value);
+                    var minutes =
+                        int.Parse(matchTime.Groups[2].Value);
+                    var seconds =
+                        int.Parse(matchTime.Groups[3].Value);
+                    var milliseconds =
+                        int.Parse(matchTime.Groups[4].Value);
+
+                    var progress = new TimeSpan(0, hours, minutes,
+                        seconds, milliseconds);
+                    var percentage =
+                        (int)(progress.TotalMilliseconds /
+                            duration.TotalMilliseconds * 100);
+
+                    progressBar.Report(percentage);
+                }
+            };
+
+            process.Start();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
         }
-        
-        
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

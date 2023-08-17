@@ -1,15 +1,9 @@
 ﻿
-using System.Net;
-
-namespace cutube;
-
+using cutube;
 using YoutubeExplode;
 using YoutubeExplode.Videos.Streams;
 
-class Program
-{
-    static async Task Main(string[] args)
-    {
+
         Menu.Show();
 
         var youtube = new YoutubeClient();
@@ -70,5 +64,3 @@ class Program
 
         Console.WriteLine(
             $"O video {videoTitle} foi baixado e cortado, o resultado está em: {Path.GetFullPath(output)}");
-    }
-}    
