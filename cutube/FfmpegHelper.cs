@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+
 namespace cutube;
 
 public class FfmpegHelper
@@ -77,20 +80,80 @@ public class FfmpegHelper
         return false;
     }
     
-    public void ExecuteFfmpeg(string arguments)
+    public void ExecuteFfmpeg(string arguments, ProgressBar progressBar)
     {
-        using (var process = new System.Diagnostics.Process())
+        
+        var startInfo = new ProcessStartInfo
         {
-            process.StartInfo.FileName = FfmpegPath;
-            process.StartInfo.Arguments = arguments;
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.RedirectStandardOutput = false;
-            process.StartInfo.RedirectStandardError = false;
+            FileName = FfmpegPath,
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = true
+        };        
+        
+        startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH");
+        startInfo.EnvironmentVariables["TEMP"] = Environment.GetEnvironmentVariable("TEMP");
 
+        using (var process = new Process { StartInfo = startInfo })
+        {
             try
             {
+                var duration = TimeSpan.Zero;
+                var durationRegex = new Regex(@"Duration: (\d+):(\d+):(\d+).(\d+)");
+                var progressRegex = new Regex(@"time=(\d+):(\d+):(\d+).(\d+)");
+                process.ErrorDataReceived += (sender, args) =>
+                {
+                    if (args.Data != null)
+                    {
+                        if (args.Data.Contains("Duration"))
+                        {
+                            var matchDuration = durationRegex.Match(args.Data);
+                            if (matchDuration.Success)
+                            {
+                                var hours =
+                                    int.Parse(matchDuration.Groups[1].Value);
+                                var minutes =
+                                    int.Parse(matchDuration.Groups[2].Value);
+                                var seconds =
+                                    int.Parse(matchDuration.Groups[3].Value);
+                                var milliseconds =
+                                    int.Parse(matchDuration.Groups[4].Value);
+
+                                duration = new TimeSpan(0, hours, minutes,
+                                    seconds, milliseconds);
+                            }
+                        }
+
+                        if (args.Data.Contains("time"))
+                        {
+                            var matchTime = progressRegex.Match(args.Data);
+                            if (matchTime.Success)
+                            {
+                                var hours =
+                                    int.Parse(matchTime.Groups[1].Value);
+                                var minutes =
+                                    int.Parse(matchTime.Groups[2].Value);
+                                var seconds =
+                                    int.Parse(matchTime.Groups[3].Value);
+                                var milliseconds =
+                                    int.Parse(matchTime.Groups[4].Value);
+
+                                var progress = new TimeSpan(0, hours, minutes,
+                                    seconds, milliseconds);
+                                var percentage =
+                                    (int)(progress.TotalMilliseconds /
+                                        duration.TotalMilliseconds * 100);
+
+                                progressBar.Report(percentage);
+                            }
+                        }
+                    }
+                };
+
                 process.Start();
+                process.BeginErrorReadLine();
                 process.WaitForExit();
             }
             catch (Exception e)
@@ -98,13 +161,8 @@ public class FfmpegHelper
                 Console.WriteLine(e);
                 throw;
             }
-            
-            
-           
-            
-
-            
         }
+        
         
     }
 }
