@@ -29,14 +29,14 @@ Explorar funcionalidades de processos com FFMpeg.
 
 
 # Tecnologias
-- Dotnet 7.0
+- Dotnet 9.0
 - YoutubeExplode 6
 - FFMpeg 6
 
 
 # Requisitos para rodar
-- Dotnet 7.0 runtime
-- FFMpeg 6
+- Dotnet +6.0 runtime
+- FFMpeg +6
 
 
 
