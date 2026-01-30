@@ -1,24 +1,38 @@
-#!/usr/bin/env sh
-# bd-shim v1
-# bd-hooks-version: 0.49.1
-#
-# bd (beads) pre-commit hook - thin shim
-#
-# This shim delegates to 'bd hook pre-commit' which contains
-# the actual hook logic. This pattern ensures hook behavior is always
-# in sync with the installed bd version - no manual updates needed.
-#
-# The 'bd hook' command (singular) supports:
-# - Per-worktree export state tracking
-# - Dolt branch-then-merge pattern for cell-level conflict resolution
-# - Hook chaining configuration
+#!/bin/bash
 
-# Check if bd is available
+# ============================================
+# Combined Pre-commit Hook
+# 1. Branch Protection (main/develop)
+# 2. BD Sync (export to JSONL)
+# ============================================
+
+# Branch protection
+protected_branches=("main" "develop")
+
+# Get current branch
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Check if current branch is protected
+if [[ " ${protected_branches[@]} " =~ " ${current_branch} " ]]; then
+    echo "❌ ERRO: Commit direto na branch '${current_branch}' não é permitido!"
+    echo ""
+    echo "Para fazer alterações em '${current_branch}':"
+    echo "1. Crie uma nova branch: git checkout -b feature/nome-da-feature"
+    echo "2. Faça commit das suas alterações"
+    echo "3. Push para a branch de feature"
+    echo "4. Abra um Pull Request"
+    echo "5. Aprove e mergelie via interface web"
+    echo ""
+    exit 1
+fi
+
+# BD sync (export database to JSONL)
 if ! command -v bd >/dev/null 2>&1; then
-    echo "Warning: bd command not found in PATH, skipping pre-commit hook" >&2
+    echo "Warning: bd command not found in PATH, skipping bd sync" >&2
     echo "  Install bd: brew install beads" >&2
     echo "  Or add bd to your PATH" >&2
     exit 0
 fi
 
+# Delegate to bd hook pre-commit
 exec bd hook pre-commit "$@"

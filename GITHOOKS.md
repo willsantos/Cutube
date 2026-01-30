@@ -6,10 +6,20 @@ This repository uses **bd (beads)** for issue tracking and git hooks for automat
 
 The following hooks are automatically installed in `.git/hooks/`:
 
-- **pre-commit**: Exports bd database to JSONL before commit
-- **pre-push**: Ensures bd state is synchronized before push
+- **pre-commit**:
+  - **Branch protection**: Blocks direct commits to `main` and `develop` branches
+  - **BD sync**: Exports bd database to JSONL before commit (only on feature branches)
 - **post-merge**: Imports JSONL to bd database after pull/merge
 - **post-checkout**: Imports JSONL to bd database after branch checkout
+
+**Protected branches:** `main` and `develop`
+
+**Workflow:**
+1. Create feature branch: `git checkout -b feature/my-feature`
+2. Make commits (bd sync exports to JSONL automatically)
+3. Push to feature branch: `git push origin feature/my-feature`
+4. Create Pull Request
+5. Merge via GitHub interface
 
 ## Hook Maintenance
 
@@ -58,6 +68,18 @@ If you see "Unknown hook" errors, it means a hook is calling an unsupported bd c
 - `bd hook pre-commit`
 - `bd hook post-merge`
 - `bd hook post-checkout`
+
+### Branch protection errors
+
+If you see "Commit direto na branch 'develop' não é permitido!", it means you're trying to commit directly to a protected branch.
+
+**Solution:**
+```bash
+git checkout -b feature/my-feature
+# Make your commits
+git push origin feature/my-feature
+# Create PR on GitHub
+```
 
 The `prepare-commit-msg` hook is **NOT supported** by bd and has been removed.
 
