@@ -195,7 +195,6 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             
             if (currentVersion == latestVersion)
             {
-                _consoleService.WriteLine($"✓ yt-dlp está atualizado ({currentVersion})");
                 return;
             }
 
