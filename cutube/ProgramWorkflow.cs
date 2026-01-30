@@ -2,7 +2,7 @@ using YoutubeDLSharp;
 
 namespace cutube;
 
-public class ProgramWorkflow
+public class ProgramWorkflow : IDisposable
 {
     private readonly IMenuService _menu;
     private readonly IYtDlpService _ytdl;
@@ -26,7 +26,10 @@ public class ProgramWorkflow
         _console.WriteLine("Obtendo informações do vídeo...");
         var videoTitle = await _ytdl.GetVideoTitleAsync(videoUrl);
 
-        var output = $"{videoTitle}.mp4";
+        var fileName = string.IsNullOrWhiteSpace(_menu.CustomFileName)
+            ? videoTitle
+            : TitleHelper.FormatTitle(_menu.CustomFileName);
+        var output = $"{fileName}.mp4";
 
         try
         {
@@ -66,5 +69,10 @@ public class ProgramWorkflow
                 $"O vídeo {videoTitle} foi baixado e cortado, o resultado está em: {Path.GetFullPath(output)}"
             );
         }
+    }
+
+    public void Dispose()
+    {
+        _ytdl?.Dispose();
     }
 }

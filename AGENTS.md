@@ -12,6 +12,54 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Issue Tracking
+
+**⚠️ IMPORTANT:** Issues are tracked in **Linear**, NOT in bd (beads).
+
+### Creating Issues
+
+**Issues should ONLY be created when the user explicitly requests it.**
+
+Do NOT automatically create issues for:
+- Minor bugs found during development
+- Edge cases discovered during testing
+- Nice-to-have improvements
+- Documentation updates
+
+ONLY create issues when:
+- User explicitly asks: "create an issue for this"
+- User asks to track a non-impediment bug/improvement
+- User requests work to be deferred/saved for later
+
+### Linear Issue Guidelines
+
+When creating issues in Linear for this project:
+
+1. **ALWAYS associate with the "Cutube" project**
+   - Use `project: "Cutube"` parameter
+   - The Cutube project already exists in Linear workspace "Oroborus"
+
+2. **Issue structure:**
+   - Clear, descriptive title
+   - Detailed problem description
+   - Proposed solution options (when applicable)
+   - Impact analysis
+   - Estimated effort
+
+3. **Labels:**
+   - Use appropriate labels (Bug, Feature, Improvement)
+   - Set appropriate priority
+
+Example:
+```
+linear_create_issue
+  title="Clear title"
+  description="Detailed description..."
+  project="Cutube"
+  priority=3
+  labels=["Improvement"]
+```
+
 ## Branch Strategy
 
 This project uses **one branch per feature** with Conventional Commits.

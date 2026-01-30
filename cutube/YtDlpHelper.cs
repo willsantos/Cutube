@@ -10,7 +10,7 @@ namespace cutube;
 /// Helper para interagir com yt-dlp (YouTube downloader)
 /// Implementa bundling, auto-update e fallback robusto
 /// </summary>
-public class YtDlpHelper : IYtDlpService
+public class YtDlpHelper : IYtDlpService, IDisposable
 {
     private YoutubeDL _ytdl;
     private readonly string _bundledPath;
@@ -29,7 +29,7 @@ public class YtDlpHelper : IYtDlpService
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     public YtDlpHelper() : this(
         new FileService(),
-        null,
+        new HttpClientService(),
         new EnvironmentService(),
         new ProcessService(),
         new ConsoleService(),
@@ -195,7 +195,6 @@ public class YtDlpHelper : IYtDlpService
             
             if (currentVersion == latestVersion)
             {
-                _consoleService.WriteLine($"✓ yt-dlp está atualizado ({currentVersion})");
                 return;
             }
 
@@ -432,4 +431,9 @@ public class YtDlpHelper : IYtDlpService
     }
 
     #endregion
+
+    public void Dispose()
+    {
+        _httpClientService?.Dispose();
+    }
 }
