@@ -1,0 +1,5 @@
+# .NET Core (ASDF)
+# Configuração local para este projeto
+# ASDF usará automaticamente .NET 10.0.102 ao entrar neste diretório
+
+dotnet-core 10.0.102

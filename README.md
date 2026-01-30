@@ -29,14 +29,29 @@ Explorar funcionalidades de processos com FFMpeg.
 
 
 # Tecnologias
-- Dotnet 9.0
-- YoutubeExplode 6
-- FFMpeg 6
+- Dotnet 10.0 LTS (suporte até Nov 2028)
+- YoutubeExplode 6.5.6
+- FFmpeg.AutoGen 8.0.0
 
 
 # Requisitos para rodar
-- Dotnet +6.0 runtime
-- FFMpeg +6
+- .NET 10.0 runtime ou superior
+- FFmpeg 6+ (opcional para versões bundle)
+
+## Desenvolvimento
+
+Este projeto usa ASDF para gerenciar versões do .NET.
+
+```bash
+# Instalar ASDF
+git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+
+# Instalar .NET 10.0
+asdf plugin add dotnet-core
+asdf install
+```
+
+O arquivo .tool-versions configura automaticamente o .NET 10.0 ao entrar no projeto.
 
 
 
