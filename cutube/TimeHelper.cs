@@ -1,29 +1,167 @@
+using System.Text.RegularExpressions;
+
 namespace cutube;
 
 public class TimeHelper
 {
-    public static int GetStartSeconds(string start)
+    public static int ParseToSeconds(string input)
     {
-        var startTime = TimeSpan.ParseExact(start,"hh\\:mm\\:ss",null);
-        var startSeconds = (int)startTime.TotalSeconds;
-        return startSeconds;
+        if (string.IsNullOrWhiteSpace(input))
+            throw new ArgumentException("Tempo não pode ser vazio");
+
+        input = input.Trim().ToLower();
+
+        if (TryParseCompactNotation(input, out var seconds))
+            return seconds;
+
+        if (TryParseColonFormat(input, out seconds))
+            return seconds;
+
+        if (double.TryParse(input, out var totalSeconds))
+            return (int)totalSeconds;
+
+        throw new FormatException($"Formato de tempo não reconhecido: {input}");
+    }
+
+    private static bool TryParseCompactNotation(string input, out int seconds)
+    {
+        seconds = 0;
+        
+        if (TryMatchHoursMinutesSeconds(input, out seconds))
+            return true;
+            
+        if (TryMatchHoursMinutes(input, out seconds))
+            return true;
+            
+        if (TryMatchHoursSeconds(input, out seconds))
+            return true;
+            
+        if (TryMatchMinutesSeconds(input, out seconds))
+            return true;
+            
+        if (TryMatchOnlyHours(input, out seconds))
+            return true;
+            
+        if (TryMatchOnlyMinutes(input, out seconds))
+            return true;
+            
+        if (TryMatchOnlySeconds(input, out seconds))
+            return true;
+            
+        return false;
     }
     
-    public static int GetEndSeconds(string end)
+    private static bool TryMatchHoursMinutesSeconds(string input, out int seconds)
     {
-        var endTime = TimeSpan.ParseExact(end,"hh\\:mm\\:ss",null);
-        var endSeconds = (int)endTime.TotalSeconds;
-        return endSeconds;
+        seconds = 0;
+        var match = Regex.Match(input, @"^(?<hours>\d+)h(?<minutes>\d+)m(?<secs>\d+(?:\.\d+)?)s$", RegexOptions.IgnoreCase);
+        if (!match.Success) return false;
+        
+        var total = double.Parse(match.Groups["hours"].Value) * 3600;
+        total += double.Parse(match.Groups["minutes"].Value) * 60;
+        total += double.Parse(match.Groups["secs"].Value);
+        seconds = (int)total;
+        return true;
     }
-    //TODO:Fazer isso direito.
+    
+    private static bool TryMatchHoursMinutes(string input, out int seconds)
+    {
+        seconds = 0;
+        var match = Regex.Match(input, @"^(?<hours>\d+)h(?<minutes>\d+)m$", RegexOptions.IgnoreCase);
+        if (!match.Success) return false;
+        
+        var total = double.Parse(match.Groups["hours"].Value) * 3600;
+        total += double.Parse(match.Groups["minutes"].Value) * 60;
+        seconds = (int)total;
+        return true;
+    }
+    
+    private static bool TryMatchHoursSeconds(string input, out int seconds)
+    {
+        seconds = 0;
+        var match = Regex.Match(input, @"^(?<hours>\d+)h(?<secs>\d+(?:\.\d+)?)s$", RegexOptions.IgnoreCase);
+        if (!match.Success) return false;
+        
+        var total = double.Parse(match.Groups["hours"].Value) * 3600;
+        total += double.Parse(match.Groups["secs"].Value);
+        seconds = (int)total;
+        return true;
+    }
+    
+    private static bool TryMatchMinutesSeconds(string input, out int seconds)
+    {
+        seconds = 0;
+        var match = Regex.Match(input, @"^(?<minutes>\d+)m(?<secs>\d+(?:\.\d+)?)s$", RegexOptions.IgnoreCase);
+        if (!match.Success) return false;
+        
+        var total = double.Parse(match.Groups["minutes"].Value) * 60;
+        total += double.Parse(match.Groups["secs"].Value);
+        seconds = (int)total;
+        return true;
+    }
+    
+    private static bool TryMatchOnlyHours(string input, out int seconds)
+    {
+        seconds = 0;
+        var match = Regex.Match(input, @"^(?<hours>\d+)h$", RegexOptions.IgnoreCase);
+        if (!match.Success) return false;
+        
+        seconds = (int)(double.Parse(match.Groups["hours"].Value) * 3600);
+        return true;
+    }
+    
+    private static bool TryMatchOnlyMinutes(string input, out int seconds)
+    {
+        seconds = 0;
+        var match = Regex.Match(input, @"^(?<minutes>\d+)m$", RegexOptions.IgnoreCase);
+        if (!match.Success) return false;
+        
+        seconds = (int)(double.Parse(match.Groups["minutes"].Value) * 60);
+        return true;
+    }
+    
+    private static bool TryMatchOnlySeconds(string input, out int seconds)
+    {
+        seconds = 0;
+        var match = Regex.Match(input, @"^(?<secs>\d+(?:\.\d+)?)s$", RegexOptions.IgnoreCase);
+        if (!match.Success) return false;
+        
+        seconds = (int)double.Parse(match.Groups["secs"].Value);
+        return true;
+    }
+
+    private static bool TryParseColonFormat(string input, out int seconds)
+    {
+        seconds = 0;
+        var parts = input.Split(':');
+
+        if (parts.Length == 2)
+        {
+            if (int.TryParse(parts[0], out var minutes) &&
+                double.TryParse(parts[1], out var secs))
+            {
+                seconds = minutes * 60 + (int)secs;
+                return true;
+            }
+        }
+        else if (parts.Length == 3)
+        {
+            if (int.TryParse(parts[0], out var hours) &&
+                int.TryParse(parts[1], out var minutes) &&
+                double.TryParse(parts[2], out var secs))
+            {
+                seconds = hours * 3600 + minutes * 60 + (int)secs;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static int GetStartSeconds(string start) => ParseToSeconds(start);
+
+    public static int GetEndSeconds(string end) => ParseToSeconds(end);
+
     public static int GetTimeDiff(string start, string end)
-    {
-        var startTime = TimeSpan.ParseExact(start,"hh\\:mm\\:ss",null);
-        var endTime = TimeSpan.ParseExact(end,"hh\\:mm\\:ss",null);
-        
-        var startSeconds = (int)startTime.TotalSeconds;
-        int endSeconds = (int)endTime.TotalSeconds;
-        
-        return endSeconds - startSeconds;
-    }
+        => GetEndSeconds(end) - GetStartSeconds(start);
 }
