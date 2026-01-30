@@ -1,6 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace cutube;
 
 
+[ExcludeFromCodeCoverage]
 public static class Menu
 {
     public static string Url { get; private set; } = string.Empty;

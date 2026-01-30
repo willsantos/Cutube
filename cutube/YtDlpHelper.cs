@@ -10,15 +10,51 @@ namespace cutube;
 /// Helper para interagir com yt-dlp (YouTube downloader)
 /// Implementa bundling, auto-update e fallback robusto
 /// </summary>
-public class YtDlpHelper
+public class YtDlpHelper : IYtDlpService
 {
     private YoutubeDL _ytdl;
     private readonly string _bundledPath;
     private readonly string _userPath;
-    private readonly string _systemPath;
+    private readonly string? _systemPath;
+    
+    // Dependencies for testability
+    private readonly IFileService _fileService;
+    private readonly IHttpClientService? _httpClientService;
+    private readonly IEnvironmentService _environmentService;
+    private readonly IProcessService _processService;
+    private readonly IConsoleService _consoleService;
+    private readonly bool _skipAutoUpdate;
 
-    public YtDlpHelper()
+    // Constructor for production use
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    public YtDlpHelper() : this(
+        new FileService(),
+        null,
+        new EnvironmentService(),
+        new ProcessService(),
+        new ConsoleService(),
+        false
+    )
     {
+    }
+
+    // Constructor for testing (dependency injection)
+    public YtDlpHelper(
+        IFileService fileService,
+        IHttpClientService? httpClientService,
+        IEnvironmentService environmentService,
+        IProcessService processService,
+        IConsoleService consoleService,
+        bool skipAutoUpdate = false
+    )
+    {
+        _fileService = fileService;
+        _httpClientService = httpClientService;
+        _environmentService = environmentService;
+        _processService = processService;
+        _consoleService = consoleService;
+        _skipAutoUpdate = skipAutoUpdate;
+
         _bundledPath = GetBundledPath();
         _userPath = GetUserPath();
         _systemPath = GetSystemPath();
@@ -29,7 +65,10 @@ public class YtDlpHelper
         };
         
         // Auto-update em background (não bloqueia inicialização)
-        Task.Run(async () => await UpdateYtDlpIfNeeded());
+        if (!_skipAutoUpdate)
+        {
+            Task.Run(async () => await UpdateYtDlpIfNeeded());
+        }
     }
 
     #region Path Resolution
@@ -37,17 +76,17 @@ public class YtDlpHelper
     /// <summary>
     /// Caminho do yt-dlp bundleado com o app
     /// </summary>
-    private string GetBundledPath()
+    protected internal virtual string GetBundledPath()
     {
         var basePath = AppContext.BaseDirectory;
         
-        if (OperatingSystem.IsWindows())
+        if (_environmentService.IsWindows())
             return Path.Combine(basePath, "yt-dlp.exe");
         
-        if (OperatingSystem.IsLinux())
+        if (_environmentService.IsLinux())
             return Path.Combine(basePath, "yt-dlp");
         
-        if (OperatingSystem.IsMacOS())
+        if (_environmentService.IsMacOS())
             return Path.Combine(basePath, "yt-dlp");
         
         throw new PlatformNotSupportedException();
@@ -56,15 +95,15 @@ public class YtDlpHelper
     /// <summary>
     /// Caminho para versão do usuário em AppData/Local
     /// </summary>
-    private string GetUserPath()
+    protected internal virtual string GetUserPath()
     {
-        var appData = Environment.GetFolderPath(
+        var appData = _environmentService.GetFolderPath(
             Environment.SpecialFolder.LocalApplicationData
         );
         var folder = Path.Combine(appData, "Cutube");
         Directory.CreateDirectory(folder);
         
-        if (OperatingSystem.IsWindows())
+        if (_environmentService.IsWindows())
             return Path.Combine(folder, "yt-dlp.exe");
         
         return Path.Combine(folder, "yt-dlp");
@@ -73,50 +112,50 @@ public class YtDlpHelper
     /// <summary>
     /// Tenta encontrar yt-dlp no PATH do sistema
     /// </summary>
-    private string GetSystemPath()
+    protected internal virtual string? GetSystemPath()
     {
-        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        var pathEnv = _environmentService.GetEnvironmentVariable("PATH");
         if (string.IsNullOrEmpty(pathEnv))
-            return null!;
+            return null;
         
-        var exeName = OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp";
+        var exeName = _environmentService.IsWindows() ? "yt-dlp.exe" : "yt-dlp";
         
         return pathEnv.Split(Path.PathSeparator)
             .Select(folder => Path.Combine(folder, exeName))
-            .FirstOrDefault(File.Exists);
+            .FirstOrDefault(path => _fileService.Exists(path));
     }
 
     /// <summary>
     /// Resolve qual versão do yt-dlp usar (prioridade: user > bundle > system)
     /// </summary>
-    private string ResolveYtDlpPath()
+    protected internal virtual string ResolveYtDlpPath()
     {
         // 1. Versão do usuário (se existe e é recente)
-        if (File.Exists(_userPath) && IsRecentVersion(_userPath))
+        if (_fileService.Exists(_userPath) && IsRecentVersion(_userPath))
         {
-            Console.WriteLine($"Usando yt-dlp do usuário: {_userPath}");
+            _consoleService.WriteLine($"Usando yt-dlp do usuário: {_userPath}");
             return _userPath;
         }
         
         // 2. Bundle do app
-        if (File.Exists(_bundledPath))
+        if (_fileService.Exists(_bundledPath))
         {
-            Console.WriteLine($"Usando yt-dlp bundleado: {_bundledPath}");
+            _consoleService.WriteLine($"Usando yt-dlp bundleado: {_bundledPath}");
             return _bundledPath;
         }
         
         // 3. PATH do sistema
         if (!string.IsNullOrEmpty(_systemPath))
         {
-            Console.WriteLine($"Usando yt-dlp do sistema: {_systemPath}");
+            _consoleService.WriteLine($"Usando yt-dlp do sistema: {_systemPath}");
             return _systemPath;
         }
         
         // 4. Download automático
-        Console.WriteLine("yt-dlp não encontrado. Baixando automaticamente...");
+        _consoleService.WriteLine("yt-dlp não encontrado. Baixando automaticamente...");
         Task.Run(async () => await DownloadLatestVersion(_userPath)).Wait();
         
-        if (File.Exists(_userPath))
+        if (_fileService.Exists(_userPath))
             return _userPath;
         
         throw new Exception(
@@ -128,10 +167,10 @@ public class YtDlpHelper
     /// <summary>
     /// Verifica se o arquivo é recente (< 7 dias)
     /// </summary>
-    private bool IsRecentVersion(string path)
+    protected internal virtual bool IsRecentVersion(string path)
     {
-        var fileInfo = new FileInfo(path);
-        return (DateTime.Now - fileInfo.LastWriteTime).TotalDays < 7;
+        var lastWrite = _fileService.GetLastWriteTime(path);
+        return (DateTime.Now - lastWrite).TotalDays < 7;
     }
 
     #endregion
@@ -141,22 +180,28 @@ public class YtDlpHelper
     /// <summary>
     /// Verifica e baixa atualizações do yt-dlp em background
     /// </summary>
-    private async Task UpdateYtDlpIfNeeded()
+    internal async Task UpdateYtDlpIfNeeded()
     {
         try
         {
+            if (_httpClientService == null)
+            {
+                _consoleService.WriteLine("⚠ Aviso: HttpClient não configurado, pulando auto-update");
+                return;
+            }
+
             var currentVersion = await GetCurrentVersion();
             var latestVersion = await GetLatestVersion();
             
             if (currentVersion == latestVersion)
             {
-                Console.WriteLine("✓ yt-dlp está atualizado ({currentVersion})");
+                _consoleService.WriteLine($"✓ yt-dlp está atualizado ({currentVersion})");
                 return;
             }
 
-            Console.WriteLine($"Atualizando yt-dlp: {currentVersion} → {latestVersion}");
+            _consoleService.WriteLine($"Atualizando yt-dlp: {currentVersion} → {latestVersion}");
             await DownloadLatestVersion(_userPath);
-            Console.WriteLine("✓ yt-dlp atualizado com sucesso!");
+            _consoleService.WriteLine("✓ yt-dlp atualizado com sucesso!");
             
             // Atualizar referência
             _ytdl = new YoutubeDL { YoutubeDLPath = _userPath };
@@ -164,31 +209,27 @@ public class YtDlpHelper
         catch (Exception ex)
         {
             // Não falhar se update falhar (usar bundle)
-            Console.WriteLine($"⚠ Aviso: Não foi possível atualizar yt-dlp: {ex.Message}");
+            _consoleService.WriteLine($"⚠ Aviso: Não foi possível atualizar yt-dlp: {ex.Message}");
         }
     }
 
     /// <summary>
     /// Obtém versão atual do yt-dlp
     /// </summary>
-    private async Task<string> GetCurrentVersion()
+    protected internal virtual async Task<string> GetCurrentVersion()
     {
         try
         {
-            var process = new Process
+            var process = _processService.Start(new ProcessStartInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = _ytdl.YoutubeDLPath,
-                    Arguments = "--version",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                }
-            };
+                FileName = _ytdl.YoutubeDLPath,
+                Arguments = "--version",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            });
 
-            process.Start();
-            var output = await process.StandardOutput.ReadToEndAsync();
+            var output = await process.StandardOutputReadToEndAsync();
             await process.WaitForExitAsync();
 
             return output.Trim();
@@ -202,12 +243,14 @@ public class YtDlpHelper
     /// <summary>
     /// Consulta GitHub API para última versão do yt-dlp
     /// </summary>
-    private async Task<string> GetLatestVersion()
+    protected internal virtual async Task<string> GetLatestVersion()
     {
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("User-Agent", "Cutube");
+        if (_httpClientService == null)
+            return "unknown";
+
+        _httpClientService.DefaultRequestHeadersAdd("User-Agent", "Cutube");
         
-        var response = await client.GetStringAsync(
+        var response = await _httpClientService.GetStringAsync(
             "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"
         );
         
@@ -220,29 +263,28 @@ public class YtDlpHelper
     /// <summary>
     /// Download do yt-dlp mais recente
     /// </summary>
-    private async Task DownloadLatestVersion(string targetPath)
+    protected internal virtual async Task DownloadLatestVersion(string targetPath)
     {
+        if (_httpClientService == null)
+            throw new InvalidOperationException("HttpClient não configurado");
+
         var platform = GetPlatformIdentifier();
         var url = $"https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp{platform}";
         
-        using var client = new HttpClient();
-        var data = await client.GetByteArrayAsync(url);
-        await File.WriteAllBytesAsync(targetPath, data);
+        var data = await _httpClientService.GetByteArrayAsync(url);
+        await _fileService.WriteAllBytesAsync(targetPath, data);
         
         // Tornar executável (Linux/macOS)
-        if (!OperatingSystem.IsWindows())
+        if (!_environmentService.IsWindows())
         {
-            var chmod = new Process
+            var chmod = _processService.Start(new ProcessStartInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "chmod",
-                    Arguments = $"+x \"{targetPath}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-            chmod.Start();
+                FileName = "chmod",
+                Arguments = $"+x \"{targetPath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+
             await chmod.WaitForExitAsync();
         }
     }
@@ -250,12 +292,13 @@ public class YtDlpHelper
     /// <summary>
     /// Identifica sufixo do binário para plataforma atual
     /// </summary>
-    private string GetPlatformIdentifier()
+    protected internal string GetPlatformIdentifier()
     {
         // Detecção de arquitetura
-        var arch = RuntimeInformation.OSArchitecture;
+        var archStr = _environmentService.OSArchitecture;
+        Enum.TryParse<Architecture>(archStr, out var arch);
         
-        if (OperatingSystem.IsWindows())
+        if (_environmentService.IsWindows())
         {
             return arch switch
             {
@@ -266,7 +309,7 @@ public class YtDlpHelper
             };
         }
         
-        if (OperatingSystem.IsLinux())
+        if (_environmentService.IsLinux())
         {
             return arch switch
             {
@@ -277,7 +320,7 @@ public class YtDlpHelper
             };
         }
         
-        if (OperatingSystem.IsMacOS())
+        if (_environmentService.IsMacOS())
         {
             return arch switch
             {
@@ -299,9 +342,15 @@ public class YtDlpHelper
     /// </summary>
     public async Task<string> GetVideoTitleAsync(string url)
     {
-        var result = await _ytdl.RunVideoDataFetch(url);
-        var title = result.Data.Title;
+        var title = await FetchVideoTitleRawAsync(url);
         return TitleHelper.FormatTitle(title ?? "video");
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    protected internal virtual async Task<string?> FetchVideoTitleRawAsync(string url)
+    {
+        var result = await _ytdl.RunVideoDataFetch(url);
+        return result.Data.Title;
     }
 
     /// <summary>
@@ -320,7 +369,16 @@ public class YtDlpHelper
             Output = outputFile
         };
         
-        var res = await _ytdl.RunVideoDownload(url, overrideOptions: options, progress: progress);
+        await RunVideoDownloadAsync(url, options, progress);
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    protected internal virtual Task RunVideoDownloadAsync(
+        string url,
+        OptionSet options,
+        IProgress<DownloadProgress>? progress)
+    {
+        return _ytdl.RunVideoDownload(url, overrideOptions: options, progress: progress);
     }
 
     /// <summary>
@@ -334,9 +392,9 @@ public class YtDlpHelper
         IProgress<DownloadProgress>? progress = null)
     {
         // Download completo primeiro
-        var tempFile = Path.GetTempFileName() + ".mp4";
+        var tempFile = CreateTempFile();
         
-        Console.WriteLine("Baixando vídeo completo...");
+        _consoleService.WriteLine("Baixando vídeo completo...");
         await DownloadAsync(url, tempFile, progress);
         
         // Usar FFmpeg para corte
@@ -344,7 +402,7 @@ public class YtDlpHelper
         var timeEnd = TimeHelper.GetEndSeconds(endTime);
         var duration = timeEnd - timeStart;
         
-        Console.WriteLine($"Cortando vídeo ({startTime} - {endTime})...");
+        _consoleService.WriteLine($"Cortando vídeo ({startTime} - {endTime})...");
         
         var ffmpeg = new FfmpegHelper();
         var arguments =
@@ -354,10 +412,23 @@ public class YtDlpHelper
             $"-c:v libx264 -c:a aac " +
             $"\"{outputFile}\"";
         
-        ffmpeg.ExecuteFfmpeg(arguments, new ProgressBar());
+        ExecuteFfmpeg(arguments);
         
         // Limpar temp
-        File.Delete(tempFile);
+        _fileService.Delete(tempFile);
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    protected internal virtual string CreateTempFile()
+    {
+        return Path.GetTempFileName() + ".mp4";
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    protected internal virtual void ExecuteFfmpeg(string arguments)
+    {
+        var ffmpeg = new FfmpegHelper();
+        ffmpeg.ExecuteFfmpeg(arguments, new ProgressBar());
     }
 
     #endregion

@@ -44,59 +44,146 @@ Cutube.Tests/
 
 ## 2. Análise de Cobertura por Classe
 
-### 2.1 Program.cs (93 linhas)
-
-**Linhas que precisam de cobertura:** ~75 linhas (excluindo using e namespaces)
+### 2.1 YtDlpHelper.cs (363 linhas)
 
 **Cenários de Teste:**
 
-#### E2E-01: Fluxo completo com áudio
-- **Setup:** Mock YoutubeClient com streams de vídeo + áudio
+#### INT-01: Path resolution - versão do usuário existe e é recente
+- **Setup:**
+  - Mock `File.Exists(_userPath)` retorna true
+  - Mock `IsRecentVersion(_userPath)` retorna true
+- **Expectativa:** `ResolveYtDlpPath()` retorna _userPath
+
+#### INT-02: Path resolution - usa bundle do app
+- **Setup:**
+  - Mock `File.Exists(_userPath)` retorna false
+  - Mock `File.Exists(_bundledPath)` retorna true
+- **Expectativa:** Retorna _bundledPath
+
+#### INT-03: Path resolution - usa PATH do sistema
+- **Setup:**
+  - Mock `File.Exists(_userPath)` retorna false
+  - Mock `File.Exists(_bundledPath)` retorna false
+  - Mock `GetSystemPath()` retorna "/usr/bin/yt-dlp"
+- **Expectativa:** Retorna _systemPath
+
+#### INT-04: Path resolution - download automático
+- **Setup:**
+  - Todos os `File.Exists` retornam false
+  - Mock `DownloadLatestVersion()` executa com sucesso
+- **Expectativa:** Download automático, retorna _userPath
+
+#### INT-05: Path resolution - falha total lança exceção
+- **Setup:**
+  - Todos os `File.Exists` retornam false
+  - Mock `DownloadLatestVersion()` falha
+- **Expectativa:** `Exception` com mensagem sobre instalação manual
+
+#### INT-06: Auto-update - versão atualizada
+- **Setup:**
+  - Mock `GetCurrentVersion()` retorna "2026.01.30"
+  - Mock `GetLatestVersion()` retorna "2026.01.30"
+- **Expectativa:** Nenhum download, log de "atualizado"
+
+#### INT-07: Auto-update - versão desatualizada
+- **Setup:**
+  - `GetCurrentVersion()` retorna "2026.01.01"
+  - `GetLatestVersion()` retorna "2026.01.30"
+  - Mock `DownloadLatestVersion()` sucesso
+- **Expectativa:** Download executado, _ytdl atualizado
+
+#### INT-08: Auto-update - falha na atualização
+- **Setup:**
+  - `GetLatestVersion()` lança exceção
+- **Expectativa:** Exceção capturada, log de aviso, não falha app
+
+#### INT-09: GetVideoTitleAsync - sucesso
+- **Setup:**
+  - Mock `_ytdl.RunVideoDataFetch()` retorna dict com "title"
+- **Expectativa:** Título sanitizado retornado
+
+#### INT-10: DownloadAsync - sucesso
+- **Setup:**
+  - Mock `_ytdl.DownloadVideoAsync()` executa sem erro
+- **Expectativa:** Download chamado com opções corretas
+
+#### INT-11: DownloadWithTimeRangeAsync - fluxo completo
+- **Setup:**
+  - Mock `DownloadAsync()` sucesso
+  - Mock `FfmpegHelper.ExecuteFfmpeg()` sucesso
+  - Mock `File.Delete()` para cleanup
+- **Expectativa:** Download + corte + limpeza temp
+
+#### INT-12: DownloadWithTimeRangeAsync - falha no FFmpeg
+- **Setup:**
+  - Mock `FfmpegHelper.ExecuteFfmpeg()` lança exceção
+- **Expectativa:** Exceção propagada, temp deletado no finally
+
+**Mocks Necessários:**
+```csharp
+// YoutubeDL
+Mock<YoutubeDL> mockYtdl = new Mock<YoutubeDL>();
+mockYtdl.Setup(x => x.RunVideoDataFetch(It.IsAny<string>()))
+        .ReturnsAsync(new VideoData(...));
+mockYtdl.Setup(x => x.DownloadVideoAsync(
+        It.IsAny<string>(), 
+        It.IsAny<string>(),
+        It.IsAny<DownloadOptions>(),
+        It.IsAny<IProgress<DownloadProgress>>()))
+        .Returns(Task.CompletedTask);
+
+// File
+Mock<IFileService> mockFile;
+mockFile.Setup(x => x.Exists(It.IsAny<string>()))
+        .Returns(false);
+
+// HttpClient (para update)
+Mock<HttpClient> mockHttp;
+mockHttp.Setup(x => x.GetStringAsync(It.IsAny<string>()))
+        .ReturnsAsync("{\"tag_name\": \"2026.01.30\"}");
+
+// Process (para chmod)
+Mock<IProcessService> mockProcess;
+```
+
+**Cobertura Esperada:** 90%+
+
+---
+
+### 2.2 Program.cs (50 linhas)
+
+**Cenários de Teste:**
+
+#### E2E-01: Fluxo completo com sucesso
+- **Setup:**
+  - Mock `YtDlpHelper.GetVideoTitleAsync()` retorna título
+  - Mock `YtDlpHelper.DownloadWithTimeRangeAsync()` sucesso
+  - Mock Console output
 - **Input:** URL válida, tempos válidos (00:00:10 - 00:01:00)
-- **Expectativa:** Download de ambos, merge com FFmpeg, arquivo final criado
-- **Mocks:**
-  - `YoutubeClient.Videos.GetAsync` → retorna Video mockado
-  - `YoutubeClient.Videos.Streams.GetManifestAsync` → StreamManifest com vídeo+áudio
-  - `YoutubeClient.Videos.Streams.DownloadAsync` → spy para verificar chamadas
-  - `FfmpegHelper.ExecuteFfmpeg` → mock que não executa FFmpeg real
+- **Expectativa:** Download executado, mensagem final exibida
 
-#### E2E-02: Fluxo completo sem áudio
-- **Setup:** Mock YoutubeClient com apenas stream de vídeo
-- **Expectativa:** Download apenas de vídeo, FFmpeg sem áudio
+#### E2E-02: Exceção no download
+- **Setup:**
+  - Mock `DownloadWithTimeRangeAsync()` lança exceção
+- **Expectativa:** Exceção capturada e relançada, mensagem de erro
 
-#### E2E-03: Vídeo não encontrado
-- **Setup:** `GetVideoStreams().TryGetWithHighestVideoQuality()` retorna null
-- **Expectativa:** Mensagem de erro, early return, sem chamar FFmpeg
-
-#### E2E-04: Exceção no download
-- **Setup:** `DownloadAsync` lança exceção
-- **Expectativa:** Exceção propagada, arquivos temp limpos no finally
-
-#### E2E-05: Exceção no FFmpeg
-- **Setup:** `ExecuteFfmpeg` lança exceção
-- **Expectativa:** Exceção capturada e relançada, arquivos temp deletados
-
-#### E2E-06: Sanitização de título
+#### E2E-03: Sanitização de título
 - **Input:** Título com acentos e caracteres especiais
 - **Expectativa:** Nome de arquivo sanitizado (sem acentos, apenas alphanum)
 
 **Mocks Necessários:**
 ```csharp
-// YoutubeClient
-Mock<YoutubeClient> mockYoutubeClient
-mockYoutubeClient.Setup(x => x.Videos.GetAsync(It.IsAny<VideoId>()))
-                .ReturnsAsync(new Video(...));
-
-// Streams
-mockYoutubeClient.Setup(x => x.Videos.Streams.GetManifestAsync(It.IsAny<VideoId>()))
-                .ReturnsAsync(new StreamManifest(...));
-
-// FfmpegHelper
-Mock<FfmpegHelper> mockFfmpeg = new Mock<FfmpegHelper>() { CallBase = true };
-mockFfmpeg.Setup(x => x.ExecuteFfmpeg(It.IsAny<string>(), It.IsAny<ProgressBar>()))
-          .Verifiable();
-
-// Console output pode ser redirecionado com Console.SetOut()
+// YtDlpHelper
+Mock<YtDlpHelper> mockYtdl = new Mock<YtDlpHelper>() { CallBase = true };
+mockYtdl.Setup(x => x.GetVideoTitleAsync(It.IsAny<string>()))
+        .ReturnsAsync("Video Teste");
+mockYtdl.Setup(x => x.DownloadWithTimeRangeAsync(
+        It.IsAny<string>(),
+        It.IsAny<string>(),
+        It.IsAny<string>(),
+        It.IsAny<string>(),
+        It.IsAny<IProgress<DownloadProgress>>()))
+        .Returns(Task.CompletedTask);
 ```
 
 **Cobertura Esperada:** 95%+
@@ -400,8 +487,8 @@ public interface IConsoleService
 
 ### 3.2 Classes Existentes que Podem ser Mockadas
 
-- `YoutubeClient` - já tem métodos virtuais (ou criar wrapper se necessário)
-- `HttpClient` - se usado para download
+- `YoutubeDL` - wrapper do YoutubeDLSharp, métodos virtuais disponíveis
+- `HttpClient` - usado para auto-update do yt-dlp
 - `Stream` - para simular arquivos
 
 ### 3.3 Classes que NÃO Precisam de Mock (testáveis diretamente)
@@ -415,13 +502,14 @@ public interface IConsoleService
 
 | Classe | Linhas | Branches | Cobertura Alvo |
 |--------|--------|----------|----------------|
-| Program.cs | 75 | 12 | 95% |
+| YtDlpHelper.cs | 320 | 25 | 90% |
+| Program.cs | 50 | 8 | 95% |
 | Menu.cs | 20 | 10 | 100% |
 | FfmpegHelper.cs | 140 | 18 | 90% |
 | TimeHelper.cs | 25 | 6 | 100% |
 | TitleHelper.cs | 18 | 4 | 100% |
 | ProgressBar.cs | 75 | 8 | 90% |
-| **TOTAL** | **353** | **58** | **93%** |
+| **TOTAL** | **648** | **79** | **92%** |
 
 ---
 
@@ -453,14 +541,22 @@ public interface IConsoleService
 4. Implementar testes de ExecuteFfmpeg com process fake
 5. Validar cobertura 90%+
 
-### Fase 5: Testes E2E de Program (Dia 5)
-1. Criar wrappers para YoutubeClient se necessário
+### Fase 5: Testes de YtDlpHelper (Dia 5)
+1. Criar wrappers necessários (IFileService, IHttpClientService)
+2. Refatorar YtDlpHelper para injetar dependências
+3. Implementar testes de path resolution (4 caminhos)
+4. Implementar testes de auto-update
+5. Implementar testes de download e título
+6. Validar cobertura 90%+
+
+### Fase 6: Testes E2E de Program (Dia 6)
+1. Criar mocks para YtDlpHelper
 2. Implementar testes E2E com todos os mocks
 3. Testar cenários de exceção
 4. Testar limpeza de arquivos temp
 5. Validar cobertura 95%+
 
-### Fase 6: Integração e Validação (Dia 6)
+### Fase 7: Integração e Validação (Dia 7)
 1. Executar todos os testes
 2. Validar cobertura global >90%
 3. Adicionar testes para branches faltantes
@@ -613,11 +709,95 @@ public class MenuTests
            .WithMessage("*url não pode ser vazia*");
     }
 }
-```
+ ```
+
+ ### 7.4 Teste de YtDlpHelper
+
+ ```csharp
+ public class YtDlpHelperTests
+ {
+     [Fact]
+     public async Task GetVideoTitleAsync_ValidUrl_ReturnsSanitizedTitle()
+     {
+         // Arrange
+         var mockYtdl = new Mock<YoutubeDL>();
+         var expectedData = new Dictionary<string, string>
+         {
+             ["title"] = "Vídeo Incrível de Teste @2024!"
+         };
+         
+         mockYtdl.Setup(x => x.RunVideoDataFetch(It.IsAny<string>()))
+                .ReturnsAsync(new VideoDownloadResult(expectedData));
+         
+         var helper = new YtDlpHelper(mockYtdl.Object);
+
+         // Act
+         var result = await helper.GetVideoTitleAsync("https://youtu.be/dQw4w9WgXcQ");
+
+         // Assert
+         result.Should().Be("Video Incrivel de Teste 2024");
+     }
+
+     [Fact]
+     public void ResolveYtDlpPath_RecentUserVersion_ReturnsUserPath()
+     {
+         // Arrange
+         var mockFile = new Mock<IFileService>();
+         mockFile.Setup(x => x.Exists(It.IsRegex(@".*\.local.*yt-dlp")))
+                .Returns(true);
+         
+         var helper = new YtDlpHelper(mockFile.Object);
+
+         // Act
+         var result = helper.ResolveYtDlpPath();
+
+         // Assert
+         result.Should().Contain(".local");
+     }
+
+     [Fact]
+     public async Task UpdateYtDlpIfNeeded_VersionMismatch_DownloadsUpdate()
+     {
+         // Arrange
+         var mockYtdl = new Mock<YoutubeDL>();
+         var mockHttp = new Mock<IHttpClientService>();
+         var mockFile = new Mock<IFileService>();
+         
+         mockHttp.Setup(x => x.GetStringAsync(It.IsAny<string>()))
+                .ReturnsAsync("{\"tag_name\": \"2026.01.30\"}");
+         
+         var helper = new YtDlpHelper(mockYtdl.Object, mockHttp.Object, mockFile.Object);
+
+         // Act
+         await helper.UpdateYtDlpIfNeeded();
+
+         // Assert
+         mockHttp.Verify(x => x.GetByteArrayAsync(It.IsAny<string>()), Times.Once);
+     }
+ }
+ ```
+
+ ---
+
+ ## 8. Notas sobre Migração yt-dlp
+
+**Contexto:** Este plano de testes foi atualizado para refletir a migração de YoutubeExplode para yt-dlp + YoutubeDLSharp (concluída em Jan/2026).
+
+**Mudanças na arquitetura:**
+- `YoutubeClient` foi substituído por `YtDlpHelper`
+- Download agora usa yt-dlp via YoutubeDLSharp
+- Auto-update do yt-dlp é executado em background
+- Path resolution prioriza: user > bundle > system > download
+
+**Impacto nos testes:**
+- Removida necessidade de mockar `YoutubeClient` e streams
+- Adicionados mocks para `YoutubeDL`, `HttpClient` (update), `File` (path resolution)
+- Nova classe `YtDlpHelper.cs` (363 linhas) adicionada à matriz de cobertura
+- Testes de Program.cs simplificados (menos complexidade de streams)
 
 ---
 
-## 8. Checklist Final
+## 9. Checklist Final
 
 - [ ] Projeto de testes criado
 - [ ] xUnit, Moq, FluentAssertions instalados
@@ -627,6 +807,7 @@ public class MenuTests
 - [ ] Menu: 100% cobertura
 - [ ] ProgressBar: 90%+ cobertura (com refatoração)
 - [ ] FfmpegHelper: 90%+ cobertura (com refatoração)
+- [ ] YtDlpHelper: 90%+ cobertura (com refatoração)
 - [ ] Program: 95%+ cobertura
 - [ ] Cobertura global ≥90%
 - [ ] Todos os testes passando
@@ -635,6 +816,7 @@ public class MenuTests
 
 ---
 
-**Status:** Plano Completo
-**Estimativa:** 6 dias de desenvolvimento
-**Cobertura Alvo:** 93% global (353 de 379 linhas)
+**Status:** Plano Completo (Atualizado para yt-dlp)
+**Estimativa:** 7 dias de desenvolvimento
+**Cobertura Alvo:** 92% global (648 de ~700 linhas)
+**Data Atualização:** 30/01/2026
