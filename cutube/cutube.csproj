@@ -9,8 +9,16 @@
 
     <ItemGroup>
       <PackageReference Include="FFmpeg.AutoGen" Version="8.0.0" />
-      <PackageReference Include="YoutubeExplode" Version="6.5.6" />
-      <PackageReference Include="YoutubeExplode.Converter" Version="6.5.6" />
+      <PackageReference Include="YoutubeDLSharp" Version="1.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Incluir yt-dlp bundleado no build e publish -->
+      <None Include="bin\yt-dlp">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <Pack>true</Pack>
+        <PackagePath>bin\</PackagePath>
+      </None>
     </ItemGroup>
 
     <ItemGroup>

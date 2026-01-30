@@ -1,93 +1,54 @@
-﻿using cutube;
-using YoutubeExplode;
-using YoutubeExplode.Videos.Streams;
+using cutube;
+using YoutubeDLSharp;
 
 Menu.Show();
-
-var youtube = new YoutubeClient();
 
 var videoUrl = Menu.Url;
 var videoStart = Menu.Start;
 var videoEnd = Menu.End;
 
-var timeStart = TimeHelper.GetStartSeconds(videoStart);
-var timeEnd = TimeHelper.GetEndSeconds(videoEnd);
+var ytdl = new YtDlpHelper();
 
-var video = await youtube.Videos.GetAsync(videoUrl);
-var videoTitle = TitleHelper.FormatTitle(video.Title);
-
-var streamManifest =
-    await youtube.Videos.Streams.GetManifestAsync(video.Id);
-
-var videoStreamInfo = streamManifest
-    .GetVideoStreams()
-    .TryGetWithHighestVideoQuality();
-
-var audioStreamInfo = streamManifest
-    .GetAudioStreams()
-    .TryGetWithHighestBitrate();
-
-if (videoStreamInfo is null)
-{
-    Console.WriteLine("Não foi possível encontrar o video");
-    return;
-}
-
-var tempVideo = Path.GetTempFileName();
-var tempAudio = Path.GetTempFileName();
-
-Console.WriteLine("Iniciando o download do video...");
-Console.WriteLine("O tempo de espera pode variar de acordo com a sua conexão.");
-await youtube.Videos.Streams.DownloadAsync(videoStreamInfo, tempVideo);
-Console.WriteLine("Video baixado com sucesso");
-
-if (audioStreamInfo is not null)
-{
-    Console.WriteLine("Iniciando o download do áudio...");
-    await youtube.Videos.Streams.DownloadAsync(audioStreamInfo, tempAudio);
-    Console.WriteLine("Áudio baixado com sucesso");
-}
-else
-{
-    Console.WriteLine("Não foi possível encontrar o áudio");
-}
-
-Console.WriteLine("Video baixado com sucesso");
+Console.WriteLine("Obtendo informações do vídeo...");
+var videoTitle = await ytdl.GetVideoTitleAsync(videoUrl);
 
 var output = $"{videoTitle}.mp4";
-var ffmpeg = new FfmpegHelper();
-
-string arguments;
-
-if (audioStreamInfo is not null)
-{
-    arguments =
-        $"-loglevel verbose -i \"{tempVideo}\" -i \"{tempAudio}\"  -ss {timeStart} " +
-        $"-t {timeEnd - timeStart} -c:v libx264 -c:a aac -strict experimental \"{output}\"";
-}
-else
-{
-    arguments =
-        $"-loglevel verbose -i \"{tempVideo}\" -ss {timeStart}  " +
-        $"-t {timeEnd - timeStart} -c:v libx264 -an \"{output}\"";
-}
 
 try
 {
-    Console.WriteLine("Iniciando o corte do video...");
-    Console.WriteLine("Esse processo pode demorar,aguarde...");
-    ffmpeg.ExecuteFfmpeg(arguments, new ProgressBar());
-    File.Delete(tempVideo);
-    if (File.Exists(tempAudio))
-        File.Delete(tempAudio);
+    Console.WriteLine("Iniciando o download e corte do vídeo...");
+    Console.WriteLine("Esse processo pode demorar, aguarde...");
+    
+    var progress = new Progress<DownloadProgress>(p => 
+    {
+        if (p.Progress > 0)
+        {
+            var percentage = p.Progress * 100;
+            Console.WriteLine($"Progresso: {percentage:F0}%");
+        }
+        
+        if (p.State != YoutubeDLSharp.DownloadState.None)
+        {
+            Console.WriteLine($"Estado: {p.State}");
+        }
+    });
+
+    await ytdl.DownloadWithTimeRangeAsync(
+        videoUrl,
+        output,
+        videoStart,
+        videoEnd,
+        progress
+    );
 }
 catch (Exception e)
 {
-    Console.WriteLine(e);
+    Console.WriteLine($"Erro: {e.Message}");
     throw;
 }
 finally
 {
     Console.WriteLine(
-    $"O video {videoTitle} foi baixado e cortado, o resultado está em: {Path.GetFullPath(output)}");
+        $"O vídeo {videoTitle} foi baixado e cortado, o resultado está em: {Path.GetFullPath(output)}"
+    );
 }
