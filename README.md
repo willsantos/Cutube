@@ -30,7 +30,8 @@ Explorar funcionalidades de processos com FFMpeg.
 
 # Tecnologias
 - Dotnet 10.0 LTS (suporte até Nov 2028)
-- YoutubeExplode 6.5.6
+- yt-dlp (YouTube downloader com PO token support) - **incluído**
+- YoutubeDLSharp 1.2.0 (.NET wrapper)
 - FFmpeg.AutoGen 8.0.0
 
 
@@ -38,7 +39,20 @@ Explorar funcionalidades de processos com FFMpeg.
 - .NET 10.0 runtime ou superior
 - FFmpeg 6+ (opcional para versões bundle)
 
+**Nota:** O yt-dlp é **incluso automaticamente** com o Cutube e se atualiza sozinho! 🎉
+
+
 ## Desenvolvimento
+
+### yt-dlp Bundling
+O Cutube vem com o yt-dlp bundleado e implementa auto-update inteligente:
+
+- ✅ **Zero configuração**: yt-dlp já vem no pacote
+- ✅ **Auto-update**: Verifica atualizações ao iniciar
+- ✅ **Fallback**: Usa yt-dlp do sistema se bundle falhar
+- ✅ **Gerenciado**: Atualizações são baixadas para `~/.local/share/Cutube/`
+
+### Desenvolvedores
 
 Este projeto usa ASDF para gerenciar versões do .NET.
 
@@ -52,6 +66,19 @@ asdf install
 ```
 
 O arquivo .tool-versions configura automaticamente o .NET 10.0 ao entrar no projeto.
+
+Se você quer usar sua própria versão do yt-dlp:
+
+```bash
+# Instalar yt-dlp globalmente (opcional)
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+chmod +x /usr/local/bin/yt-dlp
+
+# Ou via pip
+pip install yt-dlp
+```
+
+O Cutube detectará automaticamente e usará sua versão se for mais recente que o bundle.
 
 
 
