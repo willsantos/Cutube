@@ -14,3 +14,9 @@
 ### Performance
 - Benefits from .NET 10 JIT improvements
 - Faster startup time
+
+### Known Issues
+- YoutubeExplode currently experiencing 403 Forbidden errors due to YouTube's new PO token requirement (Jan 2026)
+- Issue tracked at: https://github.com/Tyrrrz/YoutubeExplode/issues/933
+- Fix PR pending: https://github.com/Tyrrrz/YoutubeExplode/pull/934
+- This is NOT related to the .NET 10 migration
