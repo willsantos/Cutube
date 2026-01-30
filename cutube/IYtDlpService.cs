@@ -2,7 +2,7 @@ using YoutubeDLSharp;
 
 namespace cutube;
 
-public interface IYtDlpService
+public interface IYtDlpService : IDisposable
 {
     Task<string> GetVideoTitleAsync(string url);
     Task DownloadWithTimeRangeAsync(

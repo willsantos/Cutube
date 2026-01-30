@@ -7,7 +7,7 @@ public static class Program
 {
     public static async Task Main()
     {
-        var app = new ProgramWorkflow(
+        using var app = new ProgramWorkflow(
             new MenuService(),
             new YtDlpHelper(),
             new ConsoleService()

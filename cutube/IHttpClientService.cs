@@ -1,6 +1,6 @@
 namespace cutube;
 
-public interface IHttpClientService
+public interface IHttpClientService : System.IDisposable
 {
     Task<string> GetStringAsync(string url);
     Task<byte[]> GetByteArrayAsync(string url);

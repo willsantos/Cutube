@@ -40,6 +40,10 @@ public class ProgramWorkflowTests
             ));
             return Task.CompletedTask;
         }
+
+        public void Dispose()
+        {
+        }
     }
     [Fact]
     public async Task RunAsync_Success_CallsDownloadAndWritesFinalMessage()
