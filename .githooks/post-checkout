@@ -1,0 +1,8 @@
+#!/bin/bash
+# Beads sync hook - auto-import beads state when switching branches
+
+# Only run on branch checkout (parameter $3 == 1), not file checkout
+if [ "$3" -eq 1 ]; then
+    # Import beads state for the new branch
+    bd sync --import 2>/dev/null || true
+fi
