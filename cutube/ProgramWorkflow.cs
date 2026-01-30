@@ -26,7 +26,10 @@ public class ProgramWorkflow
         _console.WriteLine("Obtendo informações do vídeo...");
         var videoTitle = await _ytdl.GetVideoTitleAsync(videoUrl);
 
-        var output = $"{videoTitle}.mp4";
+        var fileName = string.IsNullOrWhiteSpace(_menu.CustomFileName)
+            ? videoTitle
+            : TitleHelper.FormatTitle(_menu.CustomFileName);
+        var output = $"{fileName}.mp4";
 
         try
         {
