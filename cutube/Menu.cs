@@ -17,9 +17,9 @@ public static class Menu
         Console.WriteLine("-----------------------------------------------");
         Console.WriteLine("1 - Digite a url do vídeo.");
         Url =  Console.ReadLine() ?? throw new InvalidOperationException("A url não pode ser vazia.");
-        Console.WriteLine("2 - Digite o tempo de início (hh:mm:ss).");
+        Console.WriteLine("2 - Digite o tempo de início (ex: 00:01:30, 1:30, 90s, 1h30m).");
         Start = Console.ReadLine() ?? throw new InvalidOperationException("O tempo de inicio não pode ser vazio.");
-        Console.WriteLine("3 - Digite o tempo de fim (hh:mm:ss).");
+        Console.WriteLine("3 - Digite o tempo de fim (ex: 00:02:00, 2:00, 120s, 2m).");
         End = Console.ReadLine() ?? throw new InvalidOperationException("O tempo de fim não pode ser vazio.");
         
         
