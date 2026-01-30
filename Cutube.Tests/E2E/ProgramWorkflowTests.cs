@@ -1,0 +1,156 @@
+using FluentAssertions;
+using Moq;
+using cutube;
+using Cutube.Tests.Helpers;
+using Xunit;
+
+namespace Cutube.Tests.E2E;
+
+public class ProgramWorkflowTests
+{
+    private class ImmediateSynchronizationContext : SynchronizationContext
+    {
+        public override void Post(SendOrPostCallback d, object? state)
+        {
+            d(state);
+        }
+    }
+    private class FakeYtDlpService : IYtDlpService
+    {
+        public bool ProgressCalled { get; private set; }
+
+        public Task<string> GetVideoTitleAsync(string url) => Task.FromResult("Video Teste");
+
+        public Task DownloadWithTimeRangeAsync(
+            string url,
+            string outputFile,
+            string startTime,
+            string endTime,
+            IProgress<YoutubeDLSharp.DownloadProgress>? progress = null)
+        {
+            ProgressCalled = true;
+            progress?.Report(new YoutubeDLSharp.DownloadProgress(
+                YoutubeDLSharp.DownloadState.Downloading,
+                1.0f,
+                "",
+                "",
+                "",
+                0,
+                ""
+            ));
+            return Task.CompletedTask;
+        }
+    }
+    [Fact]
+    public async Task RunAsync_Success_CallsDownloadAndWritesFinalMessage()
+    {
+        var menu = new Mock<IMenuService>();
+        var ytdl = new Mock<IYtDlpService>();
+        var console = new FakeConsoleService();
+
+        menu.Setup(m => m.Show());
+        menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
+        menu.SetupGet(m => m.Start).Returns("00:00:10");
+        menu.SetupGet(m => m.End).Returns("00:00:20");
+
+        ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>()))
+            .ReturnsAsync("Video Teste");
+        ytdl.Setup(y => y.DownloadWithTimeRangeAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()))
+            .Returns(Task.CompletedTask);
+
+        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console);
+
+        await workflow.RunAsync();
+
+        ytdl.Verify(y => y.DownloadWithTimeRangeAsync(
+            "https://youtu.be/dQw4w9WgXcQ",
+            "Video Teste.mp4",
+            "00:00:10",
+            "00:00:20",
+            It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()
+        ), Times.Once);
+
+        console.GetOutput().Should().Contain("O vídeo Video Teste foi baixado");
+    }
+
+    [Fact]
+    public async Task RunAsync_DownloadThrows_WritesErrorAndRethrows()
+    {
+        var menu = new Mock<IMenuService>();
+        var ytdl = new Mock<IYtDlpService>();
+        var console = new FakeConsoleService();
+
+        menu.Setup(m => m.Show());
+        menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
+        menu.SetupGet(m => m.Start).Returns("00:00:10");
+        menu.SetupGet(m => m.End).Returns("00:00:20");
+
+        ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>()))
+            .ReturnsAsync("Video Teste");
+        ytdl.Setup(y => y.DownloadWithTimeRangeAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()))
+            .ThrowsAsync(new Exception("Falha no download"));
+
+        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console);
+
+        Func<Task> act = () => workflow.RunAsync();
+
+        await act.Should().ThrowAsync<Exception>();
+        console.GetOutput().Should().Contain("Erro: Falha no download");
+    }
+
+    [Fact]
+    public async Task RunAsync_ReportsProgressAndState()
+    {
+        var menu = new Mock<IMenuService>();
+        var console = new FakeConsoleService();
+
+        menu.Setup(m => m.Show());
+        menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
+        menu.SetupGet(m => m.Start).Returns("00:00:10");
+        menu.SetupGet(m => m.End).Returns("00:00:20");
+
+        var fakeYtdl = new FakeYtDlpService();
+        var workflow = new ProgramWorkflow(menu.Object, fakeYtdl, console);
+        var originalContext = SynchronizationContext.Current;
+        try
+        {
+            SynchronizationContext.SetSynchronizationContext(new ImmediateSynchronizationContext());
+            await workflow.RunAsync();
+        }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(originalContext);
+        }
+
+        console.GetOutput().Should().Contain("Progresso: 100%");
+        console.GetOutput().Should().Contain("Estado: Downloading");
+        fakeYtdl.ProgressCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void DownloadProgress_Ctor_SetsProperties()
+    {
+        var progress = new YoutubeDLSharp.DownloadProgress(
+            YoutubeDLSharp.DownloadState.Downloading,
+            0.5f,
+            "",
+            "",
+            "",
+            0,
+            ""
+        );
+
+        progress.Progress.Should().BeGreaterThan(0);
+        progress.State.Should().Be(YoutubeDLSharp.DownloadState.Downloading);
+    }
+}

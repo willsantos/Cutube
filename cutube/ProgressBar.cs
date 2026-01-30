@@ -6,7 +6,9 @@ public class ProgressBar : IDisposable, IProgress<int>
     private readonly TimeSpan _animationInterval = TimeSpan.FromSeconds(1.0 / 8);
     private const string Animation = @"|/-\";
 
-    private readonly Timer _timer;
+    private readonly ITimer _timer;
+    private readonly IConsoleService _consoleService;
+    private readonly object _sync = new();
     
     private double _currentProgress;
     private string _currentText = string.Empty;
@@ -14,10 +16,15 @@ public class ProgressBar : IDisposable, IProgress<int>
     private int _animationIndex;
     public string Message { get; set; } = string.Empty;
 
-    public ProgressBar()
+    public ProgressBar() : this(new ConsoleService(), new SystemTimerFactory())
     {
-        _timer = new Timer(TimerHandler!);
-        if (!Console.IsOutputRedirected)
+    }
+
+    public ProgressBar(IConsoleService consoleService, ITimerFactory timerFactory)
+    {
+        _consoleService = consoleService;
+        _timer = timerFactory.Create(TimerHandler);
+        if (!_consoleService.IsOutputRedirected)
         {
             ResetTimer();
         }
@@ -28,9 +35,9 @@ public class ProgressBar : IDisposable, IProgress<int>
     {
         _timer.Change(_animationInterval, TimeSpan.FromMilliseconds(-1));
     }
-    private void TimerHandler(object state)
+    private void TimerHandler(object? state)
     {
-        lock (_timer)
+        lock (_sync)
         {
             if (_disposed) return;
 
@@ -47,23 +54,23 @@ public class ProgressBar : IDisposable, IProgress<int>
     private void UpdateText(string text)
     {
         // Obtém a posição atual do cursor
-        var left = Console.CursorLeft;
-        var top = Console.CursorTop;
+        var left = _consoleService.CursorLeft;
+        var top = _consoleService.CursorTop;
 
         // Move o cursor para a esquerda e escreve o texto
-        Console.CursorLeft = 0;
-        Console.Write(text);
+        _consoleService.CursorLeft = 0;
+        _consoleService.Write(text);
 
         // Preenche com espaços se o texto for menor que o anterior
         var length = _currentText.Length - text.Length;
         if (length > 0)
         {
-            Console.Write(new string(' ', length));
+            _consoleService.Write(new string(' ', length));
         }
 
         // Restaura a posição anterior do cursor
-        Console.CursorLeft = left;
-        Console.CursorTop = top;
+        _consoleService.CursorLeft = left;
+        _consoleService.CursorTop = top;
 
         // Atualiza o texto atual
         _currentText = text;
@@ -73,7 +80,7 @@ public class ProgressBar : IDisposable, IProgress<int>
     {
         value = Math.Max(0, Math.Min(100, value));
         Interlocked.Exchange(ref _currentProgress, value);
-        if (!Console.IsOutputRedirected)
+        if (!_consoleService.IsOutputRedirected)
         {
             ResetTimer();
         }
@@ -81,10 +88,11 @@ public class ProgressBar : IDisposable, IProgress<int>
     
     public void Dispose()
     {
-        lock (_timer)
+        lock (_sync)
         {
             _disposed = true;
             UpdateText(string.Empty);
+            _timer.Dispose();
         }
     }
 }

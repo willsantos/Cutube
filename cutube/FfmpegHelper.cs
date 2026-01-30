@@ -7,6 +7,11 @@ public class FfmpegHelper
 {
     private string FfmpegPath { get; set; }
     private string FfprobePath { get; set; }
+
+    private readonly IEnvironmentService _environmentService;
+    private readonly IFileService _fileService;
+    private readonly IProcessRunner _processRunner;
+    private readonly IConsoleService _consoleService;
     
     private static readonly string[] FfmpegExecutableNames = new string[]
     {
@@ -20,13 +25,31 @@ public class FfmpegHelper
         "ffprobe"
     };
     
-    public FfmpegHelper()
+    public FfmpegHelper() : this(
+        new EnvironmentService(),
+        new FileService(),
+        new ProcessRunner(),
+        new ConsoleService()
+    )
     {
+    }
+
+    public FfmpegHelper(
+        IEnvironmentService environmentService,
+        IFileService fileService,
+        IProcessRunner processRunner,
+        IConsoleService consoleService)
+    {
+        _environmentService = environmentService;
+        _fileService = fileService;
+        _processRunner = processRunner;
+        _consoleService = consoleService;
+
         FfmpegPath = GetFfmpegPath();
         FfprobePath = GetFfprobePath();
     }
 
-    private static string GetFfprobePath()
+    protected internal string GetFfprobePath()
     {
         foreach (var executableName in FfprobeExecutableNames)
             if (TryGetFromAppData(executableName, out var path) ||
@@ -36,7 +59,7 @@ public class FfmpegHelper
         throw new Exception("Não foi possível encontrar o FFprobe.");
     }
 
-    private static string GetFfmpegPath()
+    protected internal string GetFfmpegPath()
     {
         foreach (var executableName in FfmpegExecutableNames)
             if (TryGetFromAppData(executableName, out var path) ||
@@ -46,12 +69,12 @@ public class FfmpegHelper
         throw new Exception("Não foi possível encontrar o FFmpeg.");
     }
     
-    private static bool TryGetFromAppData(string executableName, out string path)
+    protected internal bool TryGetFromAppData(string executableName, out string path)
     {
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var appDataPath = _environmentService.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var appDataExecutablePath = Path.Combine(appDataPath, executableName);
 
-        if (File.Exists(appDataExecutablePath))
+        if (_fileService.Exists(appDataExecutablePath))
         {
             path = appDataExecutablePath;
             return true;
@@ -61,16 +84,16 @@ public class FfmpegHelper
         return false;
     }
     
-    private static bool TryGetFromSystemPath(string executableName, out string path)
+    protected internal bool TryGetFromSystemPath(string executableName, out string path)
     {
-        var systemPath = Environment.GetEnvironmentVariable("PATH");
+        var systemPath = _environmentService.GetEnvironmentVariable("PATH");
         if(systemPath == null)
             throw new Exception("Não foi possível encontrar o PATH do sistema.");
         foreach (var folder in systemPath.Split(Path.PathSeparator))
         {
             var folderExecutablePath = Path.Combine(folder, executableName);
 
-            if (!File.Exists(folderExecutablePath)) continue;
+            if (!_fileService.Exists(folderExecutablePath)) continue;
             path = folderExecutablePath;
             return true;
         }
@@ -79,7 +102,7 @@ public class FfmpegHelper
         return false;
     }
     
-    public void ExecuteFfmpeg(string arguments, ProgressBar progressBar)
+    public void ExecuteFfmpeg(string arguments, IProgress<int> progress)
     {
         
         var startInfo = new ProcessStartInfo
@@ -92,24 +115,22 @@ public class FfmpegHelper
             RedirectStandardError = true,
             EnvironmentVariables =
             {
-                ["PATH"] = Environment.GetEnvironmentVariable("PATH"),
-                ["TEMP"] = Environment.GetEnvironmentVariable("TEMP")
+                ["PATH"] = _environmentService.GetEnvironmentVariable("PATH"),
+                ["TEMP"] = _environmentService.GetEnvironmentVariable("TEMP")
             }
         };
 
-        using var process = new Process();
-        process.StartInfo = startInfo;
         try
         {
             var duration = TimeSpan.Zero;
             var durationRegex = new Regex(@"Duration: (\d+):(\d+):(\d+).(\d+)");
             var progressRegex = new Regex(@"time=(\d+):(\d+):(\d+).(\d+)");
-            process.ErrorDataReceived += (sender, args) =>
+            _processRunner.Run(startInfo, data =>
             {
-                if (args.Data == null) return;
-                if (args.Data.Contains("Duration"))
+                if (data == null) return;
+                if (data.Contains("Duration"))
                 {
-                    var matchDuration = durationRegex.Match(args.Data);
+                    var matchDuration = durationRegex.Match(data);
                     if (matchDuration.Success)
                     {
                         var hours =
@@ -126,10 +147,11 @@ public class FfmpegHelper
                     }
                 }
 
-                if (!args.Data.Contains("time")) return;
+                if (!data.Contains("time")) return;
                 {
-                    var matchTime = progressRegex.Match(args.Data);
+                    var matchTime = progressRegex.Match(data);
                     if (!matchTime.Success) return;
+                    if (duration.TotalMilliseconds <= 0) return;
                     var hours =
                         int.Parse(matchTime.Groups[1].Value);
                     var minutes =
@@ -139,23 +161,19 @@ public class FfmpegHelper
                     var milliseconds =
                         int.Parse(matchTime.Groups[4].Value);
 
-                    var progress = new TimeSpan(0, hours, minutes,
+                    var progressTime = new TimeSpan(0, hours, minutes,
                         seconds, milliseconds);
                     var percentage =
-                        (int)(progress.TotalMilliseconds /
+                        (int)(progressTime.TotalMilliseconds /
                             duration.TotalMilliseconds * 100);
 
-                    progressBar.Report(percentage);
+                    progress.Report(percentage);
                 }
-            };
-
-            process.Start();
-            process.BeginErrorReadLine();
-            process.WaitForExit();
+            });
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            _consoleService.WriteLine(e.ToString());
             throw;
         }
     }

@@ -1,0 +1,9 @@
+namespace cutube;
+
+public interface IFileService
+{
+    bool Exists(string path);
+    void Delete(string path);
+    Task WriteAllBytesAsync(string path, byte[] data);
+    DateTime GetLastWriteTime(string path);
+}
