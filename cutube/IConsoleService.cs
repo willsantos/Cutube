@@ -9,6 +9,7 @@ public interface IConsoleService
     int CursorTop { get; set; }
     void Write(string value);
     void WriteLine(string message);
+    string? ReadLine();
 }
 
 [ExcludeFromCodeCoverage]
@@ -29,4 +30,5 @@ public class ConsoleService : IConsoleService
 
     public void Write(string value) => Console.Write(value);
     public void WriteLine(string message) => Console.WriteLine(message);
+    public string? ReadLine() => Console.ReadLine();
 }

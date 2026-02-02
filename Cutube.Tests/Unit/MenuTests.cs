@@ -100,4 +100,74 @@ public class MenuTests
 
         cutube.Menu.CustomFileName.Should().BeEmpty();
     }
+
+    [Fact]
+    public void OutputDirectory_DeveSerVazioPorPadrao()
+    {
+        var input = "https://youtube.com/watch?v=abc123\n00:01:00\n00:02:00\ncustom\n";
+        using var sw = new StringWriter();
+        using var sr = new StringReader(input);
+        Console.SetOut(sw);
+        Console.SetIn(sr);
+
+        cutube.Menu.Show();
+
+        cutube.Menu.OutputDirectory.Should().Be("");
+    }
+
+    [Fact]
+    public void OutputDirectory_DeveAceitarCaminhoCustomizado()
+    {
+        var input = "https://youtube.com/watch?v=abc123\n00:01:00\n00:02:00\ncustom\n/tmp/downloads\n";
+        using var sw = new StringWriter();
+        using var sr = new StringReader(input);
+        Console.SetOut(sw);
+        Console.SetIn(sr);
+
+        cutube.Menu.Show();
+
+        cutube.Menu.OutputDirectory.Should().Be("/tmp/downloads");
+    }
+
+    [Fact]
+    public void OutputDirectory_DeveAceitarCaminhoWindows()
+    {
+        var input = "https://youtube.com/watch?v=abc123\n00:01:00\n00:02:00\ncustom\nC:\\Videos\n";
+        using var sw = new StringWriter();
+        using var sr = new StringReader(input);
+        Console.SetOut(sw);
+        Console.SetIn(sr);
+
+        cutube.Menu.Show();
+
+        cutube.Menu.OutputDirectory.Should().Be("C:\\Videos");
+    }
+
+    [Fact]
+    public void OutputDirectory_DeveRemoverEspacosEmBranco()
+    {
+        var input = "https://youtube.com/watch?v=abc123\n00:01:00\n00:02:00\ncustom\n  /tmp/videos  \n";
+        using var sw = new StringWriter();
+        using var sr = new StringReader(input);
+        Console.SetOut(sw);
+        Console.SetIn(sr);
+
+        cutube.Menu.Show();
+
+        cutube.Menu.OutputDirectory.Should().Be("/tmp/videos");
+    }
+
+    [Fact]
+    public void OutputDirectory_DeveAceitarCaminhoRelativo()
+    {
+        var input = "https://youtube.com/watch?v=abc123\n00:01:00\n00:02:00\ncustom\n../downloads\n";
+        using var sw = new StringWriter();
+        using var sr = new StringReader(input);
+        Console.SetOut(sw);
+        Console.SetIn(sr);
+
+        cutube.Menu.Show();
+
+        cutube.Menu.OutputDirectory.Should().Be("../downloads");
+    }
 }

@@ -10,7 +10,8 @@ public static class Program
         using var app = new ProgramWorkflow(
             new MenuService(),
             new YtDlpHelper(),
-            new ConsoleService()
+            new ConsoleService(),
+            new FileService()
         );
 
         await app.RunAsync();

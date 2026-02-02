@@ -9,6 +9,7 @@ public interface IMenuService
     string Start { get; }
     string End { get; }
     string CustomFileName { get; }
+    string OutputDirectory { get; }
 }
 
 [ExcludeFromCodeCoverage]
@@ -19,4 +20,5 @@ public class MenuService : IMenuService
     public string Start => Menu.Start;
     public string End => Menu.End;
     public string CustomFileName => Menu.CustomFileName;
+    public string OutputDirectory => Menu.OutputDirectory;
 }

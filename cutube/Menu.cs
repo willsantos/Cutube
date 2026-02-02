@@ -10,6 +10,7 @@ public static class Menu
     public static string Start { get; private set; } = string.Empty;
     public static string End { get; private set; } = string.Empty;
     public static string CustomFileName { get; private set; } = string.Empty;
+    public static string OutputDirectory { get; private set; } = string.Empty;
 
     internal static void Reset()
     {
@@ -17,6 +18,7 @@ public static class Menu
         Start = string.Empty;
         End = string.Empty;
         CustomFileName = string.Empty;
+        OutputDirectory = string.Empty;
     }
 
     public static void Show()
@@ -37,6 +39,12 @@ public static class Menu
             CustomFileName = Path.GetFileNameWithoutExtension(input.Trim());
         }
 
+        Console.WriteLine("5 - Diretório de destino (opcional, Enter para usar atual): ");
+        var dirInput = Console.ReadLine() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(dirInput))
+        {
+            OutputDirectory = dirInput.Trim();
+        }
 
     }
 }
