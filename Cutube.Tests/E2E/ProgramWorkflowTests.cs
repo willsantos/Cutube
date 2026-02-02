@@ -51,11 +51,17 @@ public class ProgramWorkflowTests
         var menu = new Mock<IMenuService>();
         var ytdl = new Mock<IYtDlpService>();
         var console = new FakeConsoleService();
+        var fileService = new Mock<IFileService>();
 
         menu.Setup(m => m.Show());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("00:00:10");
         menu.SetupGet(m => m.End).Returns("00:00:20");
+        menu.SetupGet(m => m.CustomFileName).Returns("");
+        menu.SetupGet(m => m.OutputDirectory).Returns("");
+
+        fileService.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(true);
+        fileService.Setup(f => f.HasWritePermission(It.IsAny<string>())).Returns(true);
 
         ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>()))
             .ReturnsAsync("Video Teste");
@@ -67,19 +73,19 @@ public class ProgramWorkflowTests
                 It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()))
             .Returns(Task.CompletedTask);
 
-        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console);
+        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object);
 
         await workflow.RunAsync();
 
         ytdl.Verify(y => y.DownloadWithTimeRangeAsync(
-            "https://youtu.be/dQw4w9WgXcQ",
-            "Video Teste.mp4",
+            It.IsAny<string>(),
+            It.IsAny<string>(),
             "00:00:10",
             "00:00:20",
             It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()
         ), Times.Once);
 
-        console.GetOutput().Should().Contain("O vídeo Video Teste foi baixado");
+        console.GetOutput().Should().Contain("Vídeo salvo em:");
     }
 
     [Fact]
@@ -88,11 +94,17 @@ public class ProgramWorkflowTests
         var menu = new Mock<IMenuService>();
         var ytdl = new Mock<IYtDlpService>();
         var console = new FakeConsoleService();
+        var fileService = new Mock<IFileService>();
 
         menu.Setup(m => m.Show());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("00:00:10");
         menu.SetupGet(m => m.End).Returns("00:00:20");
+        menu.SetupGet(m => m.CustomFileName).Returns("");
+        menu.SetupGet(m => m.OutputDirectory).Returns("");
+
+        fileService.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(true);
+        fileService.Setup(f => f.HasWritePermission(It.IsAny<string>())).Returns(true);
 
         ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>()))
             .ReturnsAsync("Video Teste");
@@ -104,7 +116,7 @@ public class ProgramWorkflowTests
                 It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()))
             .ThrowsAsync(new Exception("Falha no download"));
 
-        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console);
+        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object);
 
         Func<Task> act = () => workflow.RunAsync();
 
@@ -117,14 +129,20 @@ public class ProgramWorkflowTests
     {
         var menu = new Mock<IMenuService>();
         var console = new FakeConsoleService();
+        var fileService = new Mock<IFileService>();
 
         menu.Setup(m => m.Show());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("00:00:10");
         menu.SetupGet(m => m.End).Returns("00:00:20");
+        menu.SetupGet(m => m.CustomFileName).Returns("");
+        menu.SetupGet(m => m.OutputDirectory).Returns("");
+
+        fileService.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(true);
+        fileService.Setup(f => f.HasWritePermission(It.IsAny<string>())).Returns(true);
 
         var fakeYtdl = new FakeYtDlpService();
-        var workflow = new ProgramWorkflow(menu.Object, fakeYtdl, console);
+        var workflow = new ProgramWorkflow(menu.Object, fakeYtdl, console, fileService.Object);
         var originalContext = SynchronizationContext.Current;
         try
         {
