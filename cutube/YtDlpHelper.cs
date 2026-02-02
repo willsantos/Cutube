@@ -426,10 +426,18 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         IProgress<DownloadProgress>? progress = null)
     {
         // Download de áudio completo primeiro
-        var tempFile = CreateTempFile();
+        var tempFile = CreateTempFile(".mp3");
         
         _consoleService.WriteLine("Baixando áudio completo...");
         await DownloadAudioFullAsync(url, tempFile, progress);
+        
+        // Verificar se arquivo temporário existe
+        if (!_fileService.Exists(tempFile))
+        {
+            throw new Exception($"Falha no download: arquivo temporário não criado ({tempFile})");
+        }
+        
+        _consoleService.WriteLine($"Arquivo temporário criado: {tempFile}");
         
         // Converter para MP3 e cortar com FFmpeg
         var timeStart = TimeHelper.GetStartSeconds(startTime);
@@ -448,6 +456,12 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             $"\"{outputFile}\"";
         
         ExecuteFfmpeg(arguments);
+        
+        // Verificar se arquivo de saída foi criado
+        if (!_fileService.Exists(outputFile))
+        {
+            throw new Exception($"Falha na conversão: arquivo de saída não criado ({outputFile})");
+        }
         
         // Limpar temp
         _fileService.Delete(tempFile);
@@ -471,9 +485,9 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    protected internal virtual string CreateTempFile()
+    protected internal virtual string CreateTempFile(string extension = ".mp4")
     {
-        return Path.GetTempFileName() + ".mp4";
+        return Path.GetTempFileName() + extension;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
