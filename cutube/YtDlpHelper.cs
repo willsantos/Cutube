@@ -198,9 +198,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
                 return;
             }
 
-            _consoleService.WriteLine($"Atualizando yt-dlp: {currentVersion} → {latestVersion}");
             await DownloadLatestVersion(_userPath);
-            _consoleService.WriteLine("✓ yt-dlp atualizado com sucesso!");
             
             // Atualizar referência
             _ytdl = new YoutubeDL { YoutubeDLPath = _userPath };
