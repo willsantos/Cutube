@@ -415,6 +415,61 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         _fileService.Delete(tempFile);
     }
 
+    /// <summary>
+    /// Download de áudio MP3 com recorte de tempo
+    /// </summary>
+    public async Task DownloadAudioAsync(
+        string url,
+        string outputFile,
+        string startTime,
+        string endTime,
+        IProgress<DownloadProgress>? progress = null)
+    {
+        // Download de áudio completo primeiro
+        var tempFile = CreateTempFile();
+        
+        _consoleService.WriteLine("Baixando áudio completo...");
+        await DownloadAudioFullAsync(url, tempFile, progress);
+        
+        // Converter para MP3 e cortar com FFmpeg
+        var timeStart = TimeHelper.GetStartSeconds(startTime);
+        var timeEnd = TimeHelper.GetEndSeconds(endTime);
+        var duration = timeEnd - timeStart;
+        
+        _consoleService.WriteLine($"Convertendo para MP3 e cortando ({startTime} - {endTime})...");
+        
+        var arguments =
+            $"-i \"{tempFile}\" " +
+            $"-ss {timeStart} " +
+            $"-t {duration} " +
+            $"-vn " +  // No video
+            $"-c:a libmp3lame " +
+            $"-q:a 2 " +  // Qualidade alta (~192kbps)
+            $"\"{outputFile}\"";
+        
+        ExecuteFfmpeg(arguments);
+        
+        // Limpar temp
+        _fileService.Delete(tempFile);
+    }
+
+    private async Task DownloadAudioFullAsync(
+        string url,
+        string outputFile,
+        IProgress<DownloadProgress>? progress = null)
+    {
+        var options = new OptionSet
+        {
+            Format = "bestaudio/best",
+            ExtractAudio = true,
+            AudioFormat = AudioConversionFormat.Mp3,
+            AudioQuality = 2,
+            Output = outputFile
+        };
+        
+        await RunVideoDownloadAsync(url, options, progress);
+    }
+
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     protected internal virtual string CreateTempFile()
     {

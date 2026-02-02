@@ -11,4 +11,10 @@ public interface IYtDlpService : IDisposable
         string startTime,
         string endTime,
         IProgress<DownloadProgress>? progress = null);
+    Task DownloadAudioAsync(
+        string url,
+        string outputFile,
+        string startTime,
+        string endTime,
+        IProgress<DownloadProgress>? progress = null);
 }

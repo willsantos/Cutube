@@ -103,6 +103,34 @@ public class YtDlpHelperTests
         }
     }
 
+    private class AudioWorkflowYtDlpHelper : YtDlpHelper
+    {
+        public OptionSet? CapturedAudioOptions { get; private set; }
+        public string? CapturedAudioFfmpegArguments { get; private set; }
+
+        public AudioWorkflowYtDlpHelper(
+            IFileService fileService,
+            IHttpClientService httpClientService,
+            IEnvironmentService environmentService,
+            IProcessService processService,
+            IConsoleService consoleService)
+            : base(fileService, httpClientService, environmentService, processService, consoleService, true)
+        {
+        }
+
+        protected internal override Task RunVideoDownloadAsync(
+            string url, OptionSet options, IProgress<DownloadProgress>? progress)
+        {
+            CapturedAudioOptions = options;
+            return Task.CompletedTask;
+        }
+
+        protected internal override void ExecuteFfmpeg(string arguments)
+        {
+            CapturedAudioFfmpegArguments = arguments;
+        }
+    }
+
     private class ThrowingDownloadHelper : YtDlpHelper
     {
         public string CurrentVersion { get; set; } = "2026.01.01";
@@ -229,6 +257,17 @@ public class YtDlpHelperTests
     private WorkflowYtDlpHelper CreateWorkflowHelper()
     {
         return new WorkflowYtDlpHelper(
+            _mockFile.Object,
+            _mockHttp.Object,
+            _mockEnv.Object,
+            _mockProcess.Object,
+            _mockConsole.Object
+        );
+    }
+
+    private AudioWorkflowYtDlpHelper CreateAudioWorkflowHelper()
+    {
+        return new AudioWorkflowYtDlpHelper(
             _mockFile.Object,
             _mockHttp.Object,
             _mockEnv.Object,
@@ -730,5 +769,63 @@ public class YtDlpHelperTests
         // Assert
         _mockHttp.Verify(x => x.GetByteArrayAsync(It.IsAny<string>()), Times.Once);
         _mockFile.Verify(x => x.WriteAllBytesAsync(It.IsAny<string>(), It.IsAny<byte[]>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DownloadAudioAsync_SetsCorrectOptions()
+    {
+        var helper = CreateAudioWorkflowHelper();
+
+        await helper.DownloadAudioAsync(
+            "https://youtu.be/test",
+            "output.mp3",
+            "00:00:10",
+            "00:00:20"
+        );
+
+        helper.CapturedAudioOptions.Should().NotBeNull();
+        helper.CapturedAudioOptions!.Format.Should().Be("bestaudio/best");
+        helper.CapturedAudioOptions.ExtractAudio.Should().BeTrue();
+        helper.CapturedAudioOptions.AudioFormat.Should().Be(AudioConversionFormat.Mp3);
+        helper.CapturedAudioOptions.AudioQuality.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task DownloadAudioAsync_UsesCorrectFfmpegCodec()
+    {
+        _mockFile.Setup(x => x.Delete(It.IsAny<string>()));
+
+        var helper = CreateAudioWorkflowHelper();
+
+        await helper.DownloadAudioAsync(
+            "https://youtu.be/test",
+            "output.mp3",
+            "00:00:10",
+            "00:00:20"
+        );
+
+        helper.CapturedAudioFfmpegArguments.Should().Contain("-c:a libmp3lame");
+        helper.CapturedAudioFfmpegArguments.Should().Contain("-q:a 2");
+        helper.CapturedAudioFfmpegArguments.Should().Contain("-vn");
+        helper.CapturedAudioFfmpegArguments.Should().Contain("-ss 10");
+        helper.CapturedAudioFfmpegArguments.Should().Contain("-t 10");
+        helper.CapturedAudioFfmpegArguments.Should().Contain("\"output.mp3\"");
+    }
+
+    [Fact]
+    public async Task DownloadAudioAsync_DeletesTempFile()
+    {
+        _mockFile.Setup(x => x.Delete("/tmp/temp.mp4"));
+
+        var helper = CreateAudioWorkflowHelper();
+
+        await helper.DownloadAudioAsync(
+            "https://youtu.be/test",
+            "output.mp3",
+            "00:00:10",
+            "00:00:20"
+        );
+
+        _mockFile.Verify(x => x.Delete(It.IsAny<string>()), Times.Once);
     }
 }

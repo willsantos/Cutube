@@ -11,6 +11,7 @@ public static class Menu
     public static string End { get; private set; } = string.Empty;
     public static string CustomFileName { get; private set; } = string.Empty;
     public static string OutputDirectory { get; private set; } = string.Empty;
+    public static bool AudioOnly { get; private set; } = false;
 
     internal static void Reset()
     {
@@ -19,6 +20,7 @@ public static class Menu
         End = string.Empty;
         CustomFileName = string.Empty;
         OutputDirectory = string.Empty;
+        AudioOnly = false;
     }
 
     public static void Show()
@@ -46,5 +48,10 @@ public static class Menu
             OutputDirectory = dirInput.Trim();
         }
 
+        Console.WriteLine("6 - Download completo ou áudio apenas?");
+        Console.WriteLine("   1 - Vídeo + Áudio (MP4)");
+        Console.WriteLine("   2 - Apenas Áudio (MP3)");
+        var audioChoice = Console.ReadLine();
+        AudioOnly = audioChoice == "2";
     }
 }
