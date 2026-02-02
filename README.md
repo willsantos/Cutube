@@ -25,7 +25,35 @@ Explorar funcionalidades de processos com FFMpeg.
 - [ ] Baixar videos de outras plataformas (e.g. Instagram)
 - [ ] Baixar somente o áudio
 - [ ] Criar instalador para Windows
-- [ ] Testar em MacOS e Linux
+ - [ ] Testar em MacOS e Linux
+
+
+## Gerenciamento de Tarefas
+
+Este projeto utiliza dois sistemas complementares para gerenciamento de trabalho:
+
+- **TASKS (Beads/bd):** Gerencia tarefas de desenvolvimento e features planejadas
+- **ISSUES (Linear):** Gerencia bugs reportados por usuários
+
+### Para desenvolvedores
+
+O projeto usa o **bd (Beads)** para rastreamento de tarefas de desenvolvimento:
+
+```bash
+# Ver tarefas disponíveis
+bd list
+
+# Ver detalhes de uma tarefa
+bd show <id>
+
+# Atualizar status da tarefa
+bd update <id> --status in_progress
+
+# Marcar como concluída
+bd close <id>
+```
+
+As tarefas ficam no repositório e sincronizam automaticamente com o git.
 
 
 # Tecnologias
