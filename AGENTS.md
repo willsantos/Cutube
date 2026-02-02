@@ -12,6 +12,104 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Task Sync Workflow
+
+This project uses dedicated branch `beads-sync` to synchronize task state from bd (beads) with git.
+
+### Tasks vs Issues
+
+**Tasks (bd/beads):** Planned work tracked in beads
+- Created via `bd ready`, `bd create`
+- Have IDs like Cutube-abc, Cutube-123
+- Status: open, in_progress, closed
+- Tracked in `.beads/issues.jsonl`
+
+**Issues (Problems):** Bugs or problems discovered
+- **DO NOT** automatically create task
+- Evaluate if it needs to become a bd task
+- Document in code comments if obvious
+- Create task manually only if: user asks OR it's future work
+
+### Beads Sync Branch
+
+**Dedicated branch:** `beads-sync`
+- Contains only task metadata (`.beads/`)
+- **NOT** project code
+- Auto-sync when switching branches (hook `post-checkout`)
+
+### Sync Commands
+
+```bash
+# After modifying tasks (close, update, create)
+bd sync                                             # Auto-commit in beads-sync
+git push origin beads-sync                          # Push sync
+
+# When switching branches (automatic via hook)
+git checkout feature/xyz                            # Hook runs: bd sync --import
+```
+
+### Hook post-checkout
+
+**Location:** `.githooks/post-checkout` and `.git/hooks/post-checkout`
+
+**Functionality:**
+```bash
+#!/bin/bash
+# Auto-import beads state when switching branches
+if [ "$3" -eq 1 ]; then
+    bd sync --import 2>/dev/null || true
+fi
+```
+
+**When it runs:**
+- On branch checkout
+- **NOT** on file checkout
+- Imports task state for current branch
+
+### Correct Workflow
+
+1. **Modify tasks:**
+   ```bash
+   bd close Cutube-abc                              # Close task
+   bd update Cutube-xyz --status in_progress        # Update status
+   ```
+
+2. **Sync with git:**
+   ```bash
+   bd sync                                          # Commit in beads-sync
+   git push origin beads-sync                       # Push
+   ```
+
+3. **Switch branches:**
+   ```bash
+   git checkout feature/nova-feature               # Hook auto-imports
+   ```
+
+### Configuration
+
+**Check config:**
+```bash
+bd config get sync.branch                           # Should be "beads-sync"
+```
+
+**If not configured:**
+```bash
+bd config set sync.branch beads-sync
+# Edit .beads/config.yaml, uncomment sync-branch
+```
+
+### Best Practices
+
+✅ **Always run `bd sync` after modifying tasks**
+✅ **Push beads-sync after closing/updating tasks**
+✅ **Do NOT create task branches (ex: chore/close-xyz)**
+✅ **Use only beads-sync for task metadata**
+✅ **Documentation and code go in normal branches**
+
+❌ **Do NOT commit `.beads/` in feature branches**
+❌ **Do NOT force push to beads-sync**
+❌ **Do NOT manually modify `.beads/`**
+
 ## Issue Tracking
 
 **⚠️ IMPORTANT:** Issues are tracked in **Linear**, NOT in bd (beads).
