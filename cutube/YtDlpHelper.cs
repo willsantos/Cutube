@@ -426,18 +426,36 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         IProgress<DownloadProgress>? progress = null)
     {
         // Download de áudio completo primeiro
-        var tempFile = CreateTempFile(".mp3");
+        var tempBase = Path.GetTempFileName();
+        var tempFile = tempBase + ".mp3";
         
         _consoleService.WriteLine("Baixando áudio completo...");
         await DownloadAudioFullAsync(url, tempFile, progress);
         
         // Verificar se arquivo temporário existe
+        // O yt-dlp pode ter criado com extensão diferente
+        var actualTempFile = tempFile;
         if (!_fileService.Exists(tempFile))
         {
-            throw new Exception($"Falha no download: arquivo temporário não criado ({tempFile})");
+            // Tenta sem extensão ou com outras extensões comuns de áudio
+            var altExtensions = new[] { "", ".m4a", ".webm", ".opus" };
+            foreach (var ext in altExtensions)
+            {
+                var altPath = tempBase + ext;
+                if (_fileService.Exists(altPath))
+                {
+                    actualTempFile = altPath;
+                    break;
+                }
+            }
         }
         
-        _consoleService.WriteLine($"Arquivo temporário criado: {tempFile}");
+        if (!_fileService.Exists(actualTempFile))
+        {
+            throw new Exception($"Falha no download: arquivo temporário não criado (esperado: {tempFile})");
+        }
+        
+        _consoleService.WriteLine($"Arquivo temporário criado: {actualTempFile}");
         
         // Converter para MP3 e cortar com FFmpeg
         var timeStart = TimeHelper.GetStartSeconds(startTime);
@@ -447,7 +465,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         _consoleService.WriteLine($"Convertendo para MP3 e cortando ({startTime} - {endTime})...");
         
         var arguments =
-            $"-i \"{tempFile}\" " +
+            $"-i \"{actualTempFile}\" " +
             $"-ss {timeStart} " +
             $"-t {duration} " +
             $"-vn " +  // No video
@@ -464,7 +482,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         }
         
         // Limpar temp
-        _fileService.Delete(tempFile);
+        _fileService.Delete(actualTempFile);
     }
 
     private async Task DownloadAudioFullAsync(
