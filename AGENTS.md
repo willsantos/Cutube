@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
+This project uses **bd** (beads) for **task tracking**. Run `bd onboard` to get started.
 
 ## Quick Reference
 
@@ -16,15 +16,34 @@ bd sync               # Sync with git
 
 This project uses dedicated branch `beads-sync` to synchronize task state from bd (beads) with git.
 
-### Tasks vs Issues
+### Task vs Issue Tracking
 
-**Tasks (bd/beads):** Planned work tracked in beads
+**⚠️ IMPORTANT DISTINCTION:**
+
+- **TASKS (bd/Beads):** Development tasks and features
+  - Tracked locally in `.beads/issues.jsonl`
+  - Managed via `bd` CLI commands
+  - Auto-synced with git
+  - Format: `Cutube-XXX` (e.g., Cutube-1yx)
+
+- **ISSUES (Linear):** User-reported bugs and problems
+  - Tracked in Linear workspace "Oroborus"
+  - Managed via Linear API/MCP
+  - Associated with "Cutube" project
+  - Format: `ORO-XXX` (e.g., ORO-5, ORO-6)
+
+**Workflow:**
+- Use BEADS for planned development work
+- Create Linear issues only when user explicitly requests
+- DO NOT automatically create Linear issues for minor bugs found during development
+
+**Beads Task Details:**
 - Created via `bd ready`, `bd create`
 - Have IDs like Cutube-abc, Cutube-123
 - Status: open, in_progress, closed
-- Tracked in `.beads/issues.jsonl`
 
-**Issues (Problems):** Bugs or problems discovered
+**Linear Issue Details:**
+- User-reported bugs or problems
 - **DO NOT** automatically create task
 - Evaluate if it needs to become a bd task
 - Document in code comments if obvious
@@ -110,7 +129,7 @@ bd config set sync.branch beads-sync
 ❌ **Do NOT force push to beads-sync**
 ❌ **Do NOT manually modify `.beads/`**
 
-## Issue Tracking
+## Linear Issue Management
 
 **⚠️ IMPORTANT:** Issues are tracked in **Linear**, NOT in bd (beads).
 
