@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using cutube;
 
 namespace Cutube.Tests.Helpers;
@@ -14,12 +16,13 @@ public class FakeProcessRunner : IProcessRunner
 
     public ProcessStartInfo? LastStartInfo { get; private set; }
 
-    public void Run(ProcessStartInfo startInfo, Action<string?> onErrorData)
+    public Task RunAsync(ProcessStartInfo startInfo, Action<string?> onErrorData, CancellationToken ct = default)
     {
         LastStartInfo = startInfo;
         foreach (var line in _stderrLines)
         {
             onErrorData(line);
         }
+        return Task.CompletedTask;
     }
 }

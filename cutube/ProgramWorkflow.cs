@@ -1,3 +1,4 @@
+using System.Threading;
 using YoutubeDLSharp;
 
 namespace cutube;
@@ -8,13 +9,20 @@ public class ProgramWorkflow : IDisposable
     private readonly IYtDlpService _ytdl;
     private readonly IConsoleService _console;
     private readonly IFileService _fileService;
+    private readonly CancellationToken _ct;
 
-    public ProgramWorkflow(IMenuService menu, IYtDlpService ytdl, IConsoleService console, IFileService fileService)
+    public ProgramWorkflow(
+        IMenuService menu,
+        IYtDlpService ytdl,
+        IConsoleService console,
+        IFileService fileService,
+        CancellationToken ct = default)
     {
         _menu = menu;
         _ytdl = ytdl;
         _console = console;
         _fileService = fileService;
+        _ct = ct;
     }
 
     public async Task RunAsync()
@@ -26,7 +34,7 @@ public class ProgramWorkflow : IDisposable
         var videoEnd = _menu.End;
 
         _console.WriteLine("Obtendo informações do vídeo...");
-        var videoTitle = await _ytdl.GetVideoTitleAsync(videoUrl);
+        var videoTitle = await _ytdl.GetVideoTitleAsync(videoUrl, _ct);
 
         var fileName = string.IsNullOrWhiteSpace(_menu.CustomFileName)
             ? videoTitle
@@ -89,7 +97,8 @@ public class ProgramWorkflow : IDisposable
                     output,
                     videoStart,
                     videoEnd,
-                    progress
+                    progress,
+                    _ct
                 );
             }
             else
@@ -99,9 +108,14 @@ public class ProgramWorkflow : IDisposable
                     output,
                     videoStart,
                     videoEnd,
-                    progress
+                    progress,
+                    _ct
                 );
             }
+        }
+        catch (OperationCanceledException)
+        {
+            _console.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
         }
         catch (Exception e)
         {

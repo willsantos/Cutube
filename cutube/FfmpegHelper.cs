@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace cutube;
 
-public class FfmpegHelper
+public class FfmpegHelper : IFfmpegHelper
 {
     private string FfmpegPath { get; set; }
     private string FfprobePath { get; set; }
@@ -102,7 +103,7 @@ public class FfmpegHelper
         return false;
     }
     
-    public void ExecuteFfmpeg(string arguments, IProgress<int> progress)
+    public void ExecuteFfmpeg(string arguments, IProgress<int> progress, CancellationToken ct = default)
     {
         
         var startInfo = new ProcessStartInfo
@@ -125,8 +126,11 @@ public class FfmpegHelper
             var duration = TimeSpan.Zero;
             var durationRegex = new Regex(@"Duration: (\d+):(\d+):(\d+).(\d+)");
             var progressRegex = new Regex(@"time=(\d+):(\d+):(\d+).(\d+)");
-            _processRunner.Run(startInfo, data =>
+            
+            _processRunner.RunAsync(startInfo, data =>
             {
+                ct.ThrowIfCancellationRequested();
+                
                 if (data == null) return;
                 if (data.Contains("Duration"))
                 {
@@ -169,7 +173,12 @@ public class FfmpegHelper
 
                     progress.Report(percentage);
                 }
-            });
+            }, ct).GetAwaiter().GetResult();
+        }
+        catch (OperationCanceledException)
+        {
+            _consoleService.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
+            throw;
         }
         catch (Exception e)
         {

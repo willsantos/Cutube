@@ -337,16 +337,16 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     /// <summary>
     /// Obtém título do vídeo e sanitiza para uso como filename
     /// </summary>
-    public async Task<string> GetVideoTitleAsync(string url)
+    public async Task<string> GetVideoTitleAsync(string url, CancellationToken ct = default)
     {
-        var title = await FetchVideoTitleRawAsync(url);
+        var title = await FetchVideoTitleRawAsync(url, ct);
         return TitleHelper.FormatTitle(title ?? "video");
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    protected internal virtual async Task<string?> FetchVideoTitleRawAsync(string url)
+    protected internal virtual async Task<string?> FetchVideoTitleRawAsync(string url, CancellationToken ct)
     {
-        var result = await _ytdl.RunVideoDataFetch(url);
+        var result = await _ytdl.RunVideoDataFetch(url, ct: ct);
         return result.Data.Title;
     }
 
@@ -356,7 +356,8 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     public async Task DownloadAsync(
         string url, 
         string outputFile,
-        IProgress<DownloadProgress>? progress = null)
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken ct = default)
     {
         // Download com melhor qualidade (video + audio mesclado em MP4)
         var options = new OptionSet
@@ -366,16 +367,17 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             Output = outputFile
         };
         
-        await RunVideoDownloadAsync(url, options, progress);
+        await RunVideoDownloadAsync(url, options, progress, ct);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
     protected internal virtual Task RunVideoDownloadAsync(
         string url,
         OptionSet options,
-        IProgress<DownloadProgress>? progress)
+        IProgress<DownloadProgress>? progress,
+        CancellationToken ct)
     {
-        return _ytdl.RunVideoDownload(url, overrideOptions: options, progress: progress);
+        return _ytdl.RunVideoDownload(url, overrideOptions: options, progress: progress, ct: ct);
     }
 
     /// <summary>
@@ -386,33 +388,43 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         string outputFile,
         string startTime,
         string endTime,
-        IProgress<DownloadProgress>? progress = null)
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken ct = default)
     {
         // Download completo primeiro
         var tempFile = CreateTempFile();
         
-        _consoleService.WriteLine("Baixando vídeo completo...");
-        await DownloadAsync(url, tempFile, progress);
-        
-        // Usar FFmpeg para corte
-        var timeStart = TimeHelper.GetStartSeconds(startTime);
-        var timeEnd = TimeHelper.GetEndSeconds(endTime);
-        var duration = timeEnd - timeStart;
-        
-        _consoleService.WriteLine($"Cortando vídeo ({startTime} - {endTime})...");
-        
-        var ffmpeg = new FfmpegHelper();
-        var arguments =
-            $"-i \"{tempFile}\" " +
-            $"-ss {timeStart} " +
-            $"-t {duration} " +
-            $"-c:v libx264 -c:a aac " +
-            $"\"{outputFile}\"";
-        
-        ExecuteFfmpeg(arguments);
-        
-        // Limpar temp
-        _fileService.Delete(tempFile);
+        try
+        {
+            _consoleService.WriteLine("Baixando vídeo completo...");
+            await DownloadAsync(url, tempFile, progress, ct);
+            
+            // Usar FFmpeg para corte
+            var timeStart = TimeHelper.GetStartSeconds(startTime);
+            var timeEnd = TimeHelper.GetEndSeconds(endTime);
+            var duration = timeEnd - timeStart;
+            
+            _consoleService.WriteLine($"Cortando vídeo ({startTime} - {endTime})...");
+            
+            var arguments =
+                $"-i \"{tempFile}\" " +
+                $"-ss {timeStart} " +
+                $"-t {duration} " +
+                $"-c:v libx264 -c:a aac " +
+                $"\"{outputFile}\"";
+            
+            ExecuteFfmpeg(arguments, new ProgressBar(), ct);
+            
+            // Limpar temp
+            _fileService.Delete(tempFile);
+        }
+        catch (OperationCanceledException)
+        {
+            // Cleanup arquivos temporários
+            CleanupTempFile(tempFile);
+            CleanupTempFile(outputFile);
+            throw;
+        }
     }
 
     /// <summary>
@@ -423,72 +435,92 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         string outputFile,
         string startTime,
         string endTime,
-        IProgress<DownloadProgress>? progress = null)
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken ct = default)
     {
         // Download de áudio completo primeiro
         var tempBase = Path.GetTempFileName();
         var tempFile = tempBase + ".mp3";
         
-        _consoleService.WriteLine("Baixando áudio completo...");
-        await DownloadAudioFullAsync(url, tempFile, progress);
-        
-        // Verificar se arquivo temporário existe
-        // O yt-dlp pode ter criado com extensão diferente
-        var actualTempFile = tempFile;
-        if (!_fileService.Exists(tempFile))
+        try
         {
-            // Tenta sem extensão ou com outras extensões comuns de áudio
+            _consoleService.WriteLine("Baixando áudio completo...");
+            await DownloadAudioFullAsync(url, tempFile, progress, ct);
+            
+            // Verificar se arquivo temporário existe
+            // O yt-dlp pode ter criado com extensão diferente
+            var actualTempFile = tempFile;
+            if (!_fileService.Exists(tempFile))
+            {
+                // Tenta sem extensão ou com outras extensões comuns de áudio
+                var altExtensions = new[] { "", ".m4a", ".webm", ".opus" };
+                foreach (var ext in altExtensions)
+                {
+                    var altPath = tempBase + ext;
+                    if (_fileService.Exists(altPath))
+                    {
+                        actualTempFile = altPath;
+                        break;
+                    }
+                }
+            }
+            
+            if (!_fileService.Exists(actualTempFile))
+            {
+                throw new Exception($"Falha no download: arquivo temporário não criado (esperado: {tempFile})");
+            }
+            
+            _consoleService.WriteLine($"Arquivo temporário criado: {actualTempFile}");
+            
+            // Converter para MP3 e cortar com FFmpeg
+            var timeStart = TimeHelper.GetStartSeconds(startTime);
+            var timeEnd = TimeHelper.GetEndSeconds(endTime);
+            var duration = timeEnd - timeStart;
+            
+            _consoleService.WriteLine($"Convertendo para MP3 e cortando ({startTime} - {endTime})...");
+            
+            var arguments =
+                $"-i \"{actualTempFile}\" " +
+                $"-ss {timeStart} " +
+                $"-t {duration} " +
+                $"-vn " +  // No video
+                $"-c:a libmp3lame " +
+                $"-q:a 2 " +  // Qualidade alta (~192kbps)
+                $"\"{outputFile}\"";
+            
+            ExecuteFfmpeg(arguments, new ProgressBar(), ct);
+            
+            // Verificar se arquivo de saída foi criado
+            if (!_fileService.Exists(outputFile))
+            {
+                throw new Exception($"Falha na conversão: arquivo de saída não criado ({outputFile})");
+            }
+            
+            // Limpar temp
+            _fileService.Delete(actualTempFile);
+        }
+        catch (OperationCanceledException)
+        {
+            // Cleanup arquivos temporários
+            CleanupTempFile(tempFile);
+            CleanupTempFile(outputFile);
+            
+            // Limpar arquivos com extensões alternativas
             var altExtensions = new[] { "", ".m4a", ".webm", ".opus" };
             foreach (var ext in altExtensions)
             {
-                var altPath = tempBase + ext;
-                if (_fileService.Exists(altPath))
-                {
-                    actualTempFile = altPath;
-                    break;
-                }
+                CleanupTempFile(tempBase + ext);
             }
+            
+            throw;
         }
-        
-        if (!_fileService.Exists(actualTempFile))
-        {
-            throw new Exception($"Falha no download: arquivo temporário não criado (esperado: {tempFile})");
-        }
-        
-        _consoleService.WriteLine($"Arquivo temporário criado: {actualTempFile}");
-        
-        // Converter para MP3 e cortar com FFmpeg
-        var timeStart = TimeHelper.GetStartSeconds(startTime);
-        var timeEnd = TimeHelper.GetEndSeconds(endTime);
-        var duration = timeEnd - timeStart;
-        
-        _consoleService.WriteLine($"Convertendo para MP3 e cortando ({startTime} - {endTime})...");
-        
-        var arguments =
-            $"-i \"{actualTempFile}\" " +
-            $"-ss {timeStart} " +
-            $"-t {duration} " +
-            $"-vn " +  // No video
-            $"-c:a libmp3lame " +
-            $"-q:a 2 " +  // Qualidade alta (~192kbps)
-            $"\"{outputFile}\"";
-        
-        ExecuteFfmpeg(arguments);
-        
-        // Verificar se arquivo de saída foi criado
-        if (!_fileService.Exists(outputFile))
-        {
-            throw new Exception($"Falha na conversão: arquivo de saída não criado ({outputFile})");
-        }
-        
-        // Limpar temp
-        _fileService.Delete(actualTempFile);
     }
 
     private async Task DownloadAudioFullAsync(
         string url,
         string outputFile,
-        IProgress<DownloadProgress>? progress = null)
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken ct = default)
     {
         var options = new OptionSet
         {
@@ -499,7 +531,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             Output = outputFile
         };
         
-        await RunVideoDownloadAsync(url, options, progress);
+        await RunVideoDownloadAsync(url, options, progress, ct);
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -509,10 +541,29 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    protected internal virtual void ExecuteFfmpeg(string arguments)
+    protected internal virtual void ExecuteFfmpeg(string arguments, IProgress<int> progress, CancellationToken ct)
     {
         var ffmpeg = new FfmpegHelper();
-        ffmpeg.ExecuteFfmpeg(arguments, new ProgressBar());
+        ffmpeg.ExecuteFfmpeg(arguments, progress, ct);
+    }
+
+    /// <summary>
+    /// Remove arquivo temporário se existir (silenciosamente)
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    protected internal virtual void CleanupTempFile(string path)
+    {
+        try
+        {
+            if (_fileService.Exists(path))
+            {
+                _fileService.Delete(path);
+            }
+        }
+        catch
+        {
+            // Ignorar erros de cleanup
+        }
     }
 
     #endregion
