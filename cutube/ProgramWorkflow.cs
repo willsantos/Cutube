@@ -72,8 +72,8 @@ public class ProgramWorkflow : IDisposable
 
         try
         {
-            var typeLabel = _menu.AudioOnly ? "áudio" : "vídeo";
-            _console.WriteLine($"Iniciando o download e corte do {typeLabel}...");
+            var typeLabelInicio = _menu.AudioOnly ? "áudio" : "vídeo";
+            _console.WriteLine($"Iniciando o download e corte do {typeLabelInicio}...");
             _console.WriteLine("Esse processo pode demorar, aguarde...");
 
             var progress = new Progress<DownloadProgress>(p =>
@@ -112,6 +112,11 @@ public class ProgramWorkflow : IDisposable
                     _ct
                 );
             }
+
+            var typeLabel = _menu.AudioOnly ? "Áudio" : "Vídeo";
+            _console.WriteLine(
+                $"✓ {typeLabel} salvo em: {Path.GetFullPath(output)}"
+            );
         }
         catch (OperationCanceledException)
         {
@@ -121,13 +126,6 @@ public class ProgramWorkflow : IDisposable
         {
             _console.WriteLine($"Erro: {e.Message}");
             throw;
-        }
-        finally
-        {
-            var typeLabel = _menu.AudioOnly ? "Áudio" : "Vídeo";
-            _console.WriteLine(
-                $"✓ {typeLabel} salvo em: {Path.GetFullPath(output)}"
-            );
         }
     }
 
