@@ -1,3 +1,4 @@
+using System.Threading;
 using YoutubeDLSharp;
 
 namespace cutube;
@@ -8,13 +9,20 @@ public class ProgramWorkflow : IDisposable
     private readonly IYtDlpService _ytdl;
     private readonly IConsoleService _console;
     private readonly IFileService _fileService;
+    private readonly CancellationToken _ct;
 
-    public ProgramWorkflow(IMenuService menu, IYtDlpService ytdl, IConsoleService console, IFileService fileService)
+    public ProgramWorkflow(
+        IMenuService menu,
+        IYtDlpService ytdl,
+        IConsoleService console,
+        IFileService fileService,
+        CancellationToken ct = default)
     {
         _menu = menu;
         _ytdl = ytdl;
         _console = console;
         _fileService = fileService;
+        _ct = ct;
     }
 
     public async Task RunAsync()
@@ -26,7 +34,7 @@ public class ProgramWorkflow : IDisposable
         var videoEnd = _menu.End;
 
         _console.WriteLine("Obtendo informações do vídeo...");
-        var videoTitle = await _ytdl.GetVideoTitleAsync(videoUrl);
+        var videoTitle = await _ytdl.GetVideoTitleAsync(videoUrl, _ct);
 
         var fileName = string.IsNullOrWhiteSpace(_menu.CustomFileName)
             ? videoTitle
@@ -64,8 +72,8 @@ public class ProgramWorkflow : IDisposable
 
         try
         {
-            var typeLabel = _menu.AudioOnly ? "áudio" : "vídeo";
-            _console.WriteLine($"Iniciando o download e corte do {typeLabel}...");
+            var typeLabelInicio = _menu.AudioOnly ? "áudio" : "vídeo";
+            _console.WriteLine($"Iniciando o download e corte do {typeLabelInicio}...");
             _console.WriteLine("Esse processo pode demorar, aguarde...");
 
             var progress = new Progress<DownloadProgress>(p =>
@@ -89,7 +97,8 @@ public class ProgramWorkflow : IDisposable
                     output,
                     videoStart,
                     videoEnd,
-                    progress
+                    progress,
+                    _ct
                 );
             }
             else
@@ -99,21 +108,24 @@ public class ProgramWorkflow : IDisposable
                     output,
                     videoStart,
                     videoEnd,
-                    progress
+                    progress,
+                    _ct
                 );
             }
+
+            var typeLabel = _menu.AudioOnly ? "Áudio" : "Vídeo";
+            _console.WriteLine(
+                $"✓ {typeLabel} salvo em: {Path.GetFullPath(output)}"
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            _console.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
         }
         catch (Exception e)
         {
             _console.WriteLine($"Erro: {e.Message}");
             throw;
-        }
-        finally
-        {
-            var typeLabel = _menu.AudioOnly ? "Áudio" : "Vídeo";
-            _console.WriteLine(
-                $"✓ {typeLabel} salvo em: {Path.GetFullPath(output)}"
-            );
         }
     }
 

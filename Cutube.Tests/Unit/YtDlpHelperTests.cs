@@ -86,10 +86,10 @@ public class YtDlpHelperTests
         {
         }
 
-        protected internal override Task<string?> FetchVideoTitleRawAsync(string url)
+        protected internal override Task<string?> FetchVideoTitleRawAsync(string url, CancellationToken ct)
             => Task.FromResult(RawTitle);
 
-        protected internal override Task RunVideoDownloadAsync(string url, OptionSet options, IProgress<DownloadProgress>? progress)
+        protected internal override Task RunVideoDownloadAsync(string url, OptionSet options, IProgress<DownloadProgress>? progress, CancellationToken ct)
         {
             CapturedOptions = options;
             return Task.CompletedTask;
@@ -97,7 +97,7 @@ public class YtDlpHelperTests
 
         protected internal override string CreateTempFile() => TempFilePath;
 
-        protected internal override void ExecuteFfmpeg(string arguments)
+        protected internal override void ExecuteFfmpeg(string arguments, IProgress<int> progress, CancellationToken ct)
         {
             CapturedFfmpegArguments = arguments;
         }
@@ -119,13 +119,13 @@ public class YtDlpHelperTests
         }
 
         protected internal override Task RunVideoDownloadAsync(
-            string url, OptionSet options, IProgress<DownloadProgress>? progress)
+            string url, OptionSet options, IProgress<DownloadProgress>? progress, CancellationToken ct)
         {
             CapturedAudioOptions = options;
             return Task.CompletedTask;
         }
 
-        protected internal override void ExecuteFfmpeg(string arguments)
+        protected internal override void ExecuteFfmpeg(string arguments, IProgress<int> progress, CancellationToken ct)
         {
             CapturedAudioFfmpegArguments = arguments;
         }
