@@ -29,11 +29,11 @@ public static class Menu
         Console.WriteLine("Desenvolvido por: Wilson Santos");
         Console.WriteLine("-----------------------------------------------");
         Console.WriteLine("1 - Digite a url do vídeo.");
-        Url =  Console.ReadLine() ?? throw new InvalidOperationException("A url não pode ser vazia.");
+        Url =  Console.ReadLine() ?? throw new InvalidOperationException("❌ URL não pode ser vazia. Digite uma URL válida do YouTube (ex: https://youtube.com/watch?v=... ou https://youtu.be/...)");
         Console.WriteLine("2 - Digite o tempo de início (ex: 00:01:30, 1:30, 90s, 1h30m).");
-        Start = Console.ReadLine() ?? throw new InvalidOperationException("O tempo de inicio não pode ser vazio.");
+        Start = Console.ReadLine() ?? throw new InvalidOperationException("❌ Tempo de início não pode ser vazio. Use formatos como: 00:01:30, 1:30, 90s, 1h30m.");
         Console.WriteLine("3 - Digite o tempo de fim (ex: 00:02:00, 2:00, 120s, 2m).");
-        End = Console.ReadLine() ?? throw new InvalidOperationException("O tempo de fim não pode ser vazio.");
+        End = Console.ReadLine() ?? throw new InvalidOperationException("❌ Tempo de fim não pode ser vazio. Use formatos como: 00:02:00, 2:00, 120s, 2m.");
         Console.WriteLine("4 - Digite o nome do arquivo (opcional, pressione Enter para usar título)");
         var input = Console.ReadLine() ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(input))
