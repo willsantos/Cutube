@@ -59,11 +59,13 @@ public class ProgramWorkflow : IDisposable
             return;
         }
 
-        var output = Path.Combine(outputDir, $"{fileName}.mp4");
+        var extension = _menu.AudioOnly ? ".mp3" : ".mp4";
+        var output = Path.Combine(outputDir, $"{fileName}{extension}");
 
         try
         {
-            _console.WriteLine("Iniciando o download e corte do vídeo...");
+            var typeLabel = _menu.AudioOnly ? "áudio" : "vídeo";
+            _console.WriteLine($"Iniciando o download e corte do {typeLabel}...");
             _console.WriteLine("Esse processo pode demorar, aguarde...");
 
             var progress = new Progress<DownloadProgress>(p =>
@@ -80,13 +82,26 @@ public class ProgramWorkflow : IDisposable
                 }
             });
 
-            await _ytdl.DownloadWithTimeRangeAsync(
-                videoUrl,
-                output,
-                videoStart,
-                videoEnd,
-                progress
-            );
+            if (_menu.AudioOnly)
+            {
+                await _ytdl.DownloadAudioAsync(
+                    videoUrl,
+                    output,
+                    videoStart,
+                    videoEnd,
+                    progress
+                );
+            }
+            else
+            {
+                await _ytdl.DownloadWithTimeRangeAsync(
+                    videoUrl,
+                    output,
+                    videoStart,
+                    videoEnd,
+                    progress
+                );
+            }
         }
         catch (Exception e)
         {
@@ -95,8 +110,9 @@ public class ProgramWorkflow : IDisposable
         }
         finally
         {
+            var typeLabel = _menu.AudioOnly ? "Áudio" : "Vídeo";
             _console.WriteLine(
-                $"✓ Vídeo salvo em: {Path.GetFullPath(output)}"
+                $"✓ {typeLabel} salvo em: {Path.GetFullPath(output)}"
             );
         }
     }

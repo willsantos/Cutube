@@ -41,6 +41,26 @@ public class ProgramWorkflowTests
             return Task.CompletedTask;
         }
 
+        public Task DownloadAudioAsync(
+            string url,
+            string outputFile,
+            string startTime,
+            string endTime,
+            IProgress<YoutubeDLSharp.DownloadProgress>? progress = null)
+        {
+            ProgressCalled = true;
+            progress?.Report(new YoutubeDLSharp.DownloadProgress(
+                YoutubeDLSharp.DownloadState.Downloading,
+                1.0f,
+                "",
+                "",
+                "",
+                0,
+                ""
+            ));
+            return Task.CompletedTask;
+        }
+
         public void Dispose()
         {
         }

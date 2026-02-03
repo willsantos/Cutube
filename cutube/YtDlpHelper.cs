@@ -415,10 +415,97 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         _fileService.Delete(tempFile);
     }
 
-    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-    protected internal virtual string CreateTempFile()
+    /// <summary>
+    /// Download de áudio MP3 com recorte de tempo
+    /// </summary>
+    public async Task DownloadAudioAsync(
+        string url,
+        string outputFile,
+        string startTime,
+        string endTime,
+        IProgress<DownloadProgress>? progress = null)
     {
-        return Path.GetTempFileName() + ".mp4";
+        // Download de áudio completo primeiro
+        var tempBase = Path.GetTempFileName();
+        var tempFile = tempBase + ".mp3";
+        
+        _consoleService.WriteLine("Baixando áudio completo...");
+        await DownloadAudioFullAsync(url, tempFile, progress);
+        
+        // Verificar se arquivo temporário existe
+        // O yt-dlp pode ter criado com extensão diferente
+        var actualTempFile = tempFile;
+        if (!_fileService.Exists(tempFile))
+        {
+            // Tenta sem extensão ou com outras extensões comuns de áudio
+            var altExtensions = new[] { "", ".m4a", ".webm", ".opus" };
+            foreach (var ext in altExtensions)
+            {
+                var altPath = tempBase + ext;
+                if (_fileService.Exists(altPath))
+                {
+                    actualTempFile = altPath;
+                    break;
+                }
+            }
+        }
+        
+        if (!_fileService.Exists(actualTempFile))
+        {
+            throw new Exception($"Falha no download: arquivo temporário não criado (esperado: {tempFile})");
+        }
+        
+        _consoleService.WriteLine($"Arquivo temporário criado: {actualTempFile}");
+        
+        // Converter para MP3 e cortar com FFmpeg
+        var timeStart = TimeHelper.GetStartSeconds(startTime);
+        var timeEnd = TimeHelper.GetEndSeconds(endTime);
+        var duration = timeEnd - timeStart;
+        
+        _consoleService.WriteLine($"Convertendo para MP3 e cortando ({startTime} - {endTime})...");
+        
+        var arguments =
+            $"-i \"{actualTempFile}\" " +
+            $"-ss {timeStart} " +
+            $"-t {duration} " +
+            $"-vn " +  // No video
+            $"-c:a libmp3lame " +
+            $"-q:a 2 " +  // Qualidade alta (~192kbps)
+            $"\"{outputFile}\"";
+        
+        ExecuteFfmpeg(arguments);
+        
+        // Verificar se arquivo de saída foi criado
+        if (!_fileService.Exists(outputFile))
+        {
+            throw new Exception($"Falha na conversão: arquivo de saída não criado ({outputFile})");
+        }
+        
+        // Limpar temp
+        _fileService.Delete(actualTempFile);
+    }
+
+    private async Task DownloadAudioFullAsync(
+        string url,
+        string outputFile,
+        IProgress<DownloadProgress>? progress = null)
+    {
+        var options = new OptionSet
+        {
+            Format = "bestaudio/best",
+            ExtractAudio = true,
+            AudioFormat = AudioConversionFormat.Mp3,
+            AudioQuality = 2,
+            Output = outputFile
+        };
+        
+        await RunVideoDownloadAsync(url, options, progress);
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    protected internal virtual string CreateTempFile(string extension = ".mp4")
+    {
+        return Path.GetTempFileName() + extension;
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]

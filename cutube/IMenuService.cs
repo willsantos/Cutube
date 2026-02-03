@@ -10,6 +10,7 @@ public interface IMenuService
     string End { get; }
     string CustomFileName { get; }
     string OutputDirectory { get; }
+    bool AudioOnly { get; }
 }
 
 [ExcludeFromCodeCoverage]
@@ -21,4 +22,5 @@ public class MenuService : IMenuService
     public string End => Menu.End;
     public string CustomFileName => Menu.CustomFileName;
     public string OutputDirectory => Menu.OutputDirectory;
+    public bool AudioOnly => Menu.AudioOnly;
 }
