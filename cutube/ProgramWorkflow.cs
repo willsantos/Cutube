@@ -29,6 +29,14 @@ public class ProgramWorkflow : IDisposable
     {
         _menu.Show();
 
+        ValidationHelper.ValidateUrl(_menu.Url);
+        ValidationHelper.ValidateTimeRange(_menu.Start, _menu.End);
+
+        if (!string.IsNullOrWhiteSpace(_menu.CustomFileName))
+        {
+            ValidationHelper.ValidateFileName(_menu.CustomFileName);
+        }
+
         var videoUrl = _menu.Url;
         var videoStart = _menu.Start;
         var videoEnd = _menu.End;
@@ -61,11 +69,7 @@ public class ProgramWorkflow : IDisposable
             }
         }
 
-        if (!_fileService.HasWritePermission(outputDir))
-        {
-            _console.WriteLine($"❌ Erro: Sem permissão de escrita em '{outputDir}'");
-            return;
-        }
+        ValidationHelper.ValidateDirectory(outputDir, _fileService);
 
         var extension = _menu.AudioOnly ? ".mp3" : ".mp4";
         var output = Path.Combine(outputDir, $"{fileName}{extension}");
