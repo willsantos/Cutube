@@ -80,4 +80,24 @@ public static class ValidationHelper
                 $"❌ Tempo de fim deve ser maior que o tempo de início. Início: {start}s ({startSeconds}s), Fim: {end}s ({endSeconds}s)");
         }
     }
+
+    public static bool IsDirectoryWritable(string path, IFileService fileService)
+    {
+        return fileService.DirectoryExists(path) && fileService.HasWritePermission(path);
+    }
+
+    public static void ValidateDirectory(string path, IFileService fileService)
+    {
+        if (!fileService.DirectoryExists(path))
+        {
+            throw new DirectoryNotFoundException(
+                $"❌ Diretório não encontrado: '{path}'. Verifique se o caminho está correto ou crie o diretório antes de continuar.");
+        }
+
+        if (!fileService.HasWritePermission(path))
+        {
+            throw new UnauthorizedAccessException(
+                $"❌ Sem permissão de escrita em '{path}'. Escolha outro diretório ou verifique as permissões.");
+        }
+    }
 }
