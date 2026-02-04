@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using cutube;
 using Cutube.Tests.Helpers;
+using Cutube.ErrorHandling;
 using Xunit;
 
 namespace Cutube.Tests.E2E;
@@ -19,14 +20,15 @@ public class ProgramWorkflowTests
     {
         public bool ProgressCalled { get; private set; }
 
-        public Task<string> GetVideoTitleAsync(string url) => Task.FromResult("Video Teste");
+        public Task<string> GetVideoTitleAsync(string url, CancellationToken ct = default) => Task.FromResult("Video Teste");
 
         public Task DownloadWithTimeRangeAsync(
             string url,
             string outputFile,
             string startTime,
             string endTime,
-            IProgress<YoutubeDLSharp.DownloadProgress>? progress = null)
+            IProgress<YoutubeDLSharp.DownloadProgress>? progress = null,
+            CancellationToken ct = default)
         {
             ProgressCalled = true;
             progress?.Report(new YoutubeDLSharp.DownloadProgress(
@@ -46,7 +48,8 @@ public class ProgramWorkflowTests
             string outputFile,
             string startTime,
             string endTime,
-            IProgress<YoutubeDLSharp.DownloadProgress>? progress = null)
+            IProgress<YoutubeDLSharp.DownloadProgress>? progress = null,
+            CancellationToken ct = default)
         {
             ProgressCalled = true;
             progress?.Report(new YoutubeDLSharp.DownloadProgress(
@@ -73,7 +76,7 @@ public class ProgramWorkflowTests
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
 
-        menu.Setup(m => m.Show());
+        menu.Setup(m => m.Show(console, fileService.Object, It.IsAny<IErrorHandler>())).Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("00:00:10");
         menu.SetupGet(m => m.End).Returns("00:00:20");
@@ -83,14 +86,15 @@ public class ProgramWorkflowTests
         fileService.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(true);
         fileService.Setup(f => f.HasWritePermission(It.IsAny<string>())).Returns(true);
 
-        ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>()))
+        ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>(), It.IsAny<System.Threading.CancellationToken>()))
             .ReturnsAsync("Video Teste");
         ytdl.Setup(y => y.DownloadWithTimeRangeAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()))
+                It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>(),
+                It.IsAny<System.Threading.CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object);
@@ -102,7 +106,8 @@ public class ProgramWorkflowTests
             It.IsAny<string>(),
             "00:00:10",
             "00:00:20",
-            It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()
+            It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>(),
+            It.IsAny<System.Threading.CancellationToken>()
         ), Times.Once);
 
         console.GetOutput().Should().Contain("Vídeo salvo em:");
@@ -116,7 +121,7 @@ public class ProgramWorkflowTests
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
 
-        menu.Setup(m => m.Show());
+        menu.Setup(m => m.Show(console, fileService.Object, It.IsAny<IErrorHandler>())).Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("00:00:10");
         menu.SetupGet(m => m.End).Returns("00:00:20");
@@ -126,14 +131,15 @@ public class ProgramWorkflowTests
         fileService.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(true);
         fileService.Setup(f => f.HasWritePermission(It.IsAny<string>())).Returns(true);
 
-        ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>()))
+        ytdl.Setup(y => y.GetVideoTitleAsync(It.IsAny<string>(), It.IsAny<System.Threading.CancellationToken>()))
             .ReturnsAsync("Video Teste");
         ytdl.Setup(y => y.DownloadWithTimeRangeAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
                 It.IsAny<string>(),
-                It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>()))
+                It.IsAny<IProgress<YoutubeDLSharp.DownloadProgress>>(),
+                It.IsAny<System.Threading.CancellationToken>()))
             .ThrowsAsync(new Exception("Falha no download"));
 
         var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object);
@@ -151,7 +157,7 @@ public class ProgramWorkflowTests
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
 
-        menu.Setup(m => m.Show());
+        menu.Setup(m => m.Show(console, fileService.Object, It.IsAny<IErrorHandler>())).Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("00:00:10");
         menu.SetupGet(m => m.End).Returns("00:00:20");
