@@ -1,5 +1,6 @@
 using System.Threading;
 using YoutubeDLSharp;
+using Cutube.Logging;
 
 namespace cutube;
 
@@ -10,19 +11,22 @@ public class ProgramWorkflow : IDisposable
     private readonly IConsoleService _console;
     private readonly IFileService _fileService;
     private readonly CancellationToken _ct;
+    private readonly ILoggerService? _logger;
 
     public ProgramWorkflow(
         IMenuService menu,
         IYtDlpService ytdl,
         IConsoleService console,
         IFileService fileService,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        ILoggerService? logger = null)
     {
         _menu = menu;
         _ytdl = ytdl;
         _console = console;
         _fileService = fileService;
         _ct = ct;
+        _logger = logger;
     }
 
     public async Task RunAsync()

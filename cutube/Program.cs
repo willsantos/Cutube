@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using Cutube.Logging;
 
 namespace cutube;
 
@@ -17,6 +18,9 @@ public static class Program
             Console.WriteLine("\n⚠️  Cancelando operação...");
         };
 
+        var environmentService = new EnvironmentService();
+        using var loggerService = new FileLoggerService(environmentService);
+
         try
         {
             using var app = new ProgramWorkflow(
@@ -24,7 +28,8 @@ public static class Program
                 new YtDlpHelper(),
                 new ConsoleService(),
                 new FileService(),
-                cts.Token
+                cts.Token,
+                loggerService
             );
 
             await app.RunAsync();
