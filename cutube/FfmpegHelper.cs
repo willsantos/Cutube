@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Cutube.Logging;
+using Cutube.ErrorHandling;
 
 namespace cutube;
 
@@ -13,6 +15,8 @@ public class FfmpegHelper : IFfmpegHelper
     private readonly IFileService _fileService;
     private readonly IProcessRunner _processRunner;
     private readonly IConsoleService _consoleService;
+    private readonly IErrorHandler? _errorHandler;
+    private readonly ILoggerService? _logger;
     
     private static readonly string[] FfmpegExecutableNames = new string[]
     {
@@ -39,12 +43,16 @@ public class FfmpegHelper : IFfmpegHelper
         IEnvironmentService environmentService,
         IFileService fileService,
         IProcessRunner processRunner,
-        IConsoleService consoleService)
+        IConsoleService consoleService,
+        IErrorHandler? errorHandler = null,
+        ILoggerService? logger = null)
     {
         _environmentService = environmentService;
         _fileService = fileService;
         _processRunner = processRunner;
         _consoleService = consoleService;
+        _errorHandler = errorHandler;
+        _logger = logger;
 
         FfmpegPath = GetFfmpegPath();
         FfprobePath = GetFfprobePath();
@@ -182,7 +190,13 @@ public class FfmpegHelper : IFfmpegHelper
         }
         catch (Exception e)
         {
-            _consoleService.WriteLine(e.ToString());
+            _logger?.LogError(e, "Erro ao executar FFmpeg");
+            
+            var errorMessage = _errorHandler != null 
+                ? _errorHandler.GetUserFriendlyMessage(e)
+                : "Erro ao processar vídeo com FFmpeg.";
+            
+            _consoleService.WriteLine($"Erro: {errorMessage}");
             throw;
         }
     }
