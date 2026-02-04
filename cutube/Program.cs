@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Cutube.Logging;
+using Cutube.ErrorHandling;
 
 namespace cutube;
 
@@ -20,6 +21,7 @@ public static class Program
 
         var environmentService = new EnvironmentService();
         using var loggerService = new FileLoggerService(environmentService);
+        var errorHandler = new ErrorHandler(loggerService);
 
         try
         {
@@ -29,10 +31,17 @@ public static class Program
                 new ConsoleService(),
                 new FileService(),
                 cts.Token,
-                loggerService
+                loggerService,
+                errorHandler
             );
 
-            await app.RunAsync();
+            var result = await app.RunAsync();
+            
+            if (result.IsFailure)
+            {
+                Console.WriteLine($"\n❌ {result.ErrorMessage}");
+                Environment.Exit(1);
+            }
         }
         catch (OperationCanceledException)
         {
