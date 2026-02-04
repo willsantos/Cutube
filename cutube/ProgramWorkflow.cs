@@ -1,6 +1,7 @@
 using System.Threading;
 using YoutubeDLSharp;
 using Cutube.Logging;
+using Cutube.ErrorHandling;
 
 namespace cutube;
 
@@ -12,6 +13,7 @@ public class ProgramWorkflow : IDisposable
     private readonly IFileService _fileService;
     private readonly CancellationToken _ct;
     private readonly ILoggerService? _logger;
+    private readonly IErrorHandler? _errorHandler;
 
     public ProgramWorkflow(
         IMenuService menu,
@@ -19,7 +21,8 @@ public class ProgramWorkflow : IDisposable
         IConsoleService console,
         IFileService fileService,
         CancellationToken ct = default,
-        ILoggerService? logger = null)
+        ILoggerService? logger = null,
+        IErrorHandler? errorHandler = null)
     {
         _menu = menu;
         _ytdl = ytdl;
@@ -27,57 +30,147 @@ public class ProgramWorkflow : IDisposable
         _fileService = fileService;
         _ct = ct;
         _logger = logger;
+        _errorHandler = errorHandler;
     }
 
-    public async Task RunAsync()
+    public async Task<Result> RunAsync()
     {
-        _menu.Show();
-
-        ValidationHelper.ValidateUrl(_menu.Url);
-        ValidationHelper.ValidateTimeRange(_menu.Start, _menu.End);
-
-        if (!string.IsNullOrWhiteSpace(_menu.CustomFileName))
+        try
         {
-            ValidationHelper.ValidateFileName(_menu.CustomFileName);
+            _menu.Show();
+
+            var validationResult = TryValidateInput();
+            if (validationResult.IsFailure)
+                return validationResult;
+
+            var videoUrl = _menu.Url;
+            var videoStart = _menu.Start;
+            var videoEnd = _menu.End;
+
+            _console.WriteLine("Obtendo informações do vídeo...");
+
+            var titleResult = await GetVideoTitleAsync(videoUrl);
+            if (titleResult.IsFailure)
+                return titleResult;
+
+            var fileName = string.IsNullOrWhiteSpace(_menu.CustomFileName)
+                ? titleResult.Value
+                : TitleHelper.FormatTitle(_menu.CustomFileName);
+
+            var outputDirResult = GetOutputDirectory();
+            if (outputDirResult.IsFailure)
+                return outputDirResult;
+
+            var outputDir = outputDirResult.Value;
+            var extension = _menu.AudioOnly ? ".mp3" : ".mp4";
+            var output = Path.Combine(outputDir, $"{fileName}{extension}");
+
+            return await DownloadVideoAsync(videoUrl, output, videoStart, videoEnd);
         }
-
-        var videoUrl = _menu.Url;
-        var videoStart = _menu.Start;
-        var videoEnd = _menu.End;
-
-        _console.WriteLine("Obtendo informações do vídeo...");
-        var videoTitle = await _ytdl.GetVideoTitleAsync(videoUrl, _ct);
-
-        var fileName = string.IsNullOrWhiteSpace(_menu.CustomFileName)
-            ? videoTitle
-            : TitleHelper.FormatTitle(_menu.CustomFileName);
-
-        var outputDir = string.IsNullOrWhiteSpace(_menu.OutputDirectory)
-            ? Directory.GetCurrentDirectory()
-            : NormalizePath(_menu.OutputDirectory);
-
-        if (!_fileService.DirectoryExists(outputDir))
+        catch (OperationCanceledException)
         {
-            _console.WriteLine($"⚠️  Diretório '{outputDir}' não existe.");
-            _console.Write("Deseja criá-lo? (s/n): ");
-            var response = _console.ReadLine()?.ToLower();
-            if (response == "s")
+            _console.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            if (_errorHandler != null)
             {
-                _fileService.CreateDirectory(outputDir);
-                _console.WriteLine($"✓ Diretório criado: {outputDir}");
+                var errorMessage = _errorHandler.GetUserFriendlyMessage(ex);
+                _console.WriteLine($"Erro: {errorMessage}");
+                return Result.Failure(ErrorType.Critical, errorMessage, ex);
             }
             else
             {
-                _console.WriteLine("❌ Operação cancelada.");
-                return;
+                _console.WriteLine($"Erro: {ex.Message}");
+                return Result.Failure(ErrorType.Critical, ex.Message, ex);
             }
         }
+    }
 
-        ValidationHelper.ValidateDirectory(outputDir, _fileService);
+    private Result TryValidateInput()
+    {
+        try
+        {
+            ValidationHelper.ValidateUrl(_menu.Url);
+            ValidationHelper.ValidateTimeRange(_menu.Start, _menu.End);
 
-        var extension = _menu.AudioOnly ? ".mp3" : ".mp4";
-        var output = Path.Combine(outputDir, $"{fileName}{extension}");
+            if (!string.IsNullOrWhiteSpace(_menu.CustomFileName))
+            {
+                ValidationHelper.ValidateFileName(_menu.CustomFileName);
+            }
 
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            if (_errorHandler != null)
+            {
+                var message = _errorHandler.GetUserFriendlyMessage(ex);
+                return Result.Failure(ErrorType.Validation, message, ex);
+            }
+            return Result.Failure(ErrorType.Validation, ex.Message, ex);
+        }
+    }
+
+    private async Task<Result<string>> GetVideoTitleAsync(string url)
+    {
+        if (_errorHandler != null)
+        {
+            return await _errorHandler.TryExecuteAsync(
+                () => _ytdl.GetVideoTitleAsync(url, _ct),
+                ErrorType.Network,
+                $"Obter informações do vídeo: {url}"
+            );
+        }
+        else
+        {
+            var title = await _ytdl.GetVideoTitleAsync(url, _ct);
+            return Result<string>.Success(title);
+        }
+    }
+
+    private Result<string> GetOutputDirectory()
+    {
+        try
+        {
+            var outputDir = string.IsNullOrWhiteSpace(_menu.OutputDirectory)
+                ? Directory.GetCurrentDirectory()
+                : NormalizePath(_menu.OutputDirectory);
+
+            if (!_fileService.DirectoryExists(outputDir))
+            {
+                _console.WriteLine($"⚠️  Diretório '{outputDir}' não existe.");
+                _console.Write("Deseja criá-lo? (s/n): ");
+                var response = _console.ReadLine()?.ToLower();
+                if (response == "s")
+                {
+                    _fileService.CreateDirectory(outputDir);
+                    _console.WriteLine($"✓ Diretório criado: {outputDir}");
+                }
+                else
+                {
+                    _console.WriteLine("❌ Operação cancelada.");
+                    return Result<string>.Failure(ErrorType.Validation, "Operação cancelada pelo usuário");
+                }
+            }
+
+            ValidationHelper.ValidateDirectory(outputDir, _fileService);
+            return Result<string>.Success(outputDir);
+        }
+        catch (Exception ex)
+        {
+            if (_errorHandler != null)
+            {
+                var message = _errorHandler.GetUserFriendlyMessage(ex);
+                return Result<string>.Failure(ErrorType.FileSystem, message, ex);
+            }
+            return Result<string>.Failure(ErrorType.FileSystem, ex.Message, ex);
+        }
+    }
+
+    private async Task<Result> DownloadVideoAsync(string url, string output, string start, string end)
+    {
         try
         {
             var typeLabelInicio = _menu.AudioOnly ? "áudio" : "vídeo";
@@ -101,10 +194,10 @@ public class ProgramWorkflow : IDisposable
             if (_menu.AudioOnly)
             {
                 await _ytdl.DownloadAudioAsync(
-                    videoUrl,
+                    url,
                     output,
-                    videoStart,
-                    videoEnd,
+                    start,
+                    end,
                     progress,
                     _ct
                 );
@@ -112,10 +205,10 @@ public class ProgramWorkflow : IDisposable
             else
             {
                 await _ytdl.DownloadWithTimeRangeAsync(
-                    videoUrl,
+                    url,
                     output,
-                    videoStart,
-                    videoEnd,
+                    start,
+                    end,
                     progress,
                     _ct
                 );
@@ -125,15 +218,17 @@ public class ProgramWorkflow : IDisposable
             _console.WriteLine(
                 $"✓ {typeLabel} salvo em: {Path.GetFullPath(output)}"
             );
+
+            return Result.Success();
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
-            _console.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
-        }
-        catch (Exception e)
-        {
-            _console.WriteLine($"Erro: {e.Message}");
-            throw;
+            if (_errorHandler != null)
+            {
+                var message = _errorHandler.GetUserFriendlyMessage(ex);
+                return Result.Failure(ErrorType.Network, message, ex);
+            }
+            return Result.Failure(ErrorType.Network, ex.Message, ex);
         }
     }
 
