@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
+using Cutube.Logging;
+using Cutube.ErrorHandling;
 
 namespace cutube;
 
@@ -24,6 +26,8 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     private readonly IProcessService _processService;
     private readonly IConsoleService _consoleService;
     private readonly bool _skipAutoUpdate;
+    private readonly IErrorHandler? _errorHandler;
+    private readonly ILoggerService? _logger;
 
     // Constructor for production use
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -45,7 +49,9 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         IEnvironmentService environmentService,
         IProcessService processService,
         IConsoleService consoleService,
-        bool skipAutoUpdate = false
+        bool skipAutoUpdate = false,
+        IErrorHandler? errorHandler = null,
+        ILoggerService? logger = null
     )
     {
         _fileService = fileService;
@@ -54,6 +60,8 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         _processService = processService;
         _consoleService = consoleService;
         _skipAutoUpdate = skipAutoUpdate;
+        _errorHandler = errorHandler;
+        _logger = logger;
 
         _bundledPath = GetBundledPath();
         _userPath = GetUserPath();
@@ -339,8 +347,24 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     /// </summary>
     public async Task<string> GetVideoTitleAsync(string url, CancellationToken ct = default)
     {
-        var title = await FetchVideoTitleRawAsync(url, ct);
-        return TitleHelper.FormatTitle(title ?? "video");
+        if (_errorHandler != null)
+        {
+            var result = await _errorHandler.TryExecuteAsync(
+                async () => {
+                    var title = await FetchVideoTitleRawAsync(url, ct);
+                    return TitleHelper.FormatTitle(title ?? "video");
+                },
+                ErrorType.Network,
+                $"Obter informações do vídeo: {url}"
+            );
+            
+            return result.Value;
+        }
+        else
+        {
+            var title = await FetchVideoTitleRawAsync(url, ct);
+            return TitleHelper.FormatTitle(title ?? "video");
+        }
     }
 
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
