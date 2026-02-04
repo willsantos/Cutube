@@ -37,7 +37,8 @@ public class ProgramWorkflow : IDisposable
     {
         try
         {
-            var menuResult = _menu.Show(_console, _fileService, _errorHandler);
+            var errorHandler = _errorHandler ?? new DefaultErrorHandler();
+            var menuResult = _menu.Show(_console, _fileService, errorHandler);
             if (!menuResult.IsSuccess)
                 return menuResult;
 
