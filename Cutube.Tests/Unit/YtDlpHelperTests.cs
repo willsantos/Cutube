@@ -95,7 +95,7 @@ public class YtDlpHelperTests
             return Task.CompletedTask;
         }
 
-        protected internal override string CreateTempFile() => TempFilePath;
+        protected internal override string CreateTempFile(string extension = ".mp4") => TempFilePath;
 
         protected internal override void ExecuteFfmpeg(string arguments, IProgress<int> progress, CancellationToken ct)
         {

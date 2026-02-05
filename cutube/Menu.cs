@@ -1,4 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
+using Cutube.ErrorHandling;
+using cutube.Validation;
 
 namespace cutube;
 
@@ -23,35 +25,38 @@ public static class Menu
         AudioOnly = false;
     }
 
-    public static void Show()
+    public static Result Show(IConsoleService console, IFileService fileService, IErrorHandler errorHandler)
     {
-        Console.WriteLine("Cutube - Um cortador de vídeos para o Youtube.");
-        Console.WriteLine("Desenvolvido por: Wilson Santos");
-        Console.WriteLine("-----------------------------------------------");
-        Console.WriteLine("1 - Digite a url do vídeo.");
-        Url =  Console.ReadLine() ?? throw new InvalidOperationException("❌ URL não pode ser vazia. Digite uma URL válida do YouTube (ex: https://youtube.com/watch?v=... ou https://youtu.be/...)");
-        Console.WriteLine("2 - Digite o tempo de início (ex: 00:01:30, 1:30, 90s, 1h30m).");
-        Start = Console.ReadLine() ?? throw new InvalidOperationException("❌ Tempo de início não pode ser vazio. Use formatos como: 00:01:30, 1:30, 90s, 1h30m.");
-        Console.WriteLine("3 - Digite o tempo de fim (ex: 00:02:00, 2:00, 120s, 2m).");
-        End = Console.ReadLine() ?? throw new InvalidOperationException("❌ Tempo de fim não pode ser vazio. Use formatos como: 00:02:00, 2:00, 120s, 2m.");
-        Console.WriteLine("4 - Digite o nome do arquivo (opcional, pressione Enter para usar título)");
-        var input = Console.ReadLine() ?? string.Empty;
-        if (!string.IsNullOrWhiteSpace(input))
+        try
         {
-            CustomFileName = Path.GetFileNameWithoutExtension(input.Trim());
-        }
+            console.WriteLine("\n=== Download de Cortes do YouTube ===\n");
 
-        Console.WriteLine("5 - Diretório de destino (opcional, Enter para usar atual): ");
-        var dirInput = Console.ReadLine() ?? string.Empty;
-        if (!string.IsNullOrWhiteSpace(dirInput))
+            Url = InteractiveValidator.GetValidUrl(console, errorHandler);
+
+            Start = InteractiveValidator.GetValidStartTime(console, errorHandler);
+
+            End = InteractiveValidator.GetValidEndTime(console, errorHandler, Start);
+
+            var fileNameInput = InteractiveValidator.GetValidFileName(console, errorHandler);
+            CustomFileName = string.IsNullOrWhiteSpace(fileNameInput) ? string.Empty : Path.GetFileNameWithoutExtension(fileNameInput.Trim());
+
+            OutputDirectory = InteractiveValidator.GetValidDirectory(console, errorHandler, fileService);
+
+            AudioOnly = GetAudioOnlyChoice(console);
+
+            return Result.Success();
+        }
+        catch (InvalidOperationException ex)
         {
-            OutputDirectory = dirInput.Trim();
+            console.WriteLine(ex.Message);
+            return Result.Failure(Cutube.ErrorHandling.ErrorType.Validation, ex.Message, ex);
         }
+    }
 
-        Console.WriteLine("6 - Download completo ou áudio apenas?");
-        Console.WriteLine("   1 - Vídeo + Áudio (MP4)");
-        Console.WriteLine("   2 - Apenas Áudio (MP3)");
-        var audioChoice = Console.ReadLine();
-        AudioOnly = audioChoice == "2";
+    private static bool GetAudioOnlyChoice(IConsoleService console)
+    {
+        console.Write("\nTipo de download:\n1 - Vídeo\n2 - Áudio apenas\nEscolha: ");
+        string? choice = console.ReadLine();
+        return choice?.Trim() == "2";
     }
 }

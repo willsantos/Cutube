@@ -37,11 +37,10 @@ public class ProgramWorkflow : IDisposable
     {
         try
         {
-            _menu.Show();
-
-            var validationResult = TryValidateInput();
-            if (validationResult.IsFailure)
-                return validationResult;
+            var errorHandler = _errorHandler ?? new DefaultErrorHandler();
+            var menuResult = _menu.Show(_console, _fileService, errorHandler);
+            if (!menuResult.IsSuccess)
+                return menuResult;
 
             var videoUrl = _menu.Url;
             var videoStart = _menu.Start;
@@ -85,31 +84,6 @@ public class ProgramWorkflow : IDisposable
                 _console.WriteLine($"Erro: {ex.Message}");
                 return Result.Failure(ErrorType.Critical, ex.Message, ex);
             }
-        }
-    }
-
-    private Result TryValidateInput()
-    {
-        try
-        {
-            ValidationHelper.ValidateUrl(_menu.Url);
-            ValidationHelper.ValidateTimeRange(_menu.Start, _menu.End);
-
-            if (!string.IsNullOrWhiteSpace(_menu.CustomFileName))
-            {
-                ValidationHelper.ValidateFileName(_menu.CustomFileName);
-            }
-
-            return Result.Success();
-        }
-        catch (Exception ex)
-        {
-            if (_errorHandler != null)
-            {
-                var message = _errorHandler.GetUserFriendlyMessage(ex);
-                return Result.Failure(ErrorType.Validation, message, ex);
-            }
-            return Result.Failure(ErrorType.Validation, ex.Message, ex);
         }
     }
 
