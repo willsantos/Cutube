@@ -72,7 +72,7 @@ public class FluentDownloadService : IDownloadService
         }
         catch (Exception ex)
         {
-            return Result.Fail(new ExceptionalError("Download failed", ex));
+            return Result.Fail(new ExceptionalError($"Download failed: {ex.Message}", ex));
         }
     }
 
@@ -138,7 +138,7 @@ public class FluentDownloadService : IDownloadService
         }
         catch (Exception ex)
         {
-            return Result.Fail(new ExceptionalError("Download with processing failed", ex));
+            return Result.Fail(new ExceptionalError($"Download with processing failed: {ex.Message}", ex));
         }
     }
 

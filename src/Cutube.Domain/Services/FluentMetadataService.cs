@@ -45,7 +45,7 @@ public class FluentMetadataService : IMetadataService
         }
         catch (Exception ex)
         {
-            return Result.Fail(new ExceptionalError("Failed to get metadata", ex));
+            return Result.Fail(new ExceptionalError($"Failed to get metadata: {ex.Message}", ex));
         }
     }
 

@@ -16,12 +16,24 @@ public class YtDlpDownloader : IVideoDownloader
     private readonly string _ytDlpPath;
 
     /// <summary>
-    /// Initializes a new instance of YtDlpDownloader
+    /// Initializes a new instance of YtDlpDownloader using auto-resolved yt-dlp path
     /// </summary>
-    /// <param name="ytDlpPath">Path to yt-dlp executable (null to use system PATH)</param>
-    public YtDlpDownloader(string? ytDlpPath = null)
+    public YtDlpDownloader()
     {
-        _ytDlpPath = ytDlpPath ?? "yt-dlp";
+        _ytDlpPath = YtDlpPathResolver.Resolve();
+        _ytdl = new YoutubeDL
+        {
+            YoutubeDLPath = _ytDlpPath
+        };
+    }
+
+    /// <summary>
+    /// Initializes a new instance of YtDlpDownloader with explicit path
+    /// </summary>
+    /// <param name="ytDlpPath">Path to yt-dlp executable</param>
+    public YtDlpDownloader(string ytDlpPath)
+    {
+        _ytDlpPath = ytDlpPath;
         _ytdl = new YoutubeDL
         {
             YoutubeDLPath = _ytDlpPath

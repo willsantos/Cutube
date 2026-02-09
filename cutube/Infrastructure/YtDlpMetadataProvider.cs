@@ -13,12 +13,20 @@ public class YtDlpMetadataProvider : IVideoMetadataProvider
     private readonly string _ytDlpPath;
 
     /// <summary>
-    /// Initializes a new instance of YtDlpMetadataProvider
+    /// Initializes a new instance of YtDlpMetadataProvider using auto-resolved yt-dlp path
     /// </summary>
-    /// <param name="ytDlpPath">Path to yt-dlp executable (null to use system PATH)</param>
-    public YtDlpMetadataProvider(string? ytDlpPath = null)
+    public YtDlpMetadataProvider()
     {
-        _ytDlpPath = ytDlpPath ?? "yt-dlp";
+        _ytDlpPath = YtDlpPathResolver.Resolve();
+    }
+
+    /// <summary>
+    /// Initializes a new instance of YtDlpMetadataProvider with explicit path
+    /// </summary>
+    /// <param name="ytDlpPath">Path to yt-dlp executable</param>
+    public YtDlpMetadataProvider(string ytDlpPath)
+    {
+        _ytDlpPath = ytDlpPath;
     }
 
     /// <inheritdoc/>
@@ -47,7 +55,7 @@ public class YtDlpMetadataProvider : IVideoMetadataProvider
         if (process.ExitCode != 0)
         {
             var error = await process.StandardError.ReadToEndAsync(ct);
-            throw new InvalidOperationException($"Failed to get metadata: {error}");
+            throw new InvalidOperationException($"yt-dlp falhou (exit code {process.ExitCode}): {error}");
         }
 
         try
