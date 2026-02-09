@@ -29,6 +29,10 @@ public static class Program
         // Criar State Manager para operações de resume
         var stateManager = new DownloadStateManager(environmentService, loggerService);
 
+        // Executar cleanup no startup
+        var cleanupService = new StateCleanupService(stateManager, loggerService);
+        await cleanupService.CleanupOnStartupAsync();
+
         try
         {
             // Verificar se é comando --resume
