@@ -1,4 +1,5 @@
 using Cutube.Api.Endpoints;
+using Cutube.Api.HealthChecks;
 using Cutube.Api.Services;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
@@ -50,6 +51,12 @@ builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
 builder.Services.AddHostedService<BackgroundDownloadWorker>();
 
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddCheck<YtDlpHealthCheck>("yt-dlp", tags: new[] { "ready" })
+    .AddCheck<FfmpegHealthCheck>("ffmpeg", tags: new[] { "ready" })
+    .AddCheck<DiskSpaceHealthCheck>("disk-space", tags: new[] { "ready" });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -64,6 +71,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowNextJs");
 app.UseHttpsRedirection();
+
+// Health check endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 // Map endpoints
 app.MapDownloadsEndpoints();
