@@ -22,12 +22,15 @@ public class FileLoggerService : ILoggerService, IDisposable
         Directory.CreateDirectory(_logBasePath);
 
         _logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
             .WriteTo.File(
                 new CompactJsonFormatter(),
                 Path.Combine(_logBasePath, "cutube-.log"),
                 rollingInterval: RollingInterval.Day,
                 fileSizeLimitBytes: 10_000_000,
-                retainedFileCountLimit: 7
+                retainedFileCountLimit: 7,
+                shared: true,
+                flushToDiskInterval: TimeSpan.FromSeconds(1)
             )
             .CreateLogger();
     }
@@ -59,9 +62,15 @@ public class FileLoggerService : ILoggerService, IDisposable
 
     private void WriteLog(LogEventLevel level, Exception? exception, string message, (string key, object value)[] context)
     {
-        var contextDict = context.ToDictionary(x => x.key, x => x.value);
-        
-        _logger.Write(level, exception, message, contextDict);
+        if (context.Length == 0)
+        {
+            _logger.Write(level, exception, message);
+        }
+        else
+        {
+            var contextDict = context.ToDictionary(x => x.key, x => x.value);
+            _logger.Write(level, exception, "{@Message} {@Context}", new { Message = message, Context = contextDict });
+        }
     }
 
     public void Dispose()

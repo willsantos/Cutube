@@ -10,6 +10,7 @@ namespace Cutube.Tests.Unit.Logging;
 public class FileLoggerServiceTests : IDisposable
 {
     private readonly string _testLogPath;
+    private readonly string _logDirPath;
     private readonly FileLoggerService _loggerService;
     private readonly Mock<IEnvironmentService> _mockEnvironment;
 
@@ -23,16 +24,35 @@ public class FileLoggerServiceTests : IDisposable
             .Returns(_testLogPath);
 
         _loggerService = new FileLoggerService(_mockEnvironment.Object);
+
+        // O FileLoggerService cria o path como: _testLogPath/Cutube/logs
+        _logDirPath = Path.Combine(_testLogPath, "Cutube", "logs");
+    }
+
+    private string[] GetLogFiles()
+    {
+        return Directory.GetFiles(_logDirPath, "cutube-*.log");
     }
 
     [Fact]
     public void LogDebug_WritesLogToFile()
     {
         var message = "Test debug message";
-        
+
         _loggerService.LogDebug(message);
 
-        var logFiles = Directory.GetFiles(_testLogPath, "cutube-*.log");
+        // Aguarda flush do Serilog
+        Thread.Sleep(500);
+
+        // Verifica se o diretório existe e tem arquivos
+        Directory.Exists(_logDirPath).Should().BeTrue("Log directory should exist");
+
+        var allFiles = Directory.GetFiles(_logDirPath);
+        allFiles.Should().NotBeEmpty("Log files should exist in directory");
+
+        _loggerService.Dispose();
+
+        var logFiles = GetLogFiles();
         logFiles.Should().NotBeEmpty();
         File.ReadAllText(logFiles[0]).Should().Contain(message);
     }
@@ -41,11 +61,15 @@ public class FileLoggerServiceTests : IDisposable
     public void LogInfo_WithContext_SerializesContext()
     {
         var message = "Test info with context";
-        var context = new[] { ("url", "https://youtube.com/test"), ("userId", "123") };
+        var context = new[] { ("url", (object)"https://youtube.com/test"), ("userId", (object)"123") };
 
         _loggerService.LogInfo(message, context);
 
-        var logFiles = Directory.GetFiles(_testLogPath, "cutube-*.log");
+        // Aguarda flush do Serilog
+        Thread.Sleep(100);
+        _loggerService.Dispose();
+
+        var logFiles = GetLogFiles();
         var logContent = File.ReadAllText(logFiles[0]);
         logContent.Should().Contain(message);
         logContent.Should().Contain("url");
@@ -60,7 +84,7 @@ public class FileLoggerServiceTests : IDisposable
 
         _loggerService.LogError(exception, message);
 
-        var logFiles = Directory.GetFiles(_testLogPath, "cutube-*.log");
+        var logFiles = GetLogFiles();
         var logContent = File.ReadAllText(logFiles[0]);
         logContent.Should().Contain(message);
         logContent.Should().Contain("Test exception");
@@ -73,7 +97,7 @@ public class FileLoggerServiceTests : IDisposable
 
         _loggerService.LogWarning(message);
 
-        var logFiles = Directory.GetFiles(_testLogPath, "cutube-*.log");
+        var logFiles = GetLogFiles();
         File.ReadAllText(logFiles[0]).Should().Contain(message);
     }
 
@@ -85,7 +109,7 @@ public class FileLoggerServiceTests : IDisposable
 
         _loggerService.LogCritical(exception, message);
 
-        var logFiles = Directory.GetFiles(_testLogPath, "cutube-*.log");
+        var logFiles = GetLogFiles();
         var logContent = File.ReadAllText(logFiles[0]);
         logContent.Should().Contain(message);
         logContent.Should().Contain("Critical exception");
