@@ -81,7 +81,11 @@ public class FluentDownloadService : IDownloadService
         IProgress<DownloadProgress>? progress,
         CancellationToken ct)
     {
-        var tempFile = Path.GetTempFileName();
+        // Use .mp4 extension so yt-dlp doesn't rename the file
+        // (Path.GetTempFileName() creates a .tmp file, and yt-dlp appends .mp4 to it,
+        //  causing FFmpeg to receive the empty .tmp file as input — exit code 183)
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
+        string? actualDownloadedFile = null;
 
         try
         {
@@ -94,10 +98,13 @@ public class FluentDownloadService : IDownloadService
                 return Result.Fail(downloadResult.ErrorMessage ?? "Download failed");
             }
 
+            // Use the actual path returned by the downloader (yt-dlp may change the extension)
+            actualDownloadedFile = downloadResult.OutputPath;
+
             // Processar (corte/conversão)
             var processingRequest = new ProcessingRequest
             {
-                InputPath = tempFile,
+                InputPath = actualDownloadedFile,
                 OutputPath = request.OutputPath,
                 TimeRange = request.TimeRange!, // Non-null because we checked earlier
                 AudioOnly = request.AudioOnly
@@ -111,9 +118,9 @@ public class FluentDownloadService : IDownloadService
                 return Result.Fail(processResult.ErrorMessage ?? "Processing failed");
             }
 
-            // Deletar arquivo temporário
-            if (File.Exists(tempFile))
-                File.Delete(tempFile);
+            // Cleanup temp files
+            CleanupFile(tempFile);
+            CleanupFile(actualDownloadedFile);
 
             // Calcular duração final
             var duration = request.TimeRange != null
@@ -130,15 +137,33 @@ public class FluentDownloadService : IDownloadService
         catch (OperationCanceledException)
         {
             // Cleanup em caso de cancelamento
-            if (File.Exists(tempFile))
-                File.Delete(tempFile);
-            if (File.Exists(request.OutputPath))
-                File.Delete(request.OutputPath);
+            CleanupFile(tempFile);
+            CleanupFile(actualDownloadedFile);
+            CleanupFile(request.OutputPath);
             throw;
         }
         catch (Exception ex)
         {
+            // Cleanup on error
+            CleanupFile(tempFile);
+            CleanupFile(actualDownloadedFile);
             return Result.Fail(new ExceptionalError($"Download with processing failed: {ex.Message}", ex));
+        }
+    }
+
+    /// <summary>
+    /// Safely deletes a file if it exists, ignoring errors
+    /// </summary>
+    private static void CleanupFile(string? path)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+            // Ignore cleanup errors
         }
     }
 

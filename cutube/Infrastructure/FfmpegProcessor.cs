@@ -141,6 +141,9 @@ public class FfmpegProcessor : IVideoProcessor
     {
         var args = new List<string>();
 
+        // Overwrite output file without asking (before input to avoid prompts)
+        args.Add("-y");
+
         // Input file
         args.Add("-i");
         args.Add($"\"{request.InputPath}\"");
@@ -154,8 +157,32 @@ public class FfmpegProcessor : IVideoProcessor
             args.Add(request.TimeRange.EndSeconds.ToString());
         }
 
-        // Overwrite output file without asking
-        args.Add("-y");
+        // Codec and format settings
+        if (request.AudioOnly)
+        {
+            // Audio extraction: no video, MP3 with high quality
+            args.Add("-vn");
+            args.Add("-c:a");
+            args.Add("libmp3lame");
+            args.Add("-q:a");
+            args.Add("2");
+        }
+        else
+        {
+            // Video: copy streams when possible (fast), re-encode if cutting
+            if (request.TimeRange != null)
+            {
+                args.Add("-c:v");
+                args.Add("libx264");
+                args.Add("-c:a");
+                args.Add("aac");
+            }
+            else
+            {
+                args.Add("-c");
+                args.Add("copy");
+            }
+        }
 
         // Output file
         args.Add($"\"{request.OutputPath}\"");
