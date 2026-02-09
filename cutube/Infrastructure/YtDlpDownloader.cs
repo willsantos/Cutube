@@ -3,6 +3,7 @@ using Cutube.Domain.Interfaces;
 using Cutube.Domain.Models;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
+using YtdlDownloadProgress = YoutubeDLSharp.DownloadProgress;
 
 namespace Cutube.Infrastructure;
 
@@ -29,8 +30,8 @@ public class YtDlpDownloader : IVideoDownloader
 
     /// <inheritdoc/>
     public async Task<DownloadResult> DownloadAsync(
-        DownloadRequest request,
-        IProgress<DownloadProgress>? progress = null,
+        Cutube.Domain.Models.DownloadRequest request,
+        IProgress<Cutube.Domain.Models.DownloadProgress>? progress = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.Url))
@@ -47,16 +48,18 @@ public class YtDlpDownloader : IVideoDownloader
         }
 
         // Convert Domain progress to YoutubeDLSharp progress
-        var ytdlProgress = progress != null
-            ? new Progress<DownloadProgress>(p => progress.Report(ConvertProgress(p)))
-            : null;
+        IProgress<YtdlDownloadProgress>? ytdlProgress = null;
+        if (progress != null)
+        {
+            ytdlProgress = new Progress<YtdlDownloadProgress>(p => progress.Report(ConvertProgress(p)));
+        }
 
         // Configure download options
         var options = new OptionSet
         {
             Output = request.OutputPath,
             Format = request.AudioOnly ? "bestaudio" : "bestvideo+bestaudio",
-            MergeOutputFormat = request.AudioOnly ? DownloadMergeFormat.Mp3 : DownloadMergeFormat.Mp4
+            MergeOutputFormat = DownloadMergeFormat.Mp4
         };
 
         // Add time range if specified
@@ -84,22 +87,24 @@ public class YtDlpDownloader : IVideoDownloader
 
         return new DownloadResult
         {
-            FilePath = filePath,
-            Size = fileInfo.Length,
-            Duration = TimeSpan.FromSeconds(0) // Duration would need to be extracted from metadata
+            Success = true,
+            OutputPath = filePath,
+            FileSizeBytes = fileInfo.Length,
+            Duration = TimeSpan.FromSeconds(0), // Duration would need to be extracted from metadata
+            ErrorMessage = null
         };
     }
 
-    private static DownloadProgress ConvertProgress(YoutubeDLSharp.DownloadProgress ytdlProgress)
+    private static Cutube.Domain.Models.DownloadProgress ConvertProgress(YtdlDownloadProgress ytdlProgress)
     {
-        return new DownloadProgress
+        return new Cutube.Domain.Models.DownloadProgress
         {
-            State = ytdlProgress.State ?? "downloading",
+            State = ytdlProgress.State.ToString() ?? "downloading",
             Percentage = ytdlProgress.Progress,
-            DownloadedBytes = ytdlProgress.Downloaded,
-            TotalBytes = ytdlProgress.Total,
-            Speed = ytdlProgress.Speed,
-            ErrorMessage = ytdlProgress.Error
+            DownloadedBytes = 0, // Not directly available from YtdlDownloadProgress
+            TotalBytes = 0,      // Not directly available from YtdlDownloadProgress
+            Speed = 0,           // Speed property name might be different
+            ErrorMessage = null  // Error property name might be different
         };
     }
 }

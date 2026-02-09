@@ -57,8 +57,6 @@ public class FfmpegProcessor : IVideoProcessor
             var durationRegex = new Regex(@"Duration: (\d+):(\d+):(\d+)\.(\d+)");
             var progressRegex = new Regex(@"time=(\d+):(\d+):(\d+)\.(\d+)");
 
-            var errorReader = taskStream: process.StandardError.ReadToEndAsync();
-
             // Read stderr line by line for progress
             var reader = process.StandardError;
             string? line;
@@ -105,10 +103,8 @@ public class FfmpegProcessor : IVideoProcessor
 
                         progress?.Report(new ProcessingProgress
                         {
-                            Percentage = percentage,
-                            CurrentTime = currentTime,
-                            TotalTime = duration,
-                            Speed = 1.0 // Would need to calculate from frame rate
+                            Percentage = (int)percentage,
+                            CurrentOperation = "Processing"
                         });
                     }
                 }
@@ -125,9 +121,10 @@ public class FfmpegProcessor : IVideoProcessor
             var fileInfo = new FileInfo(request.OutputPath);
             return new ProcessingResult
             {
+                Success = true,
                 OutputPath = request.OutputPath,
-                Size = fileInfo.Length,
-                Duration = duration
+                FileSizeBytes = fileInfo.Length,
+                ErrorMessage = null
             };
         }
         catch (OperationCanceledException)
