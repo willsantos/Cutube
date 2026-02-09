@@ -1,8 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using Cutube.Domain.Interfaces;
+using Cutube.Domain.Models;
+using Cutube.Domain.Services;
+using Cutube.Infrastructure;
 using Cutube.Logging;
 using Cutube.ErrorHandling;
 using Cutube.Recovery;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace cutube;
 
@@ -11,6 +16,9 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        // Configure Dependency Injection
+        var serviceProvider = ConfigureServices();
+
         using var cts = new CancellationTokenSource();
 
         Console.CancelKeyPress += (sender, e) =>
@@ -20,21 +28,23 @@ public static class Program
             Console.WriteLine("\n⚠️  Cancelando operação...");
         };
 
-        var environmentService = new EnvironmentService();
-        var consoleService = new ConsoleService();
-        var fileService = new FileService();
-        using var loggerService = new FileLoggerService(environmentService);
-        var errorHandler = new ErrorHandler(loggerService);
-
-        // Criar State Manager para operações de resume
-        var stateManager = new DownloadStateManager(environmentService, loggerService);
-
-        // Executar cleanup no startup
-        var cleanupService = new StateCleanupService(stateManager, loggerService);
-        await cleanupService.CleanupOnStartupAsync();
-
         try
         {
+            // TODO: Verify if it's --resume command and handle accordingly
+            // For now, using existing workflow temporarily
+            var environmentService = new EnvironmentService();
+            var consoleService = new ConsoleService();
+            var fileService = new FileService();
+            using var loggerService = new FileLoggerService(environmentService);
+            var errorHandler = new ErrorHandler(loggerService);
+
+            // Criar State Manager para operações de resume
+            var stateManager = new DownloadStateManager(environmentService, loggerService);
+
+            // Executar cleanup no startup
+            var cleanupService = new StateCleanupService(stateManager, loggerService);
+            await cleanupService.CleanupOnStartupAsync();
+
             // Verificar se é comando --resume
             if (args.Contains("--resume"))
             {
@@ -42,6 +52,8 @@ public static class Program
                 return;
             }
 
+            // TODO: This will be replaced with DI-based workflow
+            // For now, keep existing functionality
             using var app = new ProgramWorkflow(
                 new MenuService(),
                 new YtDlpHelper(
@@ -53,7 +65,7 @@ public static class Program
                     false,
                     errorHandler,
                     loggerService,
-                    stateManager // Passar state manager para suporte a recuperação
+                    stateManager
                 ),
                 consoleService,
                 fileService,
@@ -75,6 +87,27 @@ public static class Program
             Console.WriteLine("\n✓ Operação cancelada com sucesso.");
             Environment.Exit(1);
         }
+    }
+
+    /// <summary>
+    /// Configures dependency injection container
+    /// </summary>
+    private static ServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        // Infrastructure Layer
+        services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
+        services.AddSingleton<IVideoDownloader, YtDlpDownloader>();
+        services.AddSingleton<IVideoProcessor, FfmpegProcessor>();
+
+        // Domain Services
+        services.AddSingleton<IDownloadValidator, ValidationService>();
+
+        // TODO: Add DownloadService, MetadataService, ProcessingService when implemented
+
+        return services.BuildServiceProvider();
     }
 
     /// <summary>
