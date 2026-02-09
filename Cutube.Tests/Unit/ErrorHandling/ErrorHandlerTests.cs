@@ -143,8 +143,8 @@ public class ErrorHandlerTests
     public async Task TryExecuteAsync_WithNetworkError_RetriesThreeTimes()
     {
         var attemptCount = 0;
-        var retryPolicy = new RetryPolicy(maxRetries: 3);
-        var handlerWithRetry = new ErrorHandler(_mockLogger.Object, retryPolicy);
+        var retryPolicy = new RetryPolicy(maxRetries: 3, logger: _mockLogger.Object);
+        var handlerWithRetry = new ErrorHandler(_mockLogger.Object);
 
         var result = await handlerWithRetry.TryExecuteAsync(async () =>
         {

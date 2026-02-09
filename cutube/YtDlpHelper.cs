@@ -5,6 +5,8 @@ using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 using Cutube.Logging;
 using Cutube.ErrorHandling;
+using Cutube.Recovery;
+using YtdlDownloadState = YoutubeDLSharp.DownloadState;
 
 namespace cutube;
 
@@ -28,6 +30,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     private readonly bool _skipAutoUpdate;
     private readonly IErrorHandler? _errorHandler;
     private readonly ILoggerService? _logger;
+    private readonly IDownloadStateManager? _stateManager;
 
     // Constructor for production use
     [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
@@ -51,7 +54,8 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         IConsoleService consoleService,
         bool skipAutoUpdate = false,
         IErrorHandler? errorHandler = null,
-        ILoggerService? logger = null
+        ILoggerService? logger = null,
+        IDownloadStateManager? stateManager = null
     )
     {
         _fileService = fileService;
@@ -62,6 +66,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         _skipAutoUpdate = skipAutoUpdate;
         _errorHandler = errorHandler;
         _logger = logger;
+        _stateManager = stateManager;
 
         _bundledPath = GetBundledPath();
         _userPath = GetUserPath();
@@ -665,6 +670,184 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         {
             // Ignorar erros de cleanup
         }
+    }
+
+    #endregion
+
+    #region Recovery Support
+
+    /// <summary>
+    /// Download com suporte a recuperação de estado
+    /// Cria e gerencia DownloadState durante o processo
+    /// </summary>
+    public async Task<Result<string>> DownloadWithRecoveryAsync(
+        DownloadInput input,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken ct = default)
+    {
+        string? stateId = null;
+
+        try
+        {
+            // 1. Criar estado inicial
+            stateId = await CreateDownloadStateAsync(input);
+
+            // 2. Hook de progresso para salvar estado
+            Progress<DownloadProgress>? stateProgress = null;
+            if (!string.IsNullOrEmpty(stateId))
+            {
+                stateProgress = new Progress<DownloadProgress>(p =>
+                {
+                    // Propagar para progress original
+                    progress?.Report(p);
+
+                    // Salvar estado
+                    _ = UpdateDownloadProgressAsync(stateId, p);
+                });
+            }
+
+            // 3. Executar download (usar progress com hook)
+            var effectiveProgress = stateProgress ?? progress;
+
+            if (input.AudioOnly && !string.IsNullOrEmpty(input.StartTime) && !string.IsNullOrEmpty(input.EndTime))
+            {
+                await DownloadAudioAsync(
+                    input.Url,
+                    input.OutputPath,
+                    input.StartTime!,
+                    input.EndTime!,
+                    effectiveProgress,
+                    ct
+                );
+            }
+            else if (!string.IsNullOrEmpty(input.StartTime) && !string.IsNullOrEmpty(input.EndTime))
+            {
+                await DownloadWithTimeRangeAsync(
+                    input.Url,
+                    input.OutputPath,
+                    input.StartTime!,
+                    input.EndTime!,
+                    effectiveProgress,
+                    ct
+                );
+            }
+            else
+            {
+                await DownloadAsync(
+                    input.Url,
+                    input.OutputPath,
+                    effectiveProgress,
+                    ct
+                );
+            }
+
+            // 4. Marcar como completado
+            await MarkDownloadCompletedAsync(stateId);
+
+            return Result<string>.Success(input.OutputPath);
+        }
+        catch (OperationCanceledException)
+        {
+            // CTRL+C
+            await MarkDownloadCancelledAsync(stateId);
+            _consoleService?.WriteLine("\n⚠️  Download cancelado pelo usuário.");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Erro durante download
+            await MarkDownloadFailedAsync(stateId, ex);
+            _logger?.LogError(ex, "Download failed", ("stateId", stateId ?? "none"));
+            return Result<string>.Failure(ErrorType.Network, "Download failed", ex);
+        }
+    }
+
+    #endregion
+
+    #region State Management
+
+    /// <summary>
+    /// Cria estado inicial de download
+    /// </summary>
+    private async Task<string?> CreateDownloadStateAsync(DownloadInput input)
+    {
+        if (_stateManager == null)
+            return null;
+
+        var state = new Cutube.Recovery.DownloadState
+        {
+            Url = input.Url,
+            OutputPath = input.OutputPath,
+            StartTime = !string.IsNullOrEmpty(input.StartTime) ? TimeHelper.ParseTimeToTimeSpan(input.StartTime) : null,
+            EndTime = !string.IsNullOrEmpty(input.EndTime) ? TimeHelper.ParseTimeToTimeSpan(input.EndTime) : null,
+            AudioOnly = input.AudioOnly,
+            Status = DownloadStatus.Downloading,
+            ProgressPercent = 0
+        };
+
+        var stateId = await _stateManager.CreateStateAsync(state);
+        _logger?.LogInfo("Download state created", ("stateId", stateId ?? ""));
+
+        return stateId;
+    }
+
+    /// <summary>
+    /// Atualiza progresso do estado (a cada 10%)
+    /// </summary>
+    private async Task UpdateDownloadProgressAsync(string? stateId, DownloadProgress progressData)
+    {
+        if (string.IsNullOrEmpty(stateId) || _stateManager == null)
+            return;
+
+        var progressPercent = (int)(progressData.Progress * 100);
+
+        // Salvar a cada 10%
+        if (progressPercent % 10 == 0)
+        {
+            await _stateManager.UpdateStateAsync(stateId, s =>
+            {
+                s.ProgressPercent = progressPercent;
+                // DownloadProgress não expõe bytes diretamente, usar apenas percent
+                s.DownloadedBytes = 0;
+                s.TotalBytes = null;
+            });
+        }
+    }
+
+    /// <summary>
+    /// Marca estado como completado
+    /// </summary>
+    private async Task MarkDownloadCompletedAsync(string? stateId)
+    {
+        if (string.IsNullOrEmpty(stateId) || _stateManager == null)
+            return;
+
+        await _stateManager.MarkCompletedAsync(stateId);
+        _logger?.LogInfo("Download marked as completed", ("stateId", stateId));
+    }
+
+    /// <summary>
+    /// Marca estado como falho
+    /// </summary>
+    private async Task MarkDownloadFailedAsync(string? stateId, Exception exception)
+    {
+        if (string.IsNullOrEmpty(stateId) || _stateManager == null)
+            return;
+
+        await _stateManager.MarkFailedAsync(stateId, exception.Message);
+        _logger?.LogError(exception, "Download marked as failed", ("stateId", stateId));
+    }
+
+    /// <summary>
+    /// Marca estado como cancelado
+    /// </summary>
+    private async Task MarkDownloadCancelledAsync(string? stateId)
+    {
+        if (string.IsNullOrEmpty(stateId) || _stateManager == null)
+            return;
+
+        await _stateManager.MarkCancelledAsync(stateId);
+        _logger?.LogInfo("Download marked as cancelled", ("stateId", stateId));
     }
 
     #endregion
