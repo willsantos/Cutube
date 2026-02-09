@@ -10,7 +10,7 @@ public class DownloadState
     /// <summary>
     /// Identificador único do estado (GUID)
     /// </summary>
-    public required string StateId { get; init; } = Guid.NewGuid().ToString();
+    public string StateId { get; init; } = Guid.NewGuid().ToString();
 
     /// <summary>
     /// URL do vídeo do YouTube

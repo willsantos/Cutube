@@ -164,4 +164,12 @@ public class TimeHelper
 
     public static int GetTimeDiff(string start, string end)
         => GetEndSeconds(end) - GetStartSeconds(start);
+
+    /// <summary>
+    /// Converte string de tempo para TimeSpan
+    /// </summary>
+    public static TimeSpan ParseTimeToTimeSpan(string input)
+    {
+        return TimeSpan.FromSeconds(ParseToSeconds(input));
+    }
 }
