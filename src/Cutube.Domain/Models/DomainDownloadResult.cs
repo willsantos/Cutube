@@ -7,8 +7,19 @@ namespace Cutube.Domain.Models;
 /// </summary>
 public record DomainDownloadResult
 {
+    /// <summary>
+    /// Caminho completo do arquivo baixado
+    /// </summary>
     public required string FilePath { get; init; }
+
+    /// <summary>
+    /// Tamanho do arquivo em bytes
+    /// </summary>
     public long Size { get; init; }
+
+    /// <summary>
+    /// Duração do conteúdo baixado
+    /// </summary>
     public TimeSpan Duration { get; init; }
 }
 
