@@ -356,7 +356,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
                 },
                 ErrorType.Network,
                 $"Obter informações do vídeo: {url}",
-                new RetryPolicy(maxRetries: 3) // Retry automático para network errors
+                new RetryPolicy(maxRetries: 3, logger: _logger) // Retry automático para network errors
             );
 
             return result.Value;
@@ -393,7 +393,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
                 },
                 ErrorType.Network,
                 $"Download do vídeo: {url}",
-                new RetryPolicy(maxRetries: 3)
+                new RetryPolicy(maxRetries: 3, logger: _logger)
             );
         }
         else
@@ -449,7 +449,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
                 },
                 ErrorType.Network,
                 $"Download com recorte: {url}",
-                new RetryPolicy(maxRetries: 3)
+                new RetryPolicy(maxRetries: 3, logger: _logger)
             );
         }
         else
@@ -522,7 +522,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
                 },
                 ErrorType.Network,
                 $"Download de áudio: {url}",
-                new RetryPolicy(maxRetries: 3)
+                new RetryPolicy(maxRetries: 3, logger: _logger)
             );
         }
         else

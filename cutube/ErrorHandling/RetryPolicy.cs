@@ -1,3 +1,5 @@
+using Cutube.Logging;
+
 namespace Cutube.ErrorHandling;
 
 /// <summary>
@@ -9,12 +11,14 @@ public class RetryPolicy
     public TimeSpan InitialDelay { get; }
     public TimeSpan MaxDelay { get; }
     public Func<Exception, bool> ShouldRetryPredicate { get; }
+    private readonly ILoggerService? _logger;
 
     public RetryPolicy(
         int maxRetries = 3,
         TimeSpan? initialDelay = null,
         TimeSpan? maxDelay = null,
-        Func<Exception, bool>? shouldRetryPredicate = null)
+        Func<Exception, bool>? shouldRetryPredicate = null,
+        ILoggerService? logger = null)
     {
         if (maxRetries < 0)
             throw new ArgumentException("MaxRetries must be >= 0", nameof(maxRetries));
@@ -23,6 +27,7 @@ public class RetryPolicy
         InitialDelay = initialDelay ?? TimeSpan.FromSeconds(1);
         MaxDelay = maxDelay ?? TimeSpan.FromSeconds(30);
         ShouldRetryPredicate = shouldRetryPredicate ?? DefaultRetryPredicate;
+        _logger = logger;
     }
 
     /// <summary>
@@ -53,7 +58,7 @@ public class RetryPolicy
                 if (attempt > 0)
                 {
                     // Log retry attempt
-                    Console.WriteLine($"Retry attempt {attempt}/{MaxRetries} after {delay.TotalSeconds}s");
+                    _logger?.LogDebug($"Retry attempt {attempt}/{MaxRetries} after {delay.TotalSeconds}s");
                 }
 
                 return await operation();
