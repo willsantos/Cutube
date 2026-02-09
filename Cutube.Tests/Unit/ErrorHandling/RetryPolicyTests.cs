@@ -29,7 +29,7 @@ public class RetryPolicyTests
         var policy = new RetryPolicy(maxRetries: 3);
         var attemptCount = 0;
 
-        var act = async () => await policy.ExecuteAsync<string>(async () =>
+        var result = await policy.ExecuteAsync<string>(async () =>
         {
             attemptCount++;
             if (attemptCount < 4)
@@ -39,7 +39,6 @@ public class RetryPolicyTests
             return await Task.FromResult("success after retries");
         });
 
-        var result = await act;
         result.Should().Be("success after retries");
         attemptCount.Should().Be(4);
     }
