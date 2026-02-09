@@ -52,26 +52,17 @@ public static class Program
                 return;
             }
 
-            // TODO: This will be replaced with DI-based workflow
-            // For now, keep existing functionality
-            using var app = new ProgramWorkflow(
+            // Use Domain-based workflow with DI
+            var downloadService = serviceProvider.GetRequiredService<IDownloadService>();
+            var metadataService = serviceProvider.GetRequiredService<IMetadataService>();
+
+            using var app = new DomainWorkflow(
                 new MenuService(),
-                new YtDlpHelper(
-                    fileService,
-                    new HttpClientService(),
-                    environmentService,
-                    new ProcessService(),
-                    consoleService,
-                    false,
-                    errorHandler,
-                    loggerService,
-                    stateManager
-                ),
+                metadataService,
+                downloadService,
                 consoleService,
                 fileService,
-                cts.Token,
-                loggerService,
-                errorHandler
+                cts.Token
             );
 
             var result = await app.RunAsync();
@@ -102,10 +93,11 @@ public static class Program
         services.AddSingleton<IVideoDownloader, YtDlpDownloader>();
         services.AddSingleton<IVideoProcessor, FfmpegProcessor>();
 
-        // Domain Services
-        services.AddSingleton<IDownloadValidator, ValidationService>();
-
-        // TODO: Add DownloadService, MetadataService, ProcessingService when implemented
+        // Domain Services (FluentResults-based)
+        services.AddSingleton<IValidationService, FluentValidationService>();
+        services.AddSingleton<IMetadataService, FluentMetadataService>();
+        services.AddSingleton<IDownloadService, FluentDownloadService>();
+        services.AddSingleton<IProcessingService, FluentProcessingService>();
 
         return services.BuildServiceProvider();
     }
