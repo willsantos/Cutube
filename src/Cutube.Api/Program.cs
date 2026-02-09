@@ -51,6 +51,10 @@ builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
 builder.Services.AddHostedService<BackgroundDownloadWorker>();
 
+// Configure options
+builder.Services.Configure<DiskSpaceHealthCheckOptions>(
+    builder.Configuration.GetSection(DiskSpaceHealthCheckOptions.SectionName));
+
 // Health Checks
 builder.Services.AddHealthChecks()
     .AddCheck<YtDlpHealthCheck>("yt-dlp", tags: new[] { "ready" })

@@ -5,6 +5,7 @@ using Cutube.Domain.Models;
 using Cutube.Domain.Services;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Cutube.Api.Endpoints;
 
@@ -144,8 +145,11 @@ public static class DownloadsEndpoints
             string id,
             IDownloadStatusRepository statusRepository,
             IDownloadQueue downloadQueue,
+            ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
+            var logger = loggerFactory.CreateLogger("DownloadsEndpoints");
+            
             // 1. Check if download exists
             var download = await statusRepository.GetByIdAsync(id, ct);
 
@@ -177,7 +181,7 @@ public static class DownloadsEndpoints
                 catch (Exception ex)
                 {
                     // Log but don't fail the request
-                    Console.WriteLine($"Failed to delete file {download.FilePath}: {ex.Message}");
+                    logger.LogWarning(ex, "Failed to delete file {FilePath}", download.FilePath);
                 }
             }
 
