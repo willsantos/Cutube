@@ -5,7 +5,8 @@ public class DefaultErrorHandler : IErrorHandler
     public async Task<Result<T>> TryExecuteAsync<T>(
         Func<Task<T>> operation,
         ErrorType errorType = ErrorType.Unknown,
-        string? context = null)
+        string? context = null,
+        RetryPolicy? retryPolicy = null)
     {
         try
         {
@@ -42,5 +43,10 @@ public class DefaultErrorHandler : IErrorHandler
     public bool ShouldRetry(Exception exception)
     {
         return false;
+    }
+
+    public ErrorType DetectErrorType(Exception exception)
+    {
+        return ErrorType.Unknown;
     }
 }

@@ -2,40 +2,58 @@ using Cutube.Logging;
 
 namespace Cutube.ErrorHandling;
 
+/// <summary>
+/// Centralized error handling implementation
+/// </summary>
 public class ErrorHandler : IErrorHandler
 {
     private readonly ILoggerService _logger;
-    private readonly RetryPolicy _retryPolicy;
+    private static readonly Dictionary<Type, ErrorType> ErrorTypeMapping = new()
+    {
+        [typeof(HttpRequestException)] = ErrorType.Network,
+        [typeof(TimeoutException)] = ErrorType.Network,
+        [typeof(IOException)] = ErrorType.FileSystem,
+        [typeof(UnauthorizedAccessException)] = ErrorType.FileSystem,
+        [typeof(ArgumentException)] = ErrorType.Validation,
+        [typeof(FormatException)] = ErrorType.Validation,
+        [typeof(InvalidOperationException)] = ErrorType.DependencyMissing,
+    };
 
-    private static readonly Dictionary<ErrorType, string> UserMessages = new()
+    private static readonly Dictionary<ErrorType, string> UserFriendlyMessages = new()
     {
         [ErrorType.Network] = "Erro de conexão. Verifique sua internet.",
         [ErrorType.FileSystem] = "Erro ao acessar arquivo. Verifique permissões e espaço em disco.",
         [ErrorType.Validation] = "Entrada inválida. Verifique os dados informados.",
         [ErrorType.DependencyMissing] = "Dependência não encontrada. Instale yt-dlp e FFmpeg.",
-        [ErrorType.Critical] = "Erro fatal. O aplicativo será encerrado."
+        [ErrorType.Critical] = "Erro fatal. O aplicativo será encerrado.",
+        [ErrorType.Unknown] = "Ocorreu um erro inesperado."
     };
 
-    public ErrorHandler(ILoggerService logger, RetryPolicy? retryPolicy = null)
+    public ErrorHandler(ILoggerService logger)
     {
         _logger = logger;
-        _retryPolicy = retryPolicy ?? new RetryPolicy();
     }
 
     public async Task<Result<T>> TryExecuteAsync<T>(
         Func<Task<T>> operation,
         ErrorType errorType = ErrorType.Unknown,
-        string? context = null)
+        string? context = null,
+        RetryPolicy? retryPolicy = null)
     {
         try
         {
-            if (ShouldRetryForErrorType(errorType))
+            if (retryPolicy != null)
             {
-                var result = await _retryPolicy.ExecuteAsync(operation);
+                var result = await retryPolicy.ExecuteAsync(async () =>
+                {
+                    _logger.LogDebug($"Executing async operation with retry: {context ?? "unknown"}");
+                    return await operation();
+                });
                 return Result<T>.Success(result);
             }
             else
             {
+                _logger.LogDebug($"Executing async operation: {context ?? "unknown"}");
                 var result = await operation();
                 return Result<T>.Success(result);
             }
@@ -53,6 +71,7 @@ public class ErrorHandler : IErrorHandler
     {
         try
         {
+            _logger.LogDebug($"Executing sync operation: {context ?? "unknown"}");
             var result = operation();
             return Result<T>.Success(result);
         }
@@ -62,46 +81,71 @@ public class ErrorHandler : IErrorHandler
         }
     }
 
+    private Result<T> HandleException<T>(Exception ex, ErrorType errorType, string? context)
+    {
+        // Detect error type if not provided
+        if (errorType == ErrorType.Unknown)
+        {
+            errorType = DetectErrorType(ex);
+        }
+
+        // Log error
+        _logger.LogError(ex, $"Error in {context ?? "operation"}: {ex.Message}");
+
+        // Return failure
+        var userMessage = GetUserFriendlyMessage(ex);
+        return Result<T>.Failure(errorType, userMessage, ex);
+    }
+
     public string GetUserFriendlyMessage(Exception exception)
     {
         var errorType = DetectErrorType(exception);
-        return UserMessages.TryGetValue(errorType, out var message)
-            ? message
-            : "Ocorreu um erro inesperado.";
+
+        if (UserFriendlyMessages.TryGetValue(errorType, out var message))
+        {
+            return message;
+        }
+
+        // Specific messages by exception type
+        return exception switch
+        {
+            FileNotFoundException => "Arquivo não encontrado.",
+            DirectoryNotFoundException => "Diretório não encontrado.",
+            _ => "Ocorreu um erro inesperado. Tente novamente."
+        };
     }
 
     public bool ShouldRetry(Exception exception)
     {
-        return _retryPolicy.ShouldRetryPredicate(exception);
+        return exception is HttpRequestException
+            or TimeoutException
+            or IOException;
     }
 
-    private Result<T> HandleException<T>(Exception ex, ErrorType errorType, string? context)
+    public ErrorType DetectErrorType(Exception exception)
     {
-        var detectedErrorType = errorType == ErrorType.Unknown ? DetectErrorType(ex) : errorType;
-        
-        _logger.LogError(ex, $"Error in {context ?? "operation"}: {ex.Message}");
-
-        return Result<T>.Failure(detectedErrorType, GetUserFriendlyMessage(ex), ex);
-    }
-
-    private ErrorType DetectErrorType(Exception exception)
-    {
-        return exception switch
+        // Check exact type
+        if (ErrorTypeMapping.TryGetValue(exception.GetType(), out var errorType))
         {
-            HttpRequestException => ErrorType.Network,
-            TimeoutException => ErrorType.Network,
-            FileNotFoundException => ErrorType.DependencyMissing,
-            DllNotFoundException => ErrorType.DependencyMissing,
-            IOException => ErrorType.FileSystem,
-            UnauthorizedAccessException => ErrorType.FileSystem,
-            ArgumentException => ErrorType.Validation,
-            InvalidOperationException => ErrorType.Validation,
-            _ => ErrorType.Critical
-        };
-    }
+            return errorType;
+        }
 
-    private bool ShouldRetryForErrorType(ErrorType errorType)
-    {
-        return errorType == ErrorType.Network;
+        // Check base type
+        foreach (var (type, mappedType) in ErrorTypeMapping)
+        {
+            if (type.IsAssignableFrom(exception.GetType()))
+            {
+                return mappedType;
+            }
+        }
+
+        // Check message for specific cases
+        if (exception.Message.Contains("yt-dlp", StringComparison.OrdinalIgnoreCase) ||
+            exception.Message.Contains("ffmpeg", StringComparison.OrdinalIgnoreCase))
+        {
+            return ErrorType.DependencyMissing;
+        }
+
+        return ErrorType.Unknown;
     }
 }

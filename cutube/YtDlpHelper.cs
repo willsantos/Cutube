@@ -355,9 +355,10 @@ public class YtDlpHelper : IYtDlpService, IDisposable
                     return TitleHelper.FormatTitle(title ?? "video");
                 },
                 ErrorType.Network,
-                $"Obter informações do vídeo: {url}"
+                $"Obter informações do vídeo: {url}",
+                new RetryPolicy(maxRetries: 3, logger: _logger) // Retry automático para network errors
             );
-            
+
             return result.Value;
         }
         else
@@ -378,10 +379,34 @@ public class YtDlpHelper : IYtDlpService, IDisposable
     /// Download completo do vídeo (melhor qualidade)
     /// </summary>
     public async Task DownloadAsync(
-        string url, 
+        string url,
         string outputFile,
         IProgress<DownloadProgress>? progress = null,
         CancellationToken ct = default)
+    {
+        if (_errorHandler != null)
+        {
+            await _errorHandler.TryExecuteAsync(
+                async () => {
+                    await DownloadAsyncInternal(url, outputFile, progress, ct);
+                    return true;
+                },
+                ErrorType.Network,
+                $"Download do vídeo: {url}",
+                new RetryPolicy(maxRetries: 3, logger: _logger)
+            );
+        }
+        else
+        {
+            await DownloadAsyncInternal(url, outputFile, progress, ct);
+        }
+    }
+
+    private async Task DownloadAsyncInternal(
+        string url,
+        string outputFile,
+        IProgress<DownloadProgress>? progress,
+        CancellationToken ct)
     {
         // Download com melhor qualidade (video + audio mesclado em MP4)
         var options = new OptionSet
@@ -390,7 +415,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             MergeOutputFormat = DownloadMergeFormat.Mp4,
             Output = outputFile
         };
-        
+
         await RunVideoDownloadAsync(url, options, progress, ct);
     }
 
@@ -415,13 +440,39 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         IProgress<DownloadProgress>? progress = null,
         CancellationToken ct = default)
     {
+        if (_errorHandler != null)
+        {
+            await _errorHandler.TryExecuteAsync(
+                async () => {
+                    await DownloadWithTimeRangeAsyncInternal(url, outputFile, startTime, endTime, progress, ct);
+                    return true;
+                },
+                ErrorType.Network,
+                $"Download com recorte: {url}",
+                new RetryPolicy(maxRetries: 3, logger: _logger)
+            );
+        }
+        else
+        {
+            await DownloadWithTimeRangeAsyncInternal(url, outputFile, startTime, endTime, progress, ct);
+        }
+    }
+
+    private async Task DownloadWithTimeRangeAsyncInternal(
+        string url,
+        string outputFile,
+        string startTime,
+        string endTime,
+        IProgress<DownloadProgress>? progress,
+        CancellationToken ct)
+    {
         // Download completo primeiro
         var tempFile = CreateTempFile();
-        
+
         try
         {
             _consoleService.WriteLine("Baixando vídeo completo...");
-            await DownloadAsync(url, tempFile, progress, ct);
+            await DownloadAsyncInternal(url, tempFile, progress, ct);
             
             // Usar FFmpeg para corte
             var timeStart = TimeHelper.GetStartSeconds(startTime);
@@ -461,6 +512,32 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         string endTime,
         IProgress<DownloadProgress>? progress = null,
         CancellationToken ct = default)
+    {
+        if (_errorHandler != null)
+        {
+            await _errorHandler.TryExecuteAsync(
+                async () => {
+                    await DownloadAudioAsyncInternal(url, outputFile, startTime, endTime, progress, ct);
+                    return true;
+                },
+                ErrorType.Network,
+                $"Download de áudio: {url}",
+                new RetryPolicy(maxRetries: 3, logger: _logger)
+            );
+        }
+        else
+        {
+            await DownloadAudioAsyncInternal(url, outputFile, startTime, endTime, progress, ct);
+        }
+    }
+
+    private async Task DownloadAudioAsyncInternal(
+        string url,
+        string outputFile,
+        string startTime,
+        string endTime,
+        IProgress<DownloadProgress>? progress,
+        CancellationToken ct)
     {
         // Download de áudio completo primeiro
         var tempBase = Path.GetTempFileName();
