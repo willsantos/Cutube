@@ -9,6 +9,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cutube.Domain", "src\Cutube.Domain\Cutube.Domain.csproj", "{9DB707DF-7422-4BD0-ABE2-A1A0A1FC1E24}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cutube.Tests", "tests\Cutube.Tests\Cutube.Tests.csproj", "{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cutube.Domain.Tests", "tests\Cutube.Domain.Tests\Cutube.Domain.Tests.csproj", "{2BC3A692-544B-4F58-8B70-5526A9193052}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,11 +49,37 @@ Global
 		{9DB707DF-7422-4BD0-ABE2-A1A0A1FC1E24}.Release|x64.Build.0 = Release|Any CPU
 		{9DB707DF-7422-4BD0-ABE2-A1A0A1FC1E24}.Release|x86.ActiveCfg = Release|Any CPU
 		{9DB707DF-7422-4BD0-ABE2-A1A0A1FC1E24}.Release|x86.Build.0 = Release|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Debug|x64.Build.0 = Debug|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Debug|x86.Build.0 = Debug|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Release|x64.ActiveCfg = Release|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Release|x64.Build.0 = Release|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Release|x86.ActiveCfg = Release|Any CPU
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18}.Release|x86.Build.0 = Release|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Debug|x64.Build.0 = Debug|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Debug|x86.Build.0 = Debug|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Release|x64.ActiveCfg = Release|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Release|x64.Build.0 = Release|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Release|x86.ActiveCfg = Release|Any CPU
+		{2BC3A692-544B-4F58-8B70-5526A9193052}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9DB707DF-7422-4BD0-ABE2-A1A0A1FC1E24} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{C8CEB6A3-75AF-46EF-AEAE-04490DE61A18} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{2BC3A692-544B-4F58-8B70-5526A9193052} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

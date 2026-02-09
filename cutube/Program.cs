@@ -1,8 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using Cutube.Domain.Interfaces;
+using Cutube.Domain.Models;
+using Cutube.Domain.Services;
+using Cutube.Infrastructure;
 using Cutube.Logging;
 using Cutube.ErrorHandling;
 using Cutube.Recovery;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace cutube;
 
@@ -11,6 +16,9 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        // Configure Dependency Injection
+        var serviceProvider = ConfigureServices();
+
         using var cts = new CancellationTokenSource();
 
         Console.CancelKeyPress += (sender, e) =>
@@ -20,21 +28,23 @@ public static class Program
             Console.WriteLine("\n⚠️  Cancelando operação...");
         };
 
-        var environmentService = new EnvironmentService();
-        var consoleService = new ConsoleService();
-        var fileService = new FileService();
-        using var loggerService = new FileLoggerService(environmentService);
-        var errorHandler = new ErrorHandler(loggerService);
-
-        // Criar State Manager para operações de resume
-        var stateManager = new DownloadStateManager(environmentService, loggerService);
-
-        // Executar cleanup no startup
-        var cleanupService = new StateCleanupService(stateManager, loggerService);
-        await cleanupService.CleanupOnStartupAsync();
-
         try
         {
+            // TODO: Verify if it's --resume command and handle accordingly
+            // For now, using existing workflow temporarily
+            var environmentService = new EnvironmentService();
+            var consoleService = new ConsoleService();
+            var fileService = new FileService();
+            using var loggerService = new FileLoggerService(environmentService);
+            var errorHandler = new ErrorHandler(loggerService);
+
+            // Criar State Manager para operações de resume
+            var stateManager = new DownloadStateManager(environmentService, loggerService);
+
+            // Executar cleanup no startup
+            var cleanupService = new StateCleanupService(stateManager, loggerService);
+            await cleanupService.CleanupOnStartupAsync();
+
             // Verificar se é comando --resume
             if (args.Contains("--resume"))
             {
@@ -42,24 +52,17 @@ public static class Program
                 return;
             }
 
-            using var app = new ProgramWorkflow(
+            // Use Domain-based workflow with DI
+            var downloadService = serviceProvider.GetRequiredService<IDownloadService>();
+            var metadataService = serviceProvider.GetRequiredService<IMetadataService>();
+
+            using var app = new DomainWorkflow(
                 new MenuService(),
-                new YtDlpHelper(
-                    fileService,
-                    new HttpClientService(),
-                    environmentService,
-                    new ProcessService(),
-                    consoleService,
-                    false,
-                    errorHandler,
-                    loggerService,
-                    stateManager // Passar state manager para suporte a recuperação
-                ),
+                metadataService,
+                downloadService,
                 consoleService,
                 fileService,
-                cts.Token,
-                loggerService,
-                errorHandler
+                cts.Token
             );
 
             var result = await app.RunAsync();
@@ -75,6 +78,28 @@ public static class Program
             Console.WriteLine("\n✓ Operação cancelada com sucesso.");
             Environment.Exit(1);
         }
+    }
+
+    /// <summary>
+    /// Configures dependency injection container
+    /// </summary>
+    private static ServiceProvider ConfigureServices()
+    {
+        var services = new ServiceCollection();
+
+        // Infrastructure Layer
+        services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
+        services.AddSingleton<IVideoDownloader, YtDlpDownloader>();
+        services.AddSingleton<IVideoProcessor, FfmpegProcessor>();
+
+        // Domain Services (FluentResults-based)
+        services.AddSingleton<IValidationService, FluentValidationService>();
+        services.AddSingleton<IMetadataService, FluentMetadataService>();
+        services.AddSingleton<IDownloadService, FluentDownloadService>();
+        services.AddSingleton<IProcessingService, FluentProcessingService>();
+
+        return services.BuildServiceProvider();
     }
 
     /// <summary>
