@@ -73,7 +73,9 @@ public class DownloadService : IVideoDownloader
         IProgress<DownloadProgress>? progress,
         CancellationToken ct)
     {
-        var tempFile = Path.GetTempFileName();
+        // Use .mp4 extension so yt-dlp doesn't rename the file
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.mp4");
+        string? actualDownloadedFile = null;
 
         try
         {
@@ -86,9 +88,12 @@ public class DownloadService : IVideoDownloader
             if (!fullDownload.Success)
                 return fullDownload;
 
+            // Use the actual path returned by the downloader (yt-dlp may change the extension)
+            actualDownloadedFile = fullDownload.OutputPath;
+
             var processingRequest = new ProcessingRequest
             {
-                InputPath = tempFile,
+                InputPath = actualDownloadedFile,
                 OutputPath = request.OutputPath,
                 TimeRange = request.TimeRange!,
                 AudioOnly = request.AudioOnly
@@ -96,7 +101,8 @@ public class DownloadService : IVideoDownloader
 
             var processingResult = await _processor.ProcessAsync(processingRequest, null, ct);
 
-            File.Delete(tempFile);
+            CleanupFile(tempFile);
+            CleanupFile(actualDownloadedFile);
 
             return new DownloadResult
             {
@@ -109,10 +115,23 @@ public class DownloadService : IVideoDownloader
         }
         catch (OperationCanceledException)
         {
-            File.Delete(tempFile);
-            if (File.Exists(request.OutputPath))
-                File.Delete(request.OutputPath);
+            CleanupFile(tempFile);
+            CleanupFile(actualDownloadedFile);
+            CleanupFile(request.OutputPath);
             throw;
+        }
+    }
+
+    private static void CleanupFile(string? path)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(path) && File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+            // Ignore cleanup errors
         }
     }
 }

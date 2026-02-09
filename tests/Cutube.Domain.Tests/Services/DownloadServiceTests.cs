@@ -564,5 +564,134 @@ public class DownloadServiceTests
             capturedRequest.AudioOnly.Should().BeTrue();
             capturedRequest.OutputPath.Should().Be("/tmp/clip.mp4");
         }
+
+        /// <summary>
+        /// Regression test for FFmpeg exit code 183 bug.
+        /// When yt-dlp returns a different OutputPath than requested (e.g., appends .mp4),
+        /// the processor must receive the actual path, not the originally requested temp path.
+        /// </summary>
+        [Fact]
+        public async Task ProcessorReceivesActualDownloadedPath_NotRequestedTempPath()
+        {
+            var timeRange = new TimeRange
+            {
+                StartSeconds = 30,
+                EndSeconds = 90
+            };
+
+            var request = new DownloadRequest
+            {
+                Url = "https://www.youtube.com/watch?v=test",
+                OutputPath = "/tmp/clip.mp4",
+                TimeRange = timeRange,
+                AudioOnly = false
+            };
+
+            // Simulate yt-dlp returning a DIFFERENT path than requested
+            _downloaderMock
+                .Setup(d => d.DownloadAsync(It.IsAny<DownloadRequest>(), It.IsAny<IProgress<DownloadProgress>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((DownloadRequest req, IProgress<DownloadProgress>? _, CancellationToken _) =>
+                    new DownloadResult
+                    {
+                        Success = true,
+                        OutputPath = req.OutputPath + ".webm", // yt-dlp changed the extension!
+                        FileSizeBytes = 50_000_000,
+                        Duration = TimeSpan.FromMinutes(10),
+                        ErrorMessage = null
+                    });
+
+            ProcessingRequest? capturedRequest = null;
+
+            var processingResult = new ProcessingResult
+            {
+                Success = true,
+                OutputPath = "/tmp/clip.mp4",
+                FileSizeBytes = 512000,
+                ErrorMessage = null
+            };
+
+            _validatorMock
+                .Setup(v => v.ValidateUrl(request.Url))
+                .Returns(ValidationResult.Success());
+
+            _validatorMock
+                .Setup(v => v.ValidateDirectory(It.IsAny<string>()))
+                .Returns(ValidationResult.Success());
+
+            _processorMock
+                .Setup(p => p.ProcessAsync(It.IsAny<ProcessingRequest>(), It.IsAny<IProgress<ProcessingProgress>>(), It.IsAny<CancellationToken>()))
+                .Callback<ProcessingRequest, IProgress<ProcessingProgress>?, CancellationToken>(
+                    (req, _, _) => capturedRequest = req
+                )
+                .ReturnsAsync(processingResult);
+
+            await _service.DownloadAsync(request);
+
+            capturedRequest.Should().NotBeNull();
+            capturedRequest!.InputPath.Should().EndWith(".webm",
+                "processor must receive the actual path returned by the downloader, not the requested temp path");
+        }
+
+        [Fact]
+        public async Task TempFileUsesProperExtension_NotTmp()
+        {
+            var timeRange = new TimeRange
+            {
+                StartSeconds = 30,
+                EndSeconds = 90
+            };
+
+            var request = new DownloadRequest
+            {
+                Url = "https://www.youtube.com/watch?v=test",
+                OutputPath = "/tmp/clip.mp4",
+                TimeRange = timeRange,
+                AudioOnly = false
+            };
+
+            DownloadRequest? capturedDownloadRequest = null;
+
+            _downloaderMock
+                .Setup(d => d.DownloadAsync(It.IsAny<DownloadRequest>(), It.IsAny<IProgress<DownloadProgress>>(), It.IsAny<CancellationToken>()))
+                .Callback<DownloadRequest, IProgress<DownloadProgress>?, CancellationToken>(
+                    (req, _, _) => capturedDownloadRequest = req)
+                .ReturnsAsync((DownloadRequest req, IProgress<DownloadProgress>? _, CancellationToken _) =>
+                    new DownloadResult
+                    {
+                        Success = true,
+                        OutputPath = req.OutputPath,
+                        FileSizeBytes = 50_000_000,
+                        Duration = TimeSpan.FromMinutes(10),
+                        ErrorMessage = null
+                    });
+
+            var processingResult = new ProcessingResult
+            {
+                Success = true,
+                OutputPath = "/tmp/clip.mp4",
+                FileSizeBytes = 512000,
+                ErrorMessage = null
+            };
+
+            _validatorMock
+                .Setup(v => v.ValidateUrl(request.Url))
+                .Returns(ValidationResult.Success());
+
+            _validatorMock
+                .Setup(v => v.ValidateDirectory(It.IsAny<string>()))
+                .Returns(ValidationResult.Success());
+
+            _processorMock
+                .Setup(p => p.ProcessAsync(It.IsAny<ProcessingRequest>(), It.IsAny<IProgress<ProcessingProgress>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(processingResult);
+
+            await _service.DownloadAsync(request);
+
+            capturedDownloadRequest.Should().NotBeNull();
+            capturedDownloadRequest!.OutputPath.Should().EndWith(".mp4",
+                "temp file must use .mp4 extension to prevent yt-dlp from renaming");
+            capturedDownloadRequest.OutputPath.Should().NotEndWith(".tmp",
+                ".tmp causes yt-dlp to append .mp4, leaving the original file empty");
+        }
     }
 }
