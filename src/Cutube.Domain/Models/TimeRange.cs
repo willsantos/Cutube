@@ -1,4 +1,4 @@
-using cutube;
+using Cutube.Domain.Helpers;
 
 namespace Cutube.Domain.Models;
 
