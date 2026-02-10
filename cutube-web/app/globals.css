@@ -3,135 +3,184 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Design System Tokens — Cutube
+ * Reference: plans/design-system.md
+ *
+ * Primary: Teal (hsl 172)
+ * Philosophy: Restrained elegance. Content is protagonist.
+ * Color rule: 60% background, 30% secondary, 10% accent/primary
+ */
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Typography */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
+
+  /* Semantic colors — mapped from CSS variables */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --status-queued: var(--secondary);
-  --status-downloading: var(--status-downloading-raw);
-  --status-processing: var(--status-processing-raw);
-  --status-completed: var(--status-completed-raw);
-  --status-failed: var(--destructive);
-  --status-cancelled: var(--muted);
-  --radius-xs: calc(var(--radius-sm) - 2px);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Status colors */
+  --color-status-queued: var(--secondary);
+  --color-status-downloading: var(--status-downloading);
+  --color-status-processing: var(--status-processing);
+  --color-status-completed: var(--status-completed);
+  --color-status-failed: var(--destructive);
+  --color-status-cancelled: var(--muted);
+
+  /* Radius — Design System: sm=8px, default=12px, lg=16px */
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius-lg);
+  --radius-xl: calc(var(--radius) + 4px);
 }
+
+/* ==========================================================================
+   Light Mode (default)
+   Design System: Teal primary (172, 66%, 40%)
+   ========================================================================== */
 
 :root {
-  --radius-sm: 0.5rem;
   --radius: 0.75rem;
-  --radius-lg: 1rem;
-  --background: 0 0% 99%;
-  --foreground: 220 15% 10%;
-  --card: 0 0% 100%;
-  --card-foreground: 220 15% 10%;
-  --primary: 172 66% 40%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 220 15% 30%;
-  --muted: 220 14% 96%;
-  --muted-foreground: 220 10% 45%;
-  --accent: 172 60% 95%;
-  --accent-foreground: 172 66% 30%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 220 14% 90%;
-  --input: 220 14% 90%;
-  --ring: 172 66% 40%;
-  --status-downloading-raw: 210 75% 55%;
-  --status-processing-raw: 38 92% 50%;
-  --status-completed-raw: 160 72% 42%;
+
+  /* Backgrounds */
+  --background: hsl(0 0% 99%);
+  --foreground: hsl(220 15% 10%);
+
+  /* Card */
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 15% 10%);
+
+  /* Primary — Teal */
+  --primary: hsl(172 66% 40%);
+  --primary-foreground: hsl(0 0% 100%);
+
+  /* Secondary */
+  --secondary: hsl(220 14% 96%);
+  --secondary-foreground: hsl(220 15% 30%);
+
+  /* Muted */
+  --muted: hsl(220 14% 96%);
+  --muted-foreground: hsl(220 10% 45%);
+
+  /* Accent — Teal tint */
+  --accent: hsl(172 60% 95%);
+  --accent-foreground: hsl(172 66% 30%);
+
+  /* Destructive */
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  /* Borders & Inputs */
+  --border: hsl(220 14% 90%);
+  --input: hsl(220 14% 90%);
+  --ring: hsl(172 66% 40%);
+
+  /* Status colors */
+  --status-downloading: hsl(210 75% 55%);
+  --status-processing: hsl(38 92% 50%);
+  --status-completed: hsl(160 72% 42%);
 }
 
+/* ==========================================================================
+   Dark Mode
+   Design System rules:
+   - Never #000000 — use dark gray with blue tint
+   - Never #FFFFFF for text — use ~92% lightness
+   - Reduce accent saturation 10-15%
+   - Elevation = brightness (cards brighter than background)
+   ========================================================================== */
+
 .dark {
-  --background: 220 15% 8%;
-  --foreground: 220 10% 92%;
-  --card: 220 15% 11%;
-  --card-foreground: 220 10% 92%;
-  --primary: 172 55% 50%;
-  --primary-foreground: 172 80% 8%;
-  --secondary: 220 15% 15%;
-  --secondary-foreground: 220 10% 75%;
-  --muted: 220 15% 15%;
-  --muted-foreground: 220 10% 55%;
-  --accent: 172 40% 18%;
-  --accent-foreground: 172 50% 80%;
-  --destructive: 0 62% 55%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 220 15% 18%;
-  --input: 220 15% 18%;
-  --ring: 172 55% 50%;
-  --status-downloading-raw: 210 60% 52%;
-  --status-processing-raw: 38 75% 52%;
-  --status-completed-raw: 160 60% 45%;
+  --background: hsl(220 15% 8%);
+  --foreground: hsl(220 10% 92%);
+
+  --card: hsl(220 15% 11%);
+  --card-foreground: hsl(220 10% 92%);
+
+  --primary: hsl(172 55% 50%);
+  --primary-foreground: hsl(172 80% 8%);
+
+  --secondary: hsl(220 15% 15%);
+  --secondary-foreground: hsl(220 10% 75%);
+
+  --muted: hsl(220 15% 15%);
+  --muted-foreground: hsl(220 10% 55%);
+
+  --accent: hsl(172 40% 18%);
+  --accent-foreground: hsl(172 50% 80%);
+
+  --destructive: hsl(0 62% 55%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  --border: hsl(220 15% 18%);
+  --input: hsl(220 15% 18%);
+  --ring: hsl(172 55% 50%);
+
+  /* Status colors — reduced saturation for dark mode */
+  --status-downloading: hsl(210 60% 52%);
+  --status-processing: hsl(38 75% 52%);
+  --status-completed: hsl(160 60% 45%);
 }
+
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   html {
     scroll-behavior: smooth;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
+  /* Focus ring — Design System: ring-2 ring-ring ring-offset-2 */
   :focus-visible {
-    outline: 2px solid hsl(var(--ring));
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 
-  [data-status="queued"] {
-    --status-color: hsl(var(--status-queued));
-  }
-
-  [data-status="downloading"] {
-    --status-color: hsl(var(--status-downloading));
-  }
-
-  [data-status="processing"] {
-    --status-color: hsl(var(--status-processing));
-  }
-
-  [data-status="completed"] {
-    --status-color: hsl(var(--status-completed));
-  }
-
-  [data-status="failed"] {
-    --status-color: hsl(var(--status-failed));
-  }
-
-  [data-status="cancelled"] {
-    --status-color: hsl(var(--status-cancelled));
-  }
-
+  /* Tabular numbers for data displays (progress, speed, ETA) */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /* Status data attributes — set contextual color for child components */
+  [data-status="queued"]       { --status-color: var(--secondary); }
+  [data-status="downloading"]  { --status-color: var(--status-downloading); }
+  [data-status="processing"]   { --status-color: var(--status-processing); }
+  [data-status="completed"]    { --status-color: var(--status-completed); }
+  [data-status="failed"]       { --status-color: var(--destructive); }
+  [data-status="cancelled"]    { --status-color: var(--muted); }
 }
+
+/* ==========================================================================
+   Reduced Motion — Design System: respect prefers-reduced-motion
+   ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -11,15 +11,15 @@ interface ProgressBarProps {
 function getProgressClass(status: DownloadStatus): string {
   switch (status) {
     case "completed":
-      return "[&_[data-slot=progress-indicator]]:bg-[hsl(var(--status-completed))]";
+      return "[&_[data-slot=progress-indicator]]:bg-[var(--status-completed)]";
     case "failed":
       return "[&_[data-slot=progress-indicator]]:bg-destructive";
     case "processing":
-      return "[&_[data-slot=progress-indicator]]:bg-[hsl(var(--status-processing))]";
+      return "[&_[data-slot=progress-indicator]]:bg-[var(--status-processing)]";
     case "cancelled":
       return "[&_[data-slot=progress-indicator]]:bg-muted-foreground";
     case "downloading":
-      return "[&_[data-slot=progress-indicator]]:bg-[hsl(var(--status-downloading))]";
+      return "[&_[data-slot=progress-indicator]]:bg-[var(--status-downloading)]";
     default:
       return "[&_[data-slot=progress-indicator]]:bg-primary";
   }

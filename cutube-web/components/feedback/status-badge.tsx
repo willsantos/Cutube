@@ -18,17 +18,17 @@ const STATUS_META: Record<DownloadStatus, StatusMeta> = {
   downloading: {
     label: "Baixando",
     icon: ArrowDownToLine,
-    className: "bg-[hsl(var(--status-downloading))] text-black",
+    className: "bg-[var(--status-downloading)] text-white",
   },
   processing: {
     label: "Processando",
     icon: Cog,
-    className: "bg-[hsl(var(--status-processing))] text-black",
+    className: "bg-[var(--status-processing)] text-white",
   },
   completed: {
     label: "Concluido",
     icon: Check,
-    className: "bg-[hsl(var(--status-completed))] text-black",
+    className: "bg-[var(--status-completed)] text-white",
   },
   failed: {
     label: "Falhou",
