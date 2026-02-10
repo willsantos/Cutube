@@ -10,10 +10,14 @@ namespace Cutube.Api.Hubs;
 public class DownloadHub : Hub<IDownloadHubClient>
 {
     private readonly ILogger<DownloadHub> _logger;
+    private readonly ConnectionTracker _connectionTracker;
 
-    public DownloadHub(ILogger<DownloadHub> logger)
+    public DownloadHub(
+        ILogger<DownloadHub> logger,
+        ConnectionTracker connectionTracker)
     {
         _logger = logger;
+        _connectionTracker = connectionTracker;
     }
 
     /// <summary>
@@ -24,6 +28,9 @@ public class DownloadHub : Hub<IDownloadHubClient>
     {
         var groupName = GetDownloadGroupName(downloadId);
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+
+        // Rastrear conexão
+        _connectionTracker.AddConnection(downloadId, Context.ConnectionId);
 
         _logger.LogInformation(
             "Connection {ConnectionId} joined group {GroupName} for download {DownloadId}",
@@ -38,6 +45,9 @@ public class DownloadHub : Hub<IDownloadHubClient>
     {
         var groupName = GetDownloadGroupName(downloadId);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+
+        // Remover rastreamento
+        _connectionTracker.RemoveConnection(downloadId, Context.ConnectionId);
 
         _logger.LogInformation(
             "Connection {ConnectionId} left group {GroupName} for download {DownloadId}",
@@ -58,6 +68,9 @@ public class DownloadHub : Hub<IDownloadHubClient>
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        // Remover todas as associações desta conexão
+        _connectionTracker.RemoveConnectionAll(Context.ConnectionId);
+
         if (exception is not null)
         {
             _logger.LogError(exception,

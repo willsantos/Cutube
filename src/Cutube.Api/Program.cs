@@ -68,6 +68,7 @@ builder.Services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
 // API Services
 builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
+builder.Services.AddSingleton<ConnectionTracker>();
 builder.Services.AddHostedService<BackgroundDownloadWorker>();
 
 // Configure options
