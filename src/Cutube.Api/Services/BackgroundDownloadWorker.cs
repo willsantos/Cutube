@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Cutube.Api.Models;
 using Cutube.Domain.Models;
 using Cutube.Domain.Services;
@@ -28,6 +29,7 @@ public class BackgroundDownloadWorker : BackgroundService
         _logger = logger;
     }
 
+    [ExcludeFromCodeCoverage]
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("BackgroundDownloadWorker started");

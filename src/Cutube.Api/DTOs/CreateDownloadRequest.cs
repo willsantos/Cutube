@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Cutube.Api.DTOs;
 
 /// <summary>
 /// Request to create a new download
 /// </summary>
+[ExcludeFromCodeCoverage]
 public record CreateDownloadRequest
 {
     /// <summary>

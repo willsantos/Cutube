@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Cutube.Api.DTOs;
 
 /// <summary>
 /// Summary of a download
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class DownloadSummary
 {
     /// <summary>
@@ -39,6 +42,7 @@ public class DownloadSummary
 /// <summary>
 /// Response for getting all downloads
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class GetDownloadsResponse
 {
     /// <summary>

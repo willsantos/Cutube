@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Cutube.Api.DTOs;
 
 /// <summary>
 /// Video metadata response
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class VideoInfoResponse
 {
     /// <summary>

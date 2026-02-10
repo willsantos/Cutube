@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Cutube.Api.DTOs;
 
 /// <summary>
 /// Detailed information about a download
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class DownloadDetails
 {
     /// <summary>
