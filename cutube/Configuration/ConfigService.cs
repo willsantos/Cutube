@@ -7,15 +7,7 @@ namespace Cutube.Configuration;
 /// </summary>
 public class ConfigService
 {
-    private static readonly string ConfigDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "cutube"
-    );
-
-    private static readonly string ConfigPath = Path.Combine(
-        ConfigDirectory,
-        "config.json"
-    );
+    private readonly string _configPath;
 
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -24,19 +16,45 @@ public class ConfigService
     };
 
     /// <summary>
+    /// Creates a new ConfigService with default config path
+    /// </summary>
+    public ConfigService() : this(GetDefaultConfigPath())
+    {
+    }
+
+    /// <summary>
+    /// Creates a new ConfigService with custom config path (for testing)
+    /// </summary>
+    /// <param name="configDirectory">Directory to store config file</param>
+    public ConfigService(string configDirectory)
+    {
+        Directory.CreateDirectory(configDirectory);
+        _configPath = Path.Combine(configDirectory, "config.json");
+    }
+
+    private static string GetDefaultConfigPath()
+    {
+        var configDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "cutube"
+        );
+        return Path.Combine(configDirectory, "config.json");
+    }
+
+    /// <summary>
     /// Loads configuration from file
     /// If file doesn't exist, returns default config
     /// </summary>
     public async Task<AppConfig> LoadAsync(CancellationToken ct = default)
     {
-        if (!File.Exists(ConfigPath))
+        if (!File.Exists(_configPath))
         {
             return CreateDefaultConfig();
         }
 
         try
         {
-            var json = await File.ReadAllTextAsync(ConfigPath, ct);
+            var json = await File.ReadAllTextAsync(_configPath, ct);
             var config = JsonSerializer.Deserialize<AppConfig>(json, _jsonOptions);
 
             return config ?? CreateDefaultConfig();
@@ -44,7 +62,7 @@ public class ConfigService
         catch (JsonException ex)
         {
             throw new InvalidOperationException(
-                $"Error reading configuration from {ConfigPath}. " +
+                $"Error reading configuration from {_configPath}. " +
                 $"File may be corrupted. Delete the file to use default config.",
                 ex
             );
@@ -58,10 +76,11 @@ public class ConfigService
     public async Task SaveAsync(AppConfig config, CancellationToken ct = default)
     {
         // Create directory if it doesn't exist
-        Directory.CreateDirectory(ConfigDirectory);
+        var directory = Path.GetDirectoryName(_configPath)!;
+        Directory.CreateDirectory(directory);
 
         var json = JsonSerializer.Serialize(config, _jsonOptions);
-        await File.WriteAllTextAsync(ConfigPath, json, ct);
+        await File.WriteAllTextAsync(_configPath, json, ct);
     }
 
     /// <summary>
@@ -82,10 +101,10 @@ public class ConfigService
     /// <summary>
     /// Returns full path of config file (for debugging)
     /// </summary>
-    public string GetConfigPath() => ConfigPath;
+    public string GetConfigPath() => _configPath;
 
     /// <summary>
     /// Checks if config file exists
     /// </summary>
-    public bool ConfigExists() => File.Exists(ConfigPath);
+    public bool ConfigExists() => File.Exists(_configPath);
 }
