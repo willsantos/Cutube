@@ -5,6 +5,7 @@ using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
 using Cutube.Infrastructure;
 
+// Program.cs is excluded from code coverage via GlobalSuppressions.cs or project configuration
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
