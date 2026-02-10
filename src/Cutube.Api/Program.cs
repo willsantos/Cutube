@@ -8,6 +8,13 @@ using Cutube.Infrastructure;
 
 // Program.cs is excluded from code coverage via GlobalSuppressions.cs or project configuration
 var builder = WebApplication.CreateBuilder(args);
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+
+if (allowedOrigins is null || allowedOrigins.Length == 0)
+{
+    throw new InvalidOperationException(
+        "CORS origins are not configured. Set Cors:AllowedOrigins in appsettings.");
+}
 
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
@@ -26,12 +33,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowNextJs", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://localhost:3001",
-                "https://cutube.dev",
-                "https://www.cutube.dev"
-            )
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

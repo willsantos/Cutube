@@ -6,20 +6,156 @@
 **Responsável:** Frontend Developer (full-stack)
 **Prioridade:** 🔥 Alta
 **Dependência:** ✅ Fase 2.3 completa (WebSocket + REST API)
+**Design System:** 📐 [plans/design-system.md](./design-system.md)
 
 ---
 
 ## Objetivo
 
-Criar interface web moderna usando Next.js 15, React 19, TypeScript e TailwindCSS que se comunica com a API REST e SignalR para gerenciar downloads de vídeos em tempo real.
+Criar interface web moderna usando **Next.js 16**, **React 19**, **TypeScript** e **TailwindCSS v4** que se comunica com a API REST e SignalR para gerenciar downloads de vídeos em tempo real.
+
+**Princípios Fundamentais:**
+- **Component-first** — componentes reutilizáveis e composáveis, nunca recriar o que já existe
+- **Design System driven** — toda UI derivada do Design System documentado
+- **Acessibilidade nativa** — WCAG 2.1 AA desde o dia 1
+- **Type-safe** — TypeScript strict mode, sem `any`
+- **Performance** — Server Components onde possível, Client Components só quando necessário
 
 **Benefícios:**
 - Interface visual intuitiva para downloads
 - Visualização de progresso em tempo real via WebSocket
 - Design responsivo (mobile, tablet, desktop)
-- Dark mode suporte
-- UI moderna com shadcn/ui components
+- Dark mode com suporte a preferência do sistema
+- UI moderna com componentes reutilizáveis baseados no Design System
 - Type safety com TypeScript strict mode
+
+---
+
+## Tooling & Convenções
+
+| Item | Valor |
+|------|-------|
+| **Package Manager** | `pnpm` (obrigatório, sem npm/yarn) |
+| **Dev Server Port** | `4000` (configurado no `package.json`) |
+| **Framework** | Next.js 16 (App Router) |
+| **React** | React 19 |
+| **Styling** | TailwindCSS v4 (CSS-first config) |
+| **Components** | shadcn/ui + Design System próprio |
+| **Icons** | Lucide React |
+| **Forms** | React Hook Form + Zod |
+| **State** | React Query (TanStack Query) |
+| **WebSocket** | @microsoft/signalr |
+| **Dark Mode** | next-themes |
+| **Tests E2E** | Playwright |
+| **Linter** | ESLint (flat config) |
+| **Formatter** | Prettier |
+
+---
+
+## Arquitetura de Componentes
+
+A arquitetura segue o princípio **Atomic Design** adaptado: componentes primitivos (UI), compostos (features), e layouts (pages). Todo componente deve ser reutilizável por padrão.
+
+```
+cutube-web/
+├── app/                               # Next.js 16 App Router
+│   ├── layout.tsx                     # Root layout (ThemeProvider, fonts)
+│   ├── page.tsx                       # Dashboard principal
+│   ├── downloads/
+│   │   ├── page.tsx                   # Lista de downloads
+│   │   └── [id]/
+│   │       └── page.tsx               # Detalhes de download
+│   └── globals.css                    # TailwindCSS v4 + design tokens
+│
+├── components/                        # Componentes reutilizáveis
+│   ├── ui/                            # Primitivos (shadcn/ui customizados)
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── input.tsx
+│   │   ├── badge.tsx
+│   │   ├── progress.tsx
+│   │   ├── dialog.tsx
+│   │   ├── toast.tsx
+│   │   ├── switch.tsx
+│   │   ├── select.tsx
+│   │   ├── separator.tsx
+│   │   ├── skeleton.tsx               # Loading placeholders
+│   │   └── label.tsx
+│   │
+│   ├── layout/                        # Componentes de layout
+│   │   ├── header.tsx                 # Header com nav, theme toggle
+│   │   ├── page-container.tsx         # Container padrão de página
+│   │   ├── section.tsx                # Seção com título e conteúdo
+│   │   └── empty-state.tsx            # Estado vazio reutilizável
+│   │
+│   ├── feedback/                      # Componentes de feedback
+│   │   ├── error-message.tsx          # Mensagem de erro inline
+│   │   ├── loading-spinner.tsx        # Spinner animado
+│   │   ├── loading-skeleton.tsx       # Skeleton para cards/listas
+│   │   └── status-badge.tsx           # Badge de status (queued, downloading, etc)
+│   │
+│   ├── data-display/                  # Componentes de exibição de dados
+│   │   ├── progress-bar.tsx           # Barra de progresso com animação
+│   │   ├── stat-card.tsx              # Card de estatística (velocidade, ETA)
+│   │   ├── info-row.tsx               # Linha label: value
+│   │   └── date-display.tsx           # Exibição de data formatada
+│   │
+│   ├── downloads/                     # Feature: Downloads
+│   │   ├── download-form.tsx          # Form para criar download
+│   │   ├── download-card.tsx          # Card individual de download
+│   │   ├── download-list.tsx          # Lista de download cards
+│   │   ├── download-actions.tsx       # Ações (cancel, retry, download file)
+│   │   └── download-detail.tsx        # Visão detalhada de um download
+│   │
+│   └── theme/                         # Theme system
+│       ├── theme-provider.tsx         # next-themes provider
+│       └── theme-toggle.tsx           # Botão toggle dark/light
+│
+├── hooks/                             # Custom React hooks
+│   ├── use-downloads.ts               # CRUD de downloads (React Query)
+│   ├── use-download-progress.ts       # Progresso via WebSocket
+│   ├── use-video-metadata.ts          # Fetch de metadados de vídeo
+│   └── use-websocket.ts              # Hook base para WebSocket
+│
+├── lib/                               # Utilitários e serviços
+│   ├── api.ts                         # REST API client
+│   ├── api-helpers.ts                 # fetch wrapper, error handling
+│   ├── websocket.ts                   # SignalR WebSocket service
+│   ├── utils.ts                       # cn(), formatBytes, formatSpeed, etc
+│   └── constants.ts                   # URLs, timeouts, configs
+│
+├── types/                             # TypeScript types
+│   ├── download.ts                    # Tipos de download
+│   ├── video.ts                       # Tipos de vídeo
+│   ├── api.ts                         # Tipos de resposta HTTP
+│   └── index.ts                       # Barrel export
+│
+├── next.config.ts                     # Next.js 16 config
+├── tailwind.config.ts                 # TailwindCSS (se necessário override)
+├── tsconfig.json                      # TypeScript strict
+├── components.json                    # shadcn/ui config
+├── .env.local                         # Variáveis de ambiente
+├── .env.example                       # Template de variáveis
+└── package.json                       # Scripts com pnpm, porta 4000
+```
+
+### Princípio de Reutilização
+
+```
+Regra de 3: se um padrão aparece 3+ vezes, vira componente.
+
+✅ CERTO:
+  <StatusBadge status={download.status} />           # Reusado em Card, Detail, List
+  <ProgressBar value={progress} status={status} />   # Reusado em Card, Detail
+  <EmptyState icon={...} title="..." action={...} /> # Reusado em qualquer lista vazia
+  <ErrorMessage message={error} />                    # Reusado em qualquer form/fetch
+  <InfoRow label="Velocidade" value={speed} />        # Reusado em qualquer detalhe
+
+❌ ERRADO:
+  Copiar JSX de status badge direto no CardContent
+  Criar ProgressBar diferente para cada página
+  Duplicar loading states em cada componente
+```
 
 ---
 
@@ -27,51 +163,45 @@ Criar interface web moderna usando Next.js 15, React 19, TypeScript e TailwindCS
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Frontend Layer                         │
-│                    Next.js 15 App Router                    │
-│                                                             │
-│  /app/page.tsx                 - Dashboard principal        │
-│  /app/downloads/page.tsx       - Lista de downloads        │
-│  /app/downloads/[id]/page.tsx  - Detalhes de download      │
-└────────────────────────┬────────────────────────────────────┘
+│                      Frontend Layer                          │
+│                    Next.js 16 App Router                     │
+│                    pnpm | porta :4000                        │
+│                                                              │
+│  /app/page.tsx                 - Dashboard principal          │
+│  /app/downloads/page.tsx       - Lista de downloads          │
+│  /app/downloads/[id]/page.tsx  - Detalhes de download        │
+└────────────────────────┬─────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Components Layer                         │
-│                  React + TypeScript                        │
-│                                                             │
-│  UI Components (shadcn/ui):                                │
-│  ├── DownloadForm              - Form para criar download  │
-│  ├── DownloadsList             - Lista de downloads        │
-│  ├── DownloadCard              - Card de download          │
-│  ├── ProgressBar               - Barra de progresso        │
-│  ├── StatusBadge               - Badge colorido            │
-│  ├── VideoPreview              - Preview + metadados       │
-│  ├── TimeRangePicker           - Input timerange           │
-│  └── DownloadActions           - Ações (cancel, retry)     │
-└────────────────────────┬────────────────────────────────────┘
+│                    Components Layer                          │
+│             Atomic Design (UI → Feature → Page)              │
+│                                                              │
+│  ui/          → Primitivos: Button, Card, Input, Badge       │
+│  layout/      → PageContainer, Header, Section, EmptyState   │
+│  feedback/    → ErrorMessage, StatusBadge, LoadingSkeleton    │
+│  data-display/→ ProgressBar, StatCard, InfoRow, DateDisplay  │
+│  downloads/   → DownloadForm, DownloadCard, DownloadList     │
+└────────────────────────┬─────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     Services Layer                          │
-│                                                             │
-│  lib/api.ts                    - REST API client            │
-│  lib/websocket.ts              - SignalR client            │
-│  lib/query.ts                  - React Query (cache)       │
-│  hooks/                        - Custom React hooks         │
-│    ├── useDownloads.ts                                    │
-│    ├── useDownloadProgress.ts                             │
-│    └── useVideoMetadata.ts                                │
-└────────────────────────┬────────────────────────────────────┘
+│                     Services Layer                           │
+│                                                              │
+│  lib/api.ts              - REST API client                   │
+│  lib/websocket.ts        - SignalR client                    │
+│  hooks/use-downloads.ts  - React Query (cache + mutations)   │
+│  hooks/use-download-progress.ts - WebSocket progress hook    │
+└────────────────────────┬─────────────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Backend Layer                          │
-│              ASP.NET Core API (Fase 2.2/2.3)                │
-│                                                             │
-│  /api/downloads         - REST endpoints                   │
-│  /api/videos/info       - Video metadata                   │
-│  /hubs/downloads        - SignalR Hub (WebSocket)          │
+│                      Backend Layer                           │
+│              ASP.NET Core API (Fase 2.2/2.3)                 │
+│                                                              │
+│  /api/downloads         - REST endpoints                     │
+│  /api/videos/info       - Video metadata                     │
+│  /hubs/downloads        - SignalR Hub (WebSocket)            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -100,40 +230,93 @@ User Action (Submit Form)
 
 ## Tarefas
 
-### 2.4.1 Criar projeto Next.js 15
+### 2.4.1 Criar projeto Next.js 16
 
 **Estimativa:** 2 horas
 **Comandos:**
 
 ```bash
-# Criar projeto Next.js 15
-npx create-next-app@latest cutube-web \
+# Criar projeto Next.js 16 com pnpm
+pnpx create-next-app@latest cutube-web \
   --typescript \
   --tailwind \
   --app \
   --no-src-dir \
   --import-alias "@/*" \
-  --eslint
+  --eslint \
+  --use-pnpm
 
 cd cutube-web
 
-# Adicionar dependências adicionais
-npm install @microsoft/signalr
-npm install date-fns      # Formatação de datas
-npm install lucide-react  # Icons
-npm install class-variance-authority  # Variantes de componentes
-npm install clsx tailwind-merge       # Merge de classes
+# Dependências core
+pnpm add @microsoft/signalr
+pnpm add @tanstack/react-query
+pnpm add date-fns
+pnpm add lucide-react
+pnpm add class-variance-authority
+pnpm add clsx tailwind-merge
+pnpm add next-themes
+pnpm add react-hook-form @hookform/resolvers zod
 
-# Adicionar shadcn/ui
-npx shadcn@latest init
+# Dev dependencies
+pnpm add -D prettier eslint-config-prettier
+
+# Inicializar shadcn/ui
+pnpx shadcn@latest init
 ```
 
-**Configuração TypeScript (tsconfig.json):**
+**Configuração da porta 4000 (package.json):**
+
+```json
+{
+  "scripts": {
+    "dev": "next dev --port 4000",
+    "build": "next build",
+    "start": "next start --port 4000",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "type-check": "tsc --noEmit"
+  }
+}
+```
+
+**Configuração Next.js 16 (next.config.ts):**
+
+```typescript
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // Next.js 16 usa React 19 por padrão
+  reactStrictMode: true,
+
+  // Proxy para API backend em dev
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/:path*`,
+      },
+    ];
+  },
+};
+
+export default nextConfig;
+```
+
+**Variáveis de ambiente (.env.local):**
+
+```bash
+# Backend API
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
+
+**tsconfig.json:**
 
 ```json
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -146,11 +329,7 @@ npx shadcn@latest init
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"]
     }
@@ -160,76 +339,22 @@ npx shadcn@latest init
 }
 ```
 
-**Configuração Tailwind (tailwind.config.ts):**
-
-```typescript
-import type { Config } from "tailwindcss";
-
-const config: Config = {
-  darkMode: ["class"],
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-    },
-  },
-  plugins: [require("tailwindcss-animate")],
-};
-
-export default config;
-```
-
 **Checklist:**
-- [ ] Criar projeto Next.js com App Router
+- [ ] Criar projeto Next.js 16 com `pnpm`
+- [ ] Configurar porta 4000 no `dev` e `start`
 - [ ] Configurar TypeScript strict mode
-- [ ] Configurar TailwindCSS com dark mode
+- [ ] Configurar TailwindCSS v4 com design tokens
 - [ ] Configurar path aliases (@/*)
 - [ ] Adicionar ESLint + Prettier
-- [ ] Adicionar dependências (@microsoft/signalr, lucide-react, etc)
-- [ ] Build sem erros: `npm run build`
-- [ ] Dev server rodando: `npm run dev` (http://localhost:3000)
+- [ ] Adicionar todas as dependências
+- [ ] Configurar proxy para API backend
+- [ ] Criar `.env.example`
+- [ ] Build sem erros: `pnpm build`
+- [ ] Dev server rodando: `pnpm dev` (http://localhost:4000)
 
 **Critérios de aceito:**
-- ✅ Projeto criado com Next.js 15
+- ✅ Projeto criado com Next.js 16 + pnpm
+- ✅ Dev server roda na porta 4000
 - ✅ TypeScript sem erros
 - ✅ TailwindCSS funcionando (classes aplicadas)
 - ✅ App Router configurado
@@ -237,28 +362,17 @@ export default config;
 
 ---
 
-### 2.4.2 Setup shadcn/ui components
+### 2.4.2 Setup Design System + shadcn/ui
 
-**Estimativa:** 3 horas
-**Comandos:**
+**Estimativa:** 4 horas
+**Referência:** [Design System](./design-system.md)
 
 ```bash
 # Inicializar shadcn/ui
-npx shadcn@latest init
+pnpx shadcn@latest init
 
-# Adicionar componentes base
-npx shadcn@latest add button
-npx shadcn@latest add card
-npx shadcn@latest add input
-npx shadcn@latest add label
-npx shadcn@latest add form
-npx shadcn@latest add select
-npx shadcn@latest add badge
-npx shadcn@latest add progress
-npx shadcn@latest add toast
-npx shadcn@latest add switch
-npx shadcn@latest add dialog
-npx shadcn@latest add separator
+# Adicionar componentes primitivos
+pnpx shadcn@latest add button card input label form select badge progress toast switch dialog separator skeleton
 ```
 
 **Configuração components.json:**
@@ -272,7 +386,7 @@ npx shadcn@latest add separator
   "tailwind": {
     "config": "tailwind.config.ts",
     "css": "app/globals.css",
-    "baseColor": "slate",
+    "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
@@ -286,7 +400,33 @@ npx shadcn@latest add separator
 }
 ```
 
-**Utils file (lib/utils.ts):**
+**globals.css — Design Tokens (ver [Design System](./design-system.md) para valores):**
+
+Os design tokens CSS são definidos no `globals.css` seguindo o Design System. Incluem:
+- Cores semânticas (background, foreground, primary, accent, destructive, etc.)
+- Espaçamentos baseados em 8px grid
+- Tipografia com escala 1.25 (Major Third)
+- Radius, shadows, transitions
+- Tokens para light e dark mode
+
+**Criar componentes base do Design System:**
+
+Todos os componentes abaixo seguem as diretrizes do [Design System](./design-system.md):
+
+1. **layout/page-container.tsx** — Container padrão com max-width e padding
+2. **layout/header.tsx** — Header com logo, nav e theme toggle
+3. **layout/section.tsx** — Seção com título opcional
+4. **layout/empty-state.tsx** — Estado vazio com ícone, título, descrição e ação
+5. **feedback/error-message.tsx** — Mensagem de erro inline
+6. **feedback/loading-spinner.tsx** — Spinner com tamanhos (sm, md, lg)
+7. **feedback/loading-skeleton.tsx** — Skeleton para cards e listas
+8. **feedback/status-badge.tsx** — Badge colorido para status de download
+9. **data-display/progress-bar.tsx** — Barra de progresso animada
+10. **data-display/stat-card.tsx** — Card com label, valor e ícone
+11. **data-display/info-row.tsx** — Linha label: value
+12. **data-display/date-display.tsx** — Data formatada com ícone
+
+**lib/utils.ts:**
 
 ```typescript
 import { type ClassValue, clsx } from "clsx";
@@ -301,7 +441,7 @@ export function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
 }
 
 export function formatSpeed(bytesPerSecond: number): string {
@@ -312,40 +452,40 @@ export function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
 export function formatTimeRange(timeString: string): string {
-  // "00:01:30" -> "1m 30s"
-  const parts = timeString.split(':');
+  const parts = timeString.split(":");
   if (parts.length !== 3) return timeString;
-
   const hours = parseInt(parts[0], 10);
   const minutes = parseInt(parts[1], 10);
   const seconds = parseInt(parts[2], 10);
-
   const result: string[] = [];
   if (hours > 0) result.push(`${hours}h`);
   if (minutes > 0) result.push(`${minutes}m`);
   if (seconds > 0) result.push(`${seconds}s`);
-
-  return result.join(' ') || '0s';
+  return result.join(" ") || "0s";
 }
 ```
 
 **Checklist:**
 - [ ] Inicializar shadcn/ui com components.json
-- [ ] Adicionar componentes base (button, card, input, etc)
-- [ ] Configurar CSS variables (globals.css)
+- [ ] Adicionar todos componentes primitivos (button, card, input, etc.)
+- [ ] Implementar design tokens no globals.css conforme Design System
+- [ ] Criar componentes de layout (page-container, header, section, empty-state)
+- [ ] Criar componentes de feedback (error-message, loading-spinner, loading-skeleton, status-badge)
+- [ ] Criar componentes de data-display (progress-bar, stat-card, info-row, date-display)
 - [ ] Criar lib/utils.ts com utilitários
-- [ ] Testar componentes (criar página de teste)
 - [ ] Verificar dark mode funcionando
+- [ ] Testar todos componentes isoladamente
 
 **Critérios de aceito:**
-- ✅ shadcn/ui configurado
-- ✅ Componentes base instalados
+- ✅ shadcn/ui configurado com design tokens do Design System
+- ✅ Componentes base criados e reutilizáveis
 - ✅ Dark mode funcionando
-- ✅ Componentes renderizam corretamente
+- ✅ Todos componentes renderizam corretamente
+- ✅ WCAG 2.1 AA: contraste mínimo 4.5:1
 
 ---
 
@@ -355,15 +495,15 @@ export function formatTimeRange(timeString: string): string {
 **Arquivos:**
 ```
 types/
-  ├── download.ts                  - Tipos de download
-  ├── video.ts                     - Tipos de vídeo
-  └── api.ts                       - Tipos gerais de API
+  ├── download.ts        - Tipos de download
+  ├── video.ts           - Tipos de vídeo
+  ├── api.ts             - Tipos gerais de API
+  └── index.ts           - Barrel export
 ```
 
 **types/download.ts:**
 
 ```typescript
-// types/download.ts
 export type DownloadStatus =
   | "queued"
   | "downloading"
@@ -375,17 +515,17 @@ export type DownloadStatus =
 export interface DownloadRequest {
   url: string;
   outputPath?: string;
-  startTime?: string;      // "HH:MM:SS"
-  endTime?: string;        // "HH:MM:SS"
+  startTime?: string;       // "HH:MM:SS"
+  endTime?: string;         // "HH:MM:SS"
   audioOnly?: boolean;
   customFilename?: string;
 }
 
 export interface DownloadProgress {
   downloadId: string;
-  progress: number;         // 0-100
-  speed: number;            // bytes/s
-  eta?: string;             // "HH:MM:SS"
+  progress: number;          // 0-100
+  speed: number;             // bytes/s
+  eta?: string;              // "HH:MM:SS"
   downloadedBytes: number;
   totalBytes: number;
   status: DownloadStatus;
@@ -397,8 +537,8 @@ export interface DownloadSummary {
   status: DownloadStatus;
   progress: number;
   filePath?: string;
-  createdAt: string;        // ISO date
-  completedAt?: string;     // ISO date
+  createdAt: string;         // ISO date
+  completedAt?: string;      // ISO date
   errorMessage?: string;
 }
 
@@ -413,7 +553,7 @@ export interface DownloadDetails extends DownloadSummary {
 export interface DownloadStartedEvent {
   downloadId: string;
   url: string;
-  startedAt: string;        // ISO date
+  startedAt: string;
 }
 
 export interface DownloadProgressEvent {
@@ -430,42 +570,33 @@ export interface DownloadCompletedEvent {
   downloadId: string;
   filePath: string;
   size: number;
-  duration: number;         // seconds
-  completedAt: string;      // ISO date
+  duration: number;
+  completedAt: string;
 }
 
 export interface DownloadFailedEvent {
   downloadId: string;
   error: string;
-  failedAt: string;         // ISO date
+  failedAt: string;
 }
 ```
 
 **types/video.ts:**
 
 ```typescript
-// types/video.ts
 export interface VideoMetadata {
   id: string;
   title: string;
   uploader: string;
-  duration: string;         // "HH:MM:SS"
+  duration: string;
   thumbnailUrl: string;
   viewCount?: number;
-  uploadDate?: string;      // ISO date
+  uploadDate?: string;
   formats: VideoFormat[];
 }
 
 export interface VideoFormat {
   formatId: string;
-  extension: string;
-  resolution?: string;      // "1920x1080"
-  fileSize?: number;        // bytes
-}
-
-export interface VideoFormatOption {
-  label: string;            // "1080p (MP4) - 150MB"
-  value: string;            // formatId
   extension: string;
   resolution?: string;
   fileSize?: number;
@@ -475,7 +606,8 @@ export interface VideoFormatOption {
 **types/api.ts:**
 
 ```typescript
-// types/api.ts
+import type { DownloadSummary } from "./download";
+
 export interface ApiResponse<T> {
   data: T;
   error?: string;
@@ -505,8 +637,8 @@ export interface GetDownloadsResponse {
 - [ ] Criar types/download.ts com todos tipos de download
 - [ ] Criar types/video.ts com tipos de metadados
 - [ ] Criar types/api.ts com tipos de resposta HTTP
-- [ ] Exportar tipos como barrel export (types/index.ts)
-- [ ] Verificar TypeScript sem erros
+- [ ] Criar types/index.ts (barrel export)
+- [ ] TypeScript compila sem erros
 
 **Critérios de aceito:**
 - ✅ Todos tipos definidos
@@ -515,27 +647,46 @@ export interface GetDownloadsResponse {
 
 ---
 
-### 2.4.4 Criar API client (REST)
+### 2.4.4 Criar API client (REST) + React Query
 
 **Estimativa:** 4 horas
 **Arquivos:**
 ```
 lib/
-  ├── api.ts                      - REST API client
-  └── api-helpers.ts              - Helpers para fetch
+  ├── api.ts              - REST API client
+  ├── api-helpers.ts       - Helpers para fetch
+  └── constants.ts         - Constantes (URLs, timeouts)
+
+hooks/
+  └── use-downloads.ts     - React Query hooks para downloads
+```
+
+O API client usa `fetch` nativo (sem axios) e React Query (TanStack Query) para cache e mutations.
+
+**lib/constants.ts:**
+
+```typescript
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+export const QUERY_KEYS = {
+  downloads: ["downloads"] as const,
+  download: (id: string) => ["downloads", id] as const,
+  videoInfo: (url: string) => ["video-info", url] as const,
+} as const;
+
+export const POLL_INTERVAL = 5000; // 5s para lista de downloads
 ```
 
 **lib/api-helpers.ts:**
 
 ```typescript
-// lib/api-helpers.ts
-import { ApiError } from "@/types/api";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { API_BASE_URL } from "./constants";
+import type { ApiError } from "@/types/api";
 
 export async function fetchApi<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
@@ -548,99 +699,75 @@ export async function fetchApi<T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({
+    const error = (await response.json().catch(() => ({
       title: "Unknown error",
       detail: response.statusText,
-    })) as ApiError;
+    }))) as ApiError;
 
     throw new Error(error.detail || error.title || "API request failed");
   }
 
+  // 204 No Content
+  if (response.status === 204) return undefined as T;
+
   return response.json();
 }
 
-export function buildQueryString(params: Record<string, string | number | undefined>): string {
+export function buildQueryString(
+  params: Record<string, string | number | undefined>,
+): string {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined) {
       searchParams.append(key, String(value));
     }
   });
-  const queryString = searchParams.toString();
-  return queryString ? `?${queryString}` : "";
+  const qs = searchParams.toString();
+  return qs ? `?${qs}` : "";
 }
 ```
 
 **lib/api.ts:**
 
 ```typescript
-// lib/api.ts
 import { fetchApi, buildQueryString } from "./api-helpers";
-import {
+import type {
   DownloadRequest,
-  DownloadSummary,
   DownloadDetails,
   VideoMetadata,
   CreateDownloadResponse,
   GetDownloadsResponse,
 } from "@/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
 export const api = {
   downloads: {
-    /**
-     * Criar novo download
-     * POST /api/downloads
-     */
     create: async (request: DownloadRequest): Promise<string> => {
       const response = await fetchApi<CreateDownloadResponse>(
         "/api/downloads",
-        {
-          method: "POST",
-          body: JSON.stringify(request),
-        }
+        { method: "POST", body: JSON.stringify(request) },
       );
       return response.downloadId;
     },
 
-    /**
-     * Listar todos downloads
-     * GET /api/downloads?status=downloading&limit=10&offset=0
-     */
     list: async (params?: {
       status?: string;
       limit?: number;
       offset?: number;
     }): Promise<GetDownloadsResponse> => {
-      const queryString = buildQueryString(params || {});
-      return fetchApi<GetDownloadsResponse>(`/api/downloads${queryString}`);
+      const qs = buildQueryString(params || {});
+      return fetchApi<GetDownloadsResponse>(`/api/downloads${qs}`);
     },
 
-    /**
-     * Obter detalhes de download específico
-     * GET /api/downloads/{id}
-     */
     get: async (id: string): Promise<DownloadDetails> => {
       return fetchApi<DownloadDetails>(`/api/downloads/${id}`);
     },
 
-    /**
-     * Cancelar/Deletar download
-     * DELETE /api/downloads/{id}
-     */
     cancel: async (id: string): Promise<void> => {
-      await fetchApi<void>(`/api/downloads/${id}`, {
-        method: "DELETE",
-      });
+      await fetchApi<void>(`/api/downloads/${id}`, { method: "DELETE" });
     },
   },
 
   videos: {
-    /**
-     * Obter metadados de vídeo
-     * GET /api/videos/info?url={url}
-     */
     getInfo: async (url: string): Promise<VideoMetadata> => {
       const encodedUrl = encodeURIComponent(url);
       return fetchApi<VideoMetadata>(`/api/videos/info?url=${encodedUrl}`);
@@ -648,10 +775,6 @@ export const api = {
   },
 
   health: {
-    /**
-     * Health check simples
-     * GET /health
-     */
     check: async (): Promise<{ status: string }> => {
       return fetchApi<{ status: string }>("/health");
     },
@@ -659,16 +782,71 @@ export const api = {
 };
 ```
 
+**hooks/use-downloads.ts (React Query):**
+
+```typescript
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { QUERY_KEYS, POLL_INTERVAL } from "@/lib/constants";
+import type { DownloadRequest } from "@/types";
+
+export function useDownloads(params?: {
+  status?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.downloads, params],
+    queryFn: () => api.downloads.list(params),
+    refetchInterval: POLL_INTERVAL,
+  });
+}
+
+export function useDownload(id: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.download(id),
+    queryFn: () => api.downloads.get(id),
+    refetchInterval: 2000,
+  });
+}
+
+export function useCreateDownload() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: DownloadRequest) => api.downloads.create(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.downloads });
+    },
+  });
+}
+
+export function useCancelDownload() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.downloads.cancel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.downloads });
+    },
+  });
+}
+```
+
 **Checklist:**
+- [ ] Criar lib/constants.ts com constantes
 - [ ] Criar lib/api-helpers.ts com fetchApi e buildQueryString
 - [ ] Criar lib/api.ts com todos endpoints REST
+- [ ] Criar hooks/use-downloads.ts com React Query
 - [ ] Configurar NEXT_PUBLIC_API_URL no .env.local
 - [ ] Error handling adequado
 - [ ] TypeScript types corretos
-- [ ] Testar com API real
 
 **Critérios de aceito:**
 - ✅ API client funcional
+- ✅ React Query configurado com polling
 - ✅ Todos endpoints implementados
 - ✅ Error handling OK
 - ✅ TypeScript sem erros
@@ -681,277 +859,32 @@ export const api = {
 **Arquivos:**
 ```
 lib/
-  └── websocket.ts                - SignalR WebSocket client
+  └── websocket.ts          - SignalR WebSocket service
 
 hooks/
-  ├── useWebSocket.ts             - Hook para conexão WebSocket
-  └── useDownloadProgress.ts      - Hook para progresso de download
+  ├── use-websocket.ts       - Hook base para conexão
+  └── use-download-progress.ts - Hook para progresso de download
 ```
 
 **lib/websocket.ts:**
 
+Implementação do `WebSocketService` como singleton com:
+- Connect/disconnect com auto-reconnect (delays: 0s, 2s, 10s, 30s)
+- Join/leave download groups
+- Listeners tipados por downloadId (progress, completed, failed)
+- Cleanup automático de listeners
+
+**hooks/use-download-progress.ts:**
+
 ```typescript
-// lib/websocket.ts
-import * as signalR from "@microsoft/signalr";
+"use client";
+
+import { useState, useEffect } from "react";
+import { ws } from "@/lib/websocket";
 import type {
   DownloadProgressEvent,
   DownloadCompletedEvent,
-  DownloadFailedEvent,
 } from "@/types";
-
-type ProgressListener = (data: DownloadProgressEvent) => void;
-type CompletedListener = (data: DownloadCompletedEvent) => void;
-type FailedListener = (data: DownloadFailedEvent) => void;
-
-class WebSocketService {
-  private connection: signalR.HubConnection | null = null;
-  private isConnecting = false;
-  private reconnectAttempts = 0;
-  private readonly maxReconnectAttempts = 5;
-
-  // Listeners por downloadId
-  private progressListeners: Map<string, Set<ProgressListener>> = new Map();
-  private completedListeners: Map<string, Set<CompletedListener>> = new Map();
-  private failedListeners: Map<string, Set<FailedListener>> = new Map();
-
-  /**
-   * Conectar ao SignalR Hub
-   */
-  async connect(): Promise<void> {
-    if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      console.log("[WebSocket] Already connected");
-      return;
-    }
-
-    if (this.isConnecting) {
-      console.log("[WebSocket] Connection already in progress");
-      return;
-    }
-
-    this.isConnecting = true;
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-    const hubUrl = apiUrl.replace("http", "ws") + "/hubs/downloads";
-
-    console.log("[WebSocket] Connecting to:", hubUrl);
-
-    this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        skipNegotiation: false,
-        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
-      })
-      .withAutomaticReconnect([0, 2000, 10000, 30000]) // Delays: 0s, 2s, 10s, 30s
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
-
-    // Event handlers
-    this.connection.on("DownloadProgress", (downloadId: string, data: DownloadProgressEvent) => {
-      console.log("[WebSocket] DownloadProgress:", downloadId, data.progress);
-      this.emitProgress(downloadId, data);
-    });
-
-    this.connection.on("DownloadCompleted", (downloadId: string, data: DownloadCompletedEvent) => {
-      console.log("[WebSocket] DownloadCompleted:", downloadId);
-      this.emitCompleted(downloadId, data);
-    });
-
-    this.connection.on("DownloadFailed", (downloadId: string, data: DownloadFailedEvent) => {
-      console.log("[WebSocket] DownloadFailed:", downloadId, data.error);
-      this.emitFailed(downloadId, data);
-    });
-
-    this.connection.onreconnecting((error) => {
-      console.log("[WebSocket] Reconnecting...", error);
-      this.reconnectAttempts++;
-    });
-
-    this.connection.onreconnected((connectionId) => {
-      console.log("[WebSocket] Reconnected:", connectionId);
-      this.reconnectAttempts = 0;
-    });
-
-    this.connection.onclose((error) => {
-      console.log("[WebSocket] Connection closed", error);
-      this.isConnecting = false;
-    });
-
-    try {
-      await this.connection.start();
-      console.log("[WebSocket] Connected successfully");
-      this.isConnecting = false;
-      this.reconnectAttempts = 0;
-    } catch (error) {
-      console.error("[WebSocket] Connection failed:", error);
-      this.isConnecting = false;
-      throw error;
-    }
-  }
-
-  /**
-   * Entrar no grupo de um download (para receber updates)
-   */
-  async joinDownload(downloadId: string): Promise<void> {
-    if (!this.connection) {
-      await this.connect();
-    }
-
-    try {
-      await this.connection!.invoke("JoinDownloadGroup", downloadId);
-      console.log("[WebSocket] Joined download group:", downloadId);
-    } catch (error) {
-      console.error("[WebSocket] Failed to join download group:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Sair do grupo de um download
-   */
-  async leaveDownload(downloadId: string): Promise<void> {
-    if (!this.connection) return;
-
-    try {
-      await this.connection.invoke("LeaveDownloadGroup", downloadId);
-      console.log("[WebSocket] Left download group:", downloadId);
-
-      // Remover listeners
-      this.progressListeners.delete(downloadId);
-      this.completedListeners.delete(downloadId);
-      this.failedListeners.delete(downloadId);
-    } catch (error) {
-      console.error("[WebSocket] Failed to leave download group:", error);
-    }
-  }
-
-  /**
-   * Registrar listener para progress updates
-   */
-  onProgress(downloadId: string, listener: ProgressListener): () => void {
-    if (!this.progressListeners.has(downloadId)) {
-      this.progressListeners.set(downloadId, new Set());
-    }
-    this.progressListeners.get(downloadId)!.add(listener);
-
-    // Retornar função para remover listener
-    return () => {
-      this.offProgress(downloadId, listener);
-    };
-  }
-
-  /**
-   * Remover listener de progress
-   */
-  offProgress(downloadId: string, listener: ProgressListener): void {
-    const listeners = this.progressListeners.get(downloadId);
-    if (listeners) {
-      listeners.delete(listener);
-      if (listeners.size === 0) {
-        this.progressListeners.delete(downloadId);
-      }
-    }
-  }
-
-  /**
-   * Registrar listener para completion
-   */
-  onCompleted(downloadId: string, listener: CompletedListener): () => void {
-    if (!this.completedListeners.has(downloadId)) {
-      this.completedListeners.set(downloadId, new Set());
-    }
-    this.completedListeners.get(downloadId)!.add(listener);
-
-    return () => {
-      this.offCompleted(downloadId, listener);
-    };
-  }
-
-  offCompleted(downloadId: string, listener: CompletedListener): void {
-    const listeners = this.completedListeners.get(downloadId);
-    if (listeners) {
-      listeners.delete(listener);
-      if (listeners.size === 0) {
-        this.completedListeners.delete(downloadId);
-      }
-    }
-  }
-
-  /**
-   * Registrar listener para failure
-   */
-  onFailed(downloadId: string, listener: FailedListener): () => void {
-    if (!this.failedListeners.has(downloadId)) {
-      this.failedListeners.set(downloadId, new Set());
-    }
-    this.failedListeners.get(downloadId)!.add(listener);
-
-    return () => {
-      this.offFailed(downloadId, listener);
-    };
-  }
-
-  offFailed(downloadId: string, listener: FailedListener): void {
-    const listeners = this.failedListeners.get(downloadId);
-    if (listeners) {
-      listeners.delete(listener);
-      if (listeners.size === 0) {
-        this.failedListeners.delete(downloadId);
-      }
-    }
-  }
-
-  /**
-   * Emitir progress events para listeners registrados
-   */
-  private emitProgress(downloadId: string, data: DownloadProgressEvent): void {
-    const listeners = this.progressListeners.get(downloadId);
-    if (listeners) {
-      listeners.forEach((listener) => listener(data));
-    }
-  }
-
-  private emitCompleted(downloadId: string, data: DownloadCompletedEvent): void {
-    const listeners = this.completedListeners.get(downloadId);
-    if (listeners) {
-      listeners.forEach((listener) => listener(data));
-    }
-  }
-
-  private emitFailed(downloadId: string, data: DownloadFailedEvent): void {
-    const listeners = this.failedListeners.get(downloadId);
-    if (listeners) {
-      listeners.forEach((listener) => listener(data));
-    }
-  }
-
-  /**
-   * Desconectar do hub
-   */
-  async disconnect(): Promise<void> {
-    if (this.connection) {
-      await this.connection.stop();
-      this.connection = null;
-      console.log("[WebSocket] Disconnected");
-    }
-  }
-
-  /**
-   * Verificar estado da conexão
-   */
-  isConnected(): boolean {
-    return this.connection?.state === signalR.HubConnectionState.Connected;
-  }
-}
-
-// Singleton instance
-export const ws = new WebSocketService();
-```
-
-**hooks/useDownloadProgress.ts:**
-
-```typescript
-// hooks/useDownloadProgress.ts
-import { useState, useEffect } from "react";
-import { ws } from "@/lib/websocket";
-import type { DownloadProgressEvent, DownloadCompletedEvent, DownloadFailedEvent } from "@/types";
 
 interface UseDownloadProgressResult {
   progress: DownloadProgressEvent | null;
@@ -961,1040 +894,93 @@ interface UseDownloadProgressResult {
   completedData: DownloadCompletedEvent | null;
 }
 
-export function useDownloadProgress(downloadId: string): UseDownloadProgressResult {
+export function useDownloadProgress(
+  downloadId: string,
+): UseDownloadProgressResult {
   const [progress, setProgress] = useState<DownloadProgressEvent | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isFailed, setIsFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [completedData, setCompletedData] = useState<DownloadCompletedEvent | null>(null);
+  const [completedData, setCompletedData] =
+    useState<DownloadCompletedEvent | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    // Conectar WebSocket
-    ws.connect().catch((err) => {
-      console.error("Failed to connect WebSocket:", err);
+    ws.connect().catch(console.error);
+    ws.joinDownload(downloadId).catch(console.error);
+
+    const unsubProgress = ws.onProgress(downloadId, (data) => {
+      if (mounted) setProgress(data);
     });
 
-    // Entrar no grupo do download
-    ws.joinDownload(downloadId).catch((err) => {
-      console.error("Failed to join download group:", err);
-    });
-
-    // Registrar listeners
-    const unsubscribeProgress = ws.onProgress(downloadId, (data) => {
-      if (mounted) {
-        setProgress(data);
-      }
-    });
-
-    const unsubscribeCompleted = ws.onCompleted(downloadId, (data) => {
+    const unsubCompleted = ws.onCompleted(downloadId, (data) => {
       if (mounted) {
         setIsCompleted(true);
         setCompletedData(data);
-        setProgress((prev) => ({
-          ...prev!,
-          progress: 100,
-          status: "completed",
-        }));
+        setProgress((prev) =>
+          prev ? { ...prev, progress: 100, status: "completed" } : prev,
+        );
       }
     });
 
-    const unsubscribeFailed = ws.onFailed(downloadId, (data) => {
+    const unsubFailed = ws.onFailed(downloadId, (data) => {
       if (mounted) {
         setIsFailed(true);
         setError(data.error);
       }
     });
 
-    // Cleanup
     return () => {
       mounted = false;
-      unsubscribeProgress();
-      unsubscribeCompleted();
-      unsubscribeFailed();
+      unsubProgress();
+      unsubCompleted();
+      unsubFailed();
       ws.leaveDownload(downloadId);
     };
   }, [downloadId]);
 
-  return {
-    progress,
-    isCompleted,
-    isFailed,
-    error,
-    completedData,
-  };
+  return { progress, isCompleted, isFailed, error, completedData };
 }
 ```
 
 **Checklist:**
-- [ ] Instalar @microsoft/signalr
 - [ ] Criar WebSocketService em lib/websocket.ts
-- [ ] Implementar connect/disconnect
+- [ ] Implementar connect/disconnect com auto-reconnect
 - [ ] Implementar joinDownload/leaveDownload
-- [ ] Implementar listeners (onProgress, onCompleted, onFailed)
-- [ ] Criar hook useDownloadProgress
-- [ ] Auto-reconnect configurado
-- [ ] Testar com API real
+- [ ] Implementar listeners tipados (onProgress, onCompleted, onFailed)
+- [ ] Criar hook use-download-progress
+- [ ] Cleanup automático no unmount
 
 **Critérios de aceito:**
 - ✅ WebSocket conecta com sucesso
 - ✅ Events recebidos em tempo real
 - ✅ Auto-reconnect funcionando
-- ✅ Hook useDownloadProgress funciona
+- ✅ Hook useDownloadProgress funcional
+- ✅ Sem memory leaks (cleanup correto)
 
 ---
 
-### 2.4.6 Criar página: Dashboard
+### 2.4.6 Criar páginas: Dashboard + Downloads
 
-**Estimativa:** 6 horas
-**Arquivos:**
-```
-app/
-  ├── page.tsx                      - Dashboard principal
-  ├── layout.tsx                    - Root layout
-  └── globals.css                   - Estilos globais
+**Estimativa:** 8 horas
 
-components/
-  ├── DownloadForm.tsx              - Form para criar download
-  ├── DownloadsList.tsx             - Lista de downloads
-  ├── DownloadCard.tsx              - Card de download individual
-  ├── ProgressBar.tsx               - Barra de progresso
-  └── StatusBadge.tsx               - Badge de status
-```
+Esta tarefa implementa todas as páginas usando os **componentes reutilizáveis** criados em 2.4.2.
 
-**app/page.tsx (Dashboard):**
+**app/layout.tsx (Root Layout):**
 
-```typescript
-// app/page.tsx
-"use client";
-
-import { useState, useEffect } from "react";
-import { api } from "@/lib/api";
-import type { DownloadSummary } from "@/types";
-import { DownloadForm } from "@/components/DownloadForm";
-import { DownloadsList } from "@/components/DownloadsList";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-
-export default function DashboardPage() {
-  const [downloads, setDownloads] = useState<DownloadSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchDownloads = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await api.downloads.list();
-      setDownloads(response.downloads);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch downloads");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDownloads();
-
-    // Poll a cada 5 segundos (até implementarmos SignalR para lista)
-    const interval = setInterval(fetchDownloads, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleDownloadCreated = (downloadId: string) => {
-    // Refetch para incluir novo download
-    fetchDownloads();
-  };
-
-  const handleDownloadDeleted = (downloadId: string) => {
-    setDownloads((prev) => prev.filter((d) => d.downloadId !== downloadId));
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Cutube</h1>
-            <p className="text-muted-foreground">
-              Gerenciador de downloads de vídeos
-            </p>
-          </div>
-          <Button
-            onClick={fetchDownloads}
-            disabled={isLoading}
-            variant="outline"
-            size="icon"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
-        </div>
-
-        {/* Download Form */}
-        <div className="mb-8">
-          <DownloadForm onDownloadCreated={handleDownloadCreated} />
-        </div>
-
-        {/* Downloads List */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Downloads</h2>
-          {error && (
-            <div className="p-4 mb-4 text-sm text-destructive bg-destructive/10 rounded-md">
-              {error}
-            </div>
-          )}
-          <DownloadsList
-            downloads={downloads}
-            isLoading={isLoading}
-            onDownloadDeleted={handleDownloadDeleted}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-**components/DownloadForm.tsx:**
-
-```typescript
-// components/DownloadForm.tsx
-"use client";
-
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { api } from "@/lib/api";
-import { Loader2, Download } from "lucide-react";
-import type { DownloadRequest } from "@/types";
-
-const downloadSchema = z.object({
-  url: z.string().url("URL inválida"),
-  outputPath: z.string().optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
-  audioOnly: z.boolean().default(false),
-  customFilename: z.string().optional(),
-});
-
-type DownloadFormData = z.infer<typeof downloadSchema>;
-
-interface DownloadFormProps {
-  onDownloadCreated: (downloadId: string) => void;
-}
-
-export function DownloadForm({ onDownloadCreated }: DownloadFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<DownloadFormData>({
-    resolver: zodResolver(downloadSchema),
-    defaultValues: {
-      audioOnly: false,
-    },
-  });
-
-  const onSubmit = async (data: DownloadFormData) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const request: DownloadRequest = {
-        url: data.url,
-        outputPath: data.outputPath || undefined,
-        startTime: data.startTime || undefined,
-        endTime: data.endTime || undefined,
-        audioOnly: data.audioOnly,
-        customFilename: data.customFilename || undefined,
-      };
-
-      const downloadId = await api.downloads.create(request);
-      onDownloadCreated(downloadId);
-      reset();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create download");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="bg-card rounded-lg border p-6">
-      <h3 className="text-lg font-semibold mb-4">Novo Download</h3>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* URL */}
-        <div className="space-y-2">
-          <Label htmlFor="url">URL do vídeo *</Label>
-          <Input
-            id="url"
-            placeholder="https://youtube.com/watch?v=..."
-            {...register("url")}
-            disabled={isLoading}
-          />
-          {errors.url && (
-            <p className="text-sm text-destructive">{errors.url.message}</p>
-          )}
-        </div>
-
-        {/* Audio Only */}
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="audioOnly"
-            {...register("audioOnly")}
-            disabled={isLoading}
-          />
-          <Label htmlFor="audioOnly">Apenas áudio (MP3)</Label>
-        </div>
-
-        {/* Time Range */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="startTime">Início (HH:MM:SS)</Label>
-            <Input
-              id="startTime"
-              placeholder="00:00:00"
-              {...register("startTime")}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endTime">Fim (HH:MM:SS)</Label>
-            <Input
-              id="endTime"
-              placeholder="00:00:00"
-              {...register("endTime")}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-
-        {/* Output Path */}
-        <div className="space-y-2">
-          <Label htmlFor="outputPath">Caminho de saída</Label>
-          <Input
-            id="outputPath"
-            placeholder="/home/user/Downloads"
-            {...register("outputPath")}
-            disabled={isLoading}
-          />
-        </div>
-
-        {/* Custom Filename */}
-        <div className="space-y-2">
-          <Label htmlFor="customFilename">Nome do arquivo</Label>
-          <Input
-            id="customFilename"
-            placeholder="meu-video.mp4"
-            {...register("customFilename")}
-            disabled={isLoading}
-          />
-        </div>
-
-        {/* Error */}
-        {error && (
-          <p className="text-sm text-destructive">{error}</p>
-        )}
-
-        {/* Submit */}
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Criando download...
-            </>
-          ) : (
-            <>
-              <Download className="mr-2 h-4 w-4" />
-              Iniciar Download
-            </>
-          )}
-        </Button>
-      </form>
-    </div>
-  );
-}
-```
-
-**components/DownloadCard.tsx:**
-
-```typescript
-// components/DownloadCard.tsx
-"use client";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ProgressBar } from "@/components/ProgressBar";
-import { StatusBadge } from "@/components/StatusBadge";
-import { useDownloadProgress } from "@/hooks/useDownloadProgress";
-import { api } from "@/lib/api";
-import type { DownloadSummary } from "@/types";
-import { Trash2, Download } from "lucide-react";
-import { formatBytes, formatSpeed, formatTimeRange } from "@/lib/utils";
-
-interface DownloadCardProps {
-  download: DownloadSummary;
-  onDelete: (downloadId: string) => void;
-}
-
-export function DownloadCard({ download, onDelete }: DownloadCardProps) {
-  const { progress, isCompleted, isFailed, error } = useDownloadProgress(
-    download.downloadId
-  );
-
-  const handleCancel = async () => {
-    try {
-      await api.downloads.cancel(download.downloadId);
-      onDelete(download.downloadId);
-    } catch (err) {
-      console.error("Failed to cancel download:", err);
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-base truncate flex-1">
-            {download.url}
-          </CardTitle>
-          <StatusBadge status={download.status} />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Progress Bar */}
-        <ProgressBar
-          progress={progress?.progress ?? download.progress}
-          status={download.status}
-        />
-
-        {/* Details */}
-        <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-          {progress?.speed && (
-            <div>Velocidade: {formatSpeed(progress.speed)}</div>
-          )}
-          {progress?.eta && download.status === "downloading" && (
-            <div>ETA: {formatTimeRange(progress.eta)}</div>
-          )}
-          {progress?.downloadedBytes && progress.totalBytes && (
-            <div>
-              {formatBytes(progress.downloadedBytes)} /{" "}
-              {formatBytes(progress.totalBytes)}
-            </div>
-          )}
-        </div>
-
-        {/* Error Message */}
-        {isFailed && error && (
-          <div className="p-2 text-sm text-destructive bg-destructive/10 rounded-md">
-            {error}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="flex justify-end">
-          {download.status !== "completed" && download.status !== "failed" && (
-            <Button
-              onClick={handleCancel}
-              variant="destructive"
-              size="sm"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Cancelar
-            </Button>
-          )}
-          {download.status === "completed" && download.filePath && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={`/api/downloads/${download.downloadId}/file`}>
-                <Download className="mr-2 h-4 w-4" />
-                Baixar Arquivo
-              </a>
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-```
-
-**components/ProgressBar.tsx:**
-
-```typescript
-// components/ProgressBar.tsx
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-
-interface ProgressBarProps {
-  progress: number;
-  status: string;
-}
-
-export function ProgressBar({ progress, status }: ProgressBarProps) {
-  const isProcessing = status === "processing";
-  const isCompleted = status === "completed";
-  const isFailed = status === "failed";
-
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <span>Progresso</span>
-        <span>{Math.round(progress)}%</span>
-      </div>
-      <Progress
-        value={isFailed ? 0 : progress}
-        className={cn(
-          "h-2",
-          isProcessing && "animate-pulse",
-          isCompleted && "bg-primary"
-        )}
-      />
-      {isProcessing && (
-        <p className="text-xs text-muted-foreground">
-          Processando vídeo (ffmpeg)...
-        </p>
-      )}
-    </div>
-  );
-}
-```
-
-**components/StatusBadge.tsx:**
-
-```typescript
-// components/StatusBadge.tsx
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import type { DownloadStatus } from "@/types";
-
-interface StatusBadgeProps {
-  status: DownloadStatus;
-}
-
-const statusConfig: Record<
-  DownloadStatus,
-  { label: string; className: string }
-> = {
-  queued: { label: "Na fila", className: "bg-secondary text-secondary-foreground" },
-  downloading: {
-    label: "Baixando",
-    className: "bg-blue-500 text-white",
-  },
-  processing: {
-    label: "Processando",
-    className: "bg-yellow-500 text-white",
-  },
-  completed: {
-    label: "Concluído",
-    className: "bg-green-500 text-white",
-  },
-  failed: {
-    label: "Falhou",
-    className: "bg-destructive text-destructive-foreground",
-  },
-  cancelled: {
-    label: "Cancelado",
-    className: "bg-muted text-muted-foreground",
-  },
-};
-
-export function StatusBadge({ status }: StatusBadgeProps) {
-  const config = statusConfig[status];
-
-  return (
-    <Badge className={cn("font-normal", config.className)} variant="secondary">
-      {config.label}
-    </Badge>
-  );
-}
-```
-
-**components/DownloadsList.tsx:**
-
-```typescript
-// components/DownloadsList.tsx
-import { DownloadCard } from "@/components/DownloadCard";
-import type { DownloadSummary } from "@/types";
-
-interface DownloadsListProps {
-  downloads: DownloadSummary[];
-  isLoading: boolean;
-  onDownloadDeleted: (downloadId: string) => void;
-}
-
-export function DownloadsList({
-  downloads,
-  isLoading,
-  onDownloadDeleted,
-}: DownloadsListProps) {
-  if (isLoading) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Carregando downloads...
-      </div>
-    );
-  }
-
-  if (downloads.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Nenhum download ainda. Crie o primeiro acima!
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {downloads.map((download) => (
-        <DownloadCard
-          key={download.downloadId}
-          download={download}
-          onDelete={onDownloadDeleted}
-        />
-      ))}
-    </div>
-  );
-}
-```
-
-**Checklist:**
-- [ ] Criar app/page.tsx (Dashboard)
-- [ ] Criar DownloadForm com validações
-- [ ] Criar DownloadCard com progresso
-- [ ] Criar ProgressBar animada
-- [ ] Criar StatusBadge colorida
-- [ ] Criar DownloadsList
-- [ ] Conectar API REST (criar download)
-- [ ] Conectar SignalR (progresso em tempo real)
-- [ ] Testar fluxo completo
-
-**Critérios de aceito:**
-- ✅ Dashboard funcional
-- [ ] Formulário de download funcionando
-- [ ] Downloads listados
-- [ ] Progresso em tempo real via WebSocket
-- [ ] Cancelamento funcionando
-- [ ] Design responsivo
-
----
-
-### 2.4.7 Criar página: Downloads (Detalhes)
-
-**Estimativa:** 4 horas
-**Arquivos:**
-```
-app/downloads/
-  ├── page.tsx                      - Lista de todos downloads
-  └── [id]/
-      └── page.tsx                  - Detalhes de download específico
-```
-
-**app/downloads/page.tsx:**
-
-```typescript
-// app/downloads/page.tsx
-"use client";
-
-import { useState, useEffect } from "react";
-import { api } from "@/lib/api";
-import type { DownloadSummary } from "@/types";
-import { DownloadsList } from "@/components/DownloadsList";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from "lucide-react";
-import Link from "next/link";
-
-export default function DownloadsPage() {
-  const [downloads, setDownloads] = useState<DownloadSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchDownloads = async () => {
-    setIsLoading(true);
-    try {
-      const response = await api.downloads.list();
-      setDownloads(response.downloads);
-    } catch (err) {
-      console.error("Failed to fetch downloads:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDownloads();
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <Link href="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Downloads</h1>
-              <p className="text-muted-foreground">
-                Histórico completo de downloads
-              </p>
-            </div>
-          </div>
-          <Button
-            onClick={fetchDownloads}
-            disabled={isLoading}
-            variant="outline"
-            size="icon"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
-        </div>
-
-        {/* Downloads List */}
-        <DownloadsList
-          downloads={downloads}
-          isLoading={isLoading}
-          onDownloadDeleted={(id) => setDownloads((prev) => prev.filter((d) => d.downloadId !== id))}
-        />
-      </div>
-    </div>
-  );
-}
-```
-
-**app/downloads/[id]/page.tsx:**
-
-```typescript
-// app/downloads/[id]/page.tsx
-"use client";
-
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { api } from "@/lib/api";
-import type { DownloadDetails } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ProgressBar } from "@/components/ProgressBar";
-import { StatusBadge } from "@/components/StatusBadge";
-import { ArrowLeft, Trash2, Download, Calendar, Clock, HardDrive } from "lucide-react";
-import Link from "next/link";
-import { formatBytes, formatSpeed, formatTimeRange } from "@/lib/utils";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-
-export default function DownloadDetailsPage() {
-  const params = useParams();
-  const downloadId = params.id as string;
-
-  const [download, setDownload] = useState<DownloadDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchDownload = async () => {
-      setIsLoading(true);
-      try {
-        const details = await api.downloads.get(downloadId);
-        setDownload(details);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch download");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDownload();
-
-    // Poll a cada 2s para atualizar detalhes
-    const interval = setInterval(fetchDownload, 2000);
-    return () => clearInterval(interval);
-  }, [downloadId]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p>Carregando detalhes...</p>
-      </div>
-    );
-  }
-
-  if (error || !download) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-destructive">{error || "Download não encontrado"}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/downloads">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
-            </Button>
-          </Link>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Status Card */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <CardTitle>Download</CardTitle>
-                  <StatusBadge status={download.status} />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium mb-1">URL</p>
-                  <p className="text-sm text-muted-foreground break-all">{download.url}</p>
-                </div>
-
-                <ProgressBar progress={download.progress} status={download.status} />
-
-                {download.errorMessage && (
-                  <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                    {download.errorMessage}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Actions */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex space-x-2">
-                  {download.status !== "completed" &&
-                    download.status !== "failed" && (
-                      <Button variant="destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Cancelar Download
-                      </Button>
-                    )}
-                  {download.status === "completed" && download.filePath && (
-                    <Button asChild>
-                      <a href={`/api/downloads/${downloadId}/file`}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Baixar Arquivo
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Info Sidebar */}
-          <div className="space-y-6">
-            {/* Dates */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Datas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-start space-x-2">
-                  <Calendar className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Criado em</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(download.createdAt), "PPp", { locale: ptBR })}
-                    </p>
-                  </div>
-                </div>
-                {download.completedAt && (
-                  <div className="flex items-start space-x-2">
-                    <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Concluído em</p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(download.completedAt), "PPp", { locale: ptBR })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Stats */}
-            {download.speed > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Estatísticas</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {download.speed > 0 && (
-                    <div className="flex items-start space-x-2">
-                      <Download className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">Velocidade</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatSpeed(download.speed)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {download.eta && download.status === "downloading" && (
-                    <div className="flex items-start space-x-2">
-                      <Clock className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">Tempo Restante</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatTimeRange(download.eta)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* File Info */}
-            {download.status === "completed" && download.filePath && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Arquivo</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start space-x-2">
-                    <HardDrive className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {download.filePath.split("/").pop()}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {download.filePath}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-```
-
-**Checklist:**
-- [ ] Criar página /downloads
-- [ ] Criar página /downloads/[id]
-- [ ] Listar todos downloads
-- [ ] Mostrar detalhes específicos
-- [ ] Implementar filtros (status, date)
-- [ ] Implementar ações (cancel, retry)
-- [ ] Navegação OK
-
-**Critérios de aceito:**
-- ✅ Páginas funcionais
-- ✅ Detalhes completos mostrados
-- ✅ Navegação entre páginas OK
-- ✅ Design responsivo
-
----
-
-### 2.4.8 Dark Mode
-
-**Estimativa:** 3 horas
-**Arquivos:**
-```
-components/
-  ├── theme-provider.tsx            - Provider de tema
-  └── theme-toggle.tsx              - Botão toggle tema
-```
-
-**components/theme-provider.tsx:**
-
-```typescript
-// components/theme-provider.tsx
-"use client";
-
-import * as React from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { type ThemeProviderProps } from "next-themes/dist/types";
-
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
-}
-```
-
-**components/theme-toggle.tsx:**
-
-```typescript
-// components/theme-toggle.tsx
-"use client";
-
-import * as React from "react";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
-
-export function ThemeToggle() {
-  const { setTheme, theme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-    >
-      {theme === "dark" ? (
-        <Sun className="h-5 w-5" />
-      ) : (
-        <Moon className="h-5 w-5" />
-      )}
-      <span className="sr-only">Toggle theme</span>
-    </Button>
-  );
-}
-```
-
-**app/layout.tsx:**
-
-```typescript
-// app/layout.tsx
+```tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Header } from "@/components/layout/header";
+import { QueryProvider } from "@/components/providers/query-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Cutube - Video Downloader",
+  title: "Cutube — Video Downloader",
   description: "Gerenciador de downloads de vídeos",
 };
 
@@ -2005,17 +991,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <div className="fixed top-4 right-4 z-50">
-            <ThemeToggle />
-          </div>
-          {children}
+          <QueryProvider>
+            <Header />
+            <main>{children}</main>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
@@ -2023,64 +1009,217 @@ export default function RootLayout({
 }
 ```
 
+**app/page.tsx (Dashboard):**
+
+Composto de componentes reutilizáveis:
+- `<PageContainer>` — wrapper padrão
+- `<Section>` — seções com título
+- `<DownloadForm>` — formulário de download
+- `<DownloadList>` — lista de downloads (usa React Query via `useDownloads`)
+- `<EmptyState>` — quando não há downloads
+- `<ErrorMessage>` — quando API falha
+
+**app/downloads/page.tsx (Lista):**
+
+Reutiliza exatamente os mesmos componentes:
+- `<PageContainer>` + `<DownloadList>` + `<EmptyState>`
+
+**app/downloads/[id]/page.tsx (Detalhes):**
+
+Composto de:
+- `<PageContainer>`
+- `<DownloadDetail>` (card principal com status, URL, progress)
+- `<ProgressBar>` (reutilizado do design system)
+- `<StatusBadge>` (reutilizado)
+- `<StatCard>` (velocidade, ETA, tamanho)
+- `<InfoRow>` (datas, caminhos)
+- `<DownloadActions>` (cancelar, baixar arquivo)
+- `<DateDisplay>` (criado em, concluído em)
+- `<ErrorMessage>` (quando download falha)
+
 **Checklist:**
-- [ ] Instalar next-themes
-- [ ] Criar ThemeProvider
-- [ ] Criar ThemeToggle button
-- [ ] Integrar no root layout
-- [ ] Testar em light/dark mode
-- [ ] Verificar persistência de tema
+- [ ] Criar app/layout.tsx com ThemeProvider + QueryProvider + Header
+- [ ] Criar app/page.tsx (Dashboard) usando componentes reutilizáveis
+- [ ] Criar app/downloads/page.tsx reutilizando DownloadList
+- [ ] Criar app/downloads/[id]/page.tsx reutilizando componentes de display
+- [ ] Conectar React Query (useDownloads, useDownload)
+- [ ] Conectar WebSocket (useDownloadProgress)
+- [ ] Loading states com Skeleton
+- [ ] Error states com ErrorMessage
+- [ ] Empty states com EmptyState
+- [ ] Navegação entre páginas funcional
 
 **Critérios de aceito:**
-- ✅ Dark mode funcionando
-- ✅ Toggle button funcional
-- ✅ Tema persiste entre sessões
-- ✅ Transições suaves
+- ✅ Dashboard funcional com form + lista
+- ✅ Downloads listados com progresso em tempo real
+- ✅ Detalhes de download completos
+- ✅ Cancelamento funcionando
+- ✅ Todos os componentes são reutilizados (nenhum JSX duplicado)
+- ✅ Loading/Error/Empty states em todas as páginas
 
 ---
 
-### 2.4.9 Responsividade
+### 2.4.7 Dark Mode + Theme System
+
+**Estimativa:** 2 horas
+
+**components/theme/theme-provider.tsx:**
+
+```tsx
+"use client";
+
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+
+export function ThemeProvider({
+  children,
+  ...props
+}: React.ComponentProps<typeof NextThemesProvider>) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+}
+```
+
+**components/theme/theme-toggle.tsx:**
+
+```tsx
+"use client";
+
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+
+export function ThemeToggle() {
+  const { setTheme, theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return <Button variant="ghost" size="icon" aria-label="Toggle theme" />;
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+    >
+      {theme === "dark" ? (
+        <Sun className="h-5 w-5" />
+      ) : (
+        <Moon className="h-5 w-5" />
+      )}
+    </Button>
+  );
+}
+```
+
+O Dark mode segue as diretrizes do [Design System](./design-system.md):
+- Nunca `#000` puro — usar cinza escuro com tint da marca
+- Nunca `#FFF` puro em texto — usar `~92%` lightness
+- Reduzir saturação de cores accent em 10-20%
+- Elevação = brilho (cards mais claros que background)
+
+**Checklist:**
+- [ ] Instalar next-themes
+- [ ] Criar ThemeProvider
+- [ ] Criar ThemeToggle com aria-label
+- [ ] Integrar no root layout
+- [ ] Tokens de dark mode no globals.css
+- [ ] Testar em light e dark mode
+- [ ] Verificar persistência de tema
+- [ ] Verificar contraste WCAG AA em ambos modos
+
+**Critérios de aceito:**
+- ✅ Dark mode funcionando
+- ✅ Toggle button acessível (aria-label, keyboard)
+- ✅ Tema persiste entre sessões (localStorage)
+- ✅ Respeita preferência do sistema
+- ✅ Contraste WCAG 2.1 AA em ambos modos
+
+---
+
+### 2.4.8 Responsividade
 
 **Estimativa:** 4 horas
+
+**Breakpoints (TailwindCSS defaults):**
+
+| Breakpoint | Min Width | Layout |
+|------------|-----------|--------|
+| `sm` | 640px | Mobile landscape |
+| `md` | 768px | Tablet |
+| `lg` | 1024px | Desktop |
+| `xl` | 1280px | Wide desktop |
+
+**Responsividade por componente:**
+
+| Componente | Mobile (< 768px) | Tablet (768px+) | Desktop (1024px+) |
+|------------|-------------------|-----------------|-------------------|
+| Header | Logo + menu hamburguer | Logo + nav | Logo + nav + actions |
+| DownloadForm | Campos empilhados | 2 colunas | 2 colunas com sidebar |
+| DownloadList | 1 coluna | 2 colunas | 3 colunas |
+| DownloadDetail | Empilhado | Empilhado | 2/3 content + 1/3 sidebar |
+| StatCards | 2 colunas | 3 colunas | 4 colunas |
+
 **Checklist:**
-- [ ] Mobile (320px+)
-  - Cards empilhados verticalmente
-  - Form com campos em coluna única
-  - Botões full-width
-- [ ] Tablet (768px+)
-  - Cards em grid 2 colunas
-  - Sidebar em detalhes colapsada
-- [ ] Desktop (1024px+)
-  - Cards em grid 3 colunas
-  - Sidebar visível
-  - Espaçamento adequado
-- [ ] Testar em múltiplos devices
-- [ ] Tailwind breakpoints configurados
+- [ ] Mobile-first CSS (base → sm → md → lg)
+- [ ] DownloadList grid responsivo
+- [ ] DownloadForm layout adaptativo
+- [ ] DownloadDetail com sidebar colapsável
+- [ ] Touch targets mínimo 44×44px em mobile
+- [ ] Testar em DevTools (320px, 768px, 1024px, 1440px)
+- [ ] Testar em dispositivos reais se possível
 
 **Critérios de aceito:**
 - ✅ Responsivo em todos tamanhos
 - ✅ Mobile-first approach
-- ✅ Lighthouse score > 90
+- ✅ Touch targets adequados
+- ✅ Nenhum scroll horizontal
+
+---
+
+### 2.4.9 Acessibilidade (a11y)
+
+**Estimativa:** 3 horas
+
+A acessibilidade é parte core do Design System. Esta tarefa garante conformidade:
+
+**Requisitos WCAG 2.1 AA:**
+- Contraste mínimo 4.5:1 para texto normal, 3:1 para texto grande
+- Todos inputs com `<label>` associado
+- Todos botões com texto visível ou `aria-label`
+- Focus ring visível em todos elementos interativos
+- Navegação por teclado funcional (Tab, Enter, Escape)
+- Landmarks semânticos (`<header>`, `<main>`, `<nav>`, `<footer>`)
+- `aria-live` regions para updates em tempo real (progresso de download)
+- `prefers-reduced-motion` respeitado em animações
+
+**Checklist:**
+- [ ] Rodar audit de acessibilidade (Lighthouse, axe-core)
+- [ ] Verificar contraste de todas combinações de cores
+- [ ] Verificar labels em todos inputs
+- [ ] Verificar aria-labels em botões icon-only
+- [ ] Testar navegação por teclado completa
+- [ ] Adicionar skip-to-content link
+- [ ] `aria-live="polite"` para updates de progresso
+- [ ] `prefers-reduced-motion` em animações CSS
+- [ ] Testar com leitor de tela (NVDA/VoiceOver)
+
+**Critérios de aceito:**
+- ✅ Lighthouse Accessibility score > 95
+- ✅ axe-core: zero violations
+- ✅ Navegação por teclado completa
+- ✅ Funcional com leitor de tela
 
 ---
 
 ### 2.4.10 Testes E2E com Playwright
 
 **Estimativa:** 6 horas
-**Arquivos:**
-```
-e2e/
-  ├── downloads.spec.ts             - Testes de downloads
-  └── video-info.spec.ts            - Testes de metadados
-
-playwright.config.ts
-```
-
-**Setup Playwright:**
 
 ```bash
-npm install -D @playwright/test
-npx playwright install
+pnpm add -D @playwright/test
+pnpx playwright install
 ```
 
 **playwright.config.ts:**
@@ -2096,147 +1235,118 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:4000",
     trace: "on-first-retry",
   },
   projects: [
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-    },
-    {
-      name: "firefox",
-      use: { ...devices["Desktop Firefox"] },
-    },
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-    },
-    {
-      name: "Mobile Chrome",
-      use: { ...devices["Pixel 5"] },
-    },
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    { name: "Mobile Chrome", use: { ...devices["Pixel 5"] } },
   ],
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
+    command: "pnpm dev",
+    url: "http://localhost:4000",
     reuseExistingServer: !process.env.CI,
   },
 });
 ```
 
-**e2e/downloads.spec.ts:**
+**Cenários de teste:**
 
-```typescript
-// e2e/downloads.spec.ts
-import { test, expect } from "@playwright/test";
-
-test.describe("Downloads", () => {
-  test("should create download", async ({ page }) => {
-    await page.goto("/");
-
-    // Preencher form
-    await page.fill('input[name="url"]', "https://youtube.com/watch?v=test");
-    await page.click('button[type="submit"]');
-
-    // Verificar que download foi criado
-    await expect(page.locator("text=Baixando")).toBeVisible({ timeout: 5000 });
-  });
-
-  test("should show progress updates", async ({ page }) => {
-    await page.goto("/");
-
-    // Criar download
-    await page.fill('input[name="url"]', "https://youtube.com/watch?v=test2");
-    await page.click('button[type="submit"]');
-
-    // Esperar progresso mudar
-    await expect(page.locator("text=Progresso")).toBeVisible();
-    const progressText = await page.locator("text=Progresso").textContent();
-    expect(progressText).toContain("%");
-  });
-
-  test("should cancel download", async ({ page }) => {
-    await page.goto("/");
-
-    // Criar download
-    await page.fill('input[name="url"]', "https://youtube.com/watch?v=test3");
-    await page.click('button[type="submit"]');
-
-    // Cancelar
-    await page.click("button:has-text('Cancelar')");
-
-    // Verificar que não está mais na lista
-    await expect(page.locator(`text=test3`)).not.toBeVisible();
-  });
-});
+```
+e2e/
+  ├── dashboard.spec.ts      - Dashboard load, form submit, lista
+  ├── downloads.spec.ts      - CRUD de downloads, progresso
+  ├── navigation.spec.ts     - Navegação entre páginas
+  ├── dark-mode.spec.ts      - Toggle tema, persistência
+  ├── responsive.spec.ts     - Layout em diferentes viewports
+  └── accessibility.spec.ts  - a11y checks com axe-core
 ```
 
 **Checklist:**
-- [ ] Configurar Playwright
-- [ ] Criar testes para downloads
-- [ ] Criar testes para metadados
-- [ ] Testar fluxos principais
-- [ ] Testar WebSocket (events)
-- [ ] Testar responsividade (mobile/desktop)
+- [ ] Configurar Playwright com porta 4000
+- [ ] Testes de dashboard (load, form, lista)
+- [ ] Testes de downloads (criar, cancelar, detalhes)
+- [ ] Testes de navegação
+- [ ] Testes de dark mode
+- [ ] Testes de responsividade (mobile, desktop)
+- [ ] Testes de acessibilidade (@axe-core/playwright)
 
 **Critérios de aceito:**
 - ✅ Testes passam em todos browsers
 - ✅ Cobertura de fluxos principais
-- ✅ Testes rápidos (< 30s)
+- ✅ Testes de a11y passam
+- ✅ Testes rápidos (< 60s total)
 
 ---
 
-## Qualidade Gates - Fase 2.4
+## Quality Gates — Fase 2.4
 
 **ANTES de passar para Fase 2.5, TODOS os itens abaixo devem ser concluídos:**
 
-- [ ] **npm run build** - **ZERO errors**
-- [ ] **npm run lint** - **ZERO warnings**
-- [ ] **npm run test** - **100% pass** (Playwright E2E)
+```bash
+# Todos os comandos usam pnpm
+pnpm build          # ZERO errors
+pnpm lint           # ZERO warnings
+pnpm type-check     # ZERO TypeScript errors
+pnpm test:e2e       # 100% pass (Playwright)
+```
+
+- [ ] **pnpm build** — ZERO errors
+- [ ] **pnpm lint** — ZERO warnings
+- [ ] **pnpm type-check** — ZERO TypeScript errors
+- [ ] **pnpm test:e2e** — 100% pass (Playwright)
 - [ ] Lighthouse score > 90 (Performance, Accessibility, Best Practices)
 - [ ] Responsivo (mobile, tablet, desktop)
 - [ ] Dark mode funcionando
 - [ ] WebSocket (SignalR) conectado
 - [ ] REST API client funcionando
-- [ ] Type safety (TypeScript strict mode)
+- [ ] WCAG 2.1 AA compliance
+- [ ] Todos componentes reutilizáveis (zero JSX duplicado)
+- [ ] Design System aplicado consistentemente
 - [ ] Code review aprovado
 
 ---
 
 ## Cronograma Detalhado
 
-| Tarefa | Estimativa | Dependencies | Blocker |
+| Tarefa | Estimativa | Dependências | Blocker |
 |--------|-----------|--------------|---------|
-| 2.4.1 Criar projeto Next.js | 2h | Fase 2.3 | Não |
-| 2.4.2 Setup shadcn/ui | 3h | 2.4.1 | Não |
+| 2.4.1 Criar projeto Next.js 16 | 2h | Fase 2.3 | Não |
+| 2.4.2 Setup Design System + shadcn/ui | 4h | 2.4.1 | Não |
 | 2.4.3 Criar tipos TypeScript | 2h | 2.4.1 | Não |
-| 2.4.4 Criar API client | 4h | 2.4.3 | **Sim** |
+| 2.4.4 Criar API client + React Query | 4h | 2.4.3 | **Sim** |
 | 2.4.5 Criar SignalR client | 4h | 2.4.3 | **Sim** |
-| 2.4.6 Criar Dashboard | 6h | 2.4.4, 2.4.5 | **Sim** |
-| 2.4.7 Criar páginas Downloads | 4h | 2.4.6 | **Sim** |
-| 2.4.8 Dark Mode | 3h | 2.4.6 | Não |
-| 2.4.9 Responsividade | 4h | 2.4.6 | Não |
-| 2.4.10 Testes E2E | 6h | 2.4.7 | **Sim** |
+| 2.4.6 Criar páginas (Dashboard + Downloads) | 8h | 2.4.2, 2.4.4, 2.4.5 | **Sim** |
+| 2.4.7 Dark Mode + Theme System | 2h | 2.4.2 | Não |
+| 2.4.8 Responsividade | 4h | 2.4.6 | Não |
+| 2.4.9 Acessibilidade (a11y) | 3h | 2.4.6 | Não |
+| 2.4.10 Testes E2E | 6h | 2.4.6 | **Sim** |
 
-**Total:** 38 horas (7-10 dias)
+**Total:** 39 horas (7-10 dias)
 
 ---
 
 ## Tecnologias
 
-- **Next.js 15** - React framework (App Router)
-- **React 19** - UI library
-- **TypeScript** - Type safety (strict mode)
-- **TailwindCSS** - Styling
-- **shadcn/ui** - UI components
-- **@microsoft/signalr** - WebSocket client
-- **next-themes** - Dark mode
-- **date-fns** - Formatação de datas
-- **lucide-react** - Icons
-- **react-hook-form** - Form validation
-- **zod** - Schema validation
-- **Playwright** - E2E tests
+| Categoria | Tecnologia | Versão |
+|-----------|-----------|--------|
+| Framework | Next.js | 16 (App Router) |
+| UI Library | React | 19 |
+| Language | TypeScript | strict mode |
+| Styling | TailwindCSS | v4 |
+| Components | shadcn/ui + Design System | latest |
+| Package Manager | pnpm | latest |
+| WebSocket | @microsoft/signalr | latest |
+| Data Fetching | TanStack React Query | v5 |
+| Dark Mode | next-themes | latest |
+| Dates | date-fns | latest |
+| Icons | lucide-react | latest |
+| Forms | react-hook-form + zod | latest |
+| Tests E2E | Playwright | latest |
+| Linter | ESLint (flat config) | latest |
+| Formatter | Prettier | latest |
 
 ---
 
@@ -2249,19 +1359,30 @@ Após completar Fase 2.4:
    - Config file para API URL
    - Testar ambos modos
 
-2. 🎯 **Deploy em Staging**
+2. **Deploy em Staging**
    - Docker compose (API + Frontend)
    - Testar em produção-like environment
    - Performance tuning
 
-3. 📝 **Documentação**
+3. **Documentação**
    - README do frontend
-   - Como desenvolver
+   - Como desenvolver (pnpm dev, porta 4000)
    - Troubleshooting
 
 ---
 
 ## Troubleshooting Comum
+
+**Problema: Dev server não sobe na porta 4000**
+
+```bash
+# Verificar se porta está em uso
+lsof -i :4000
+# Matar processo se necessário
+kill -9 <PID>
+# Ou usar outra porta temporariamente
+pnpm dev --port 4001
+```
 
 **Problema: WebSocket não conecta**
 
@@ -2284,14 +1405,9 @@ error TS2307: Cannot find module '@/components/ui/button'
 **Solução:**
 1. Verificar se components.json configurado corretamente
 2. Verificar tsconfig.json com paths aliases
-3. Rodar `npx shadcn@latest add` novamente
+3. Rodar `pnpx shadcn@latest add` novamente
 
 **Problema: Progresso não atualiza em tempo real**
-
-```
-Expected: Progress bar updates every second
-Actual: Progress bar stuck at 0%
-```
 
 **Solução:**
 1. Verificar se useDownloadProgress hook está sendo usado
@@ -2301,14 +1417,9 @@ Actual: Progress bar stuck at 0%
 
 **Problema: Lighthouse score baixo**
 
-```
-Performance: 65
-Accessibility: 80
-```
-
 **Solução:**
-1. Otimizar imagens (usar next/image)
-2. Lazy loading de componentes
-3. Minificar CSS/JS (já vem por padrão)
-4. Adicionar loading states
-5. Melhorar contrast ratios (WCAG AA)
+1. Usar Server Components onde possível (sem "use client" desnecessário)
+2. Otimizar imagens com next/image
+3. Lazy loading de componentes pesados
+4. Melhorar contrast ratios (WCAG AA)
+5. Adicionar loading states (Suspense boundaries)
