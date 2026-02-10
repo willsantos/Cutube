@@ -18,12 +18,12 @@ public class ConfigService
     /// <summary>
     /// Creates a new ConfigService with default config path
     /// </summary>
-    public ConfigService() : this(GetDefaultConfigPath())
+    public ConfigService() : this(GetDefaultConfigDirectory())
     {
     }
 
     /// <summary>
-    /// Creates a new ConfigService with custom config path (for testing)
+    /// Creates a new ConfigService with custom config directory (for testing)
     /// </summary>
     /// <param name="configDirectory">Directory to store config file</param>
     public ConfigService(string configDirectory)
@@ -32,13 +32,12 @@ public class ConfigService
         _configPath = Path.Combine(configDirectory, "config.json");
     }
 
-    private static string GetDefaultConfigPath()
+    private static string GetDefaultConfigDirectory()
     {
-        var configDirectory = Path.Combine(
+        return Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "cutube"
         );
-        return Path.Combine(configDirectory, "config.json");
     }
 
     /// <summary>
