@@ -1,5 +1,6 @@
 using Cutube.Api.Endpoints;
 using Cutube.Api.HealthChecks;
+using Cutube.Api.Hubs;
 using Cutube.Api.Services;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
@@ -37,6 +38,23 @@ builder.Services.AddCors(options =>
     });
 });
 
+// SignalR Configuration
+builder.Services.AddSignalR(options =>
+{
+    // Keep-alive interval: servidor envia ping a cada 10s
+    // para detectar conexões mortas
+    options.KeepAliveInterval = TimeSpan.FromSeconds(10);
+
+    // Client timeout: se cliente não responder em 30s, desconecta
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+
+    // Handshake timeout: tempo máximo para handshake inicial
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+
+    // Maximum message size (para progress events grandes)
+    options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+});
+
 // Domain Services
 builder.Services.AddSingleton<IValidationService, FluentValidationService>();
 builder.Services.AddSingleton<IDownloadService, FluentDownloadService>();
@@ -50,6 +68,7 @@ builder.Services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
 // API Services
 builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
+builder.Services.AddSingleton<ConnectionTracker>();
 builder.Services.AddHostedService<BackgroundDownloadWorker>();
 
 // Configure options
@@ -76,6 +95,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowNextJs");
 app.UseHttpsRedirection();
+
+// SignalR Hub endpoint
+app.MapHub<DownloadHub>("/hubs/downloads");
 
 // Health check endpoints
 app.MapHealthChecks("/health");

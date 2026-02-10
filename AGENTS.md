@@ -155,15 +155,21 @@ When creating issues in Linear for this project:
 1. **ALWAYS associate with the "Cutube" project**
    - Use `project: "Cutube"` parameter
    - The Cutube project already exists in Linear workspace "Oroborus"
+   - Project ID: `90c0cdae-e411-4fcd-80ce-eef703622671`
+   - **⚠️ MANDATORY:** ALL Linear issues for this project MUST be associated with the Cutube project
 
-2. **Issue structure:**
+2. **Team Assignment:**
+   - Use team ID: `2e51306a-fedf-4c10-8f46-f65c808dff79` (Oroborus team)
+   - Or use `team: "Oroborus"` parameter
+
+3. **Issue structure:**
    - Clear, descriptive title
    - Detailed problem description
    - Proposed solution options (when applicable)
    - Impact analysis
    - Estimated effort
 
-3. **Labels:**
+4. **Labels:**
    - Use appropriate labels (Bug, Feature, Improvement)
    - Set appropriate priority
 
@@ -173,6 +179,7 @@ linear_create_issue
   title="Clear title"
   description="Detailed description..."
   project="Cutube"
+  team="2e51306a-fedf-4c10-8f46-f65c808dff79"
   priority=3
   labels=["Improvement"]
 ```
