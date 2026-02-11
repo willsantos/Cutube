@@ -56,37 +56,56 @@ public static class StatusEndpoints
         .WithSummary("Get failed and dead letter downloads")
         .WithOpenApi();
 
-        // PATCH /api/downloads/{correlationId}/status - Worker callback
-        group.MapPatch("/{correlationId}/status", async (
-            string correlationId,
-            [FromBody] UpdateStatusRequest request,
-            IDownloadStatusRepository repository,
-            IHubContext<DownloadHub, IDownloadHubClient> hub,
-            CancellationToken ct) =>
-        {
-            if (!Enum.TryParse<DownloadStatus>(request.State, true, out var newState))
-            {
-                return Results.BadRequest(new { error = "Invalid state" });
-            }
+         // PATCH /api/downloads/{correlationId}/status - Worker callback
+         group.MapPatch("/{correlationId}/status", async (
+             string correlationId,
+             [FromBody] UpdateStatusRequest request,
+             IDownloadStatusRepository repository,
+             IHubContext<DownloadHub, IDownloadHubClient> hub,
+             CancellationToken ct) =>
+         {
+             if (!Enum.TryParse<DownloadStatus>(request.State, true, out var newState))
+             {
+                 return Results.BadRequest(new { error = "Invalid state" });
+             }
 
-            var download = await repository.GetByCorrelationIdAsync(correlationId, ct);
-            if (download == null)
-            {
-                return Results.NotFound(new { error = "Download not found", correlationId });
-            }
+             var download = await repository.GetByCorrelationIdAsync(correlationId, ct);
+             if (download == null)
+             {
+                 return Results.NotFound(new { error = "Download not found", correlationId });
+             }
 
-            await repository.UpdateStateAsync(correlationId, newState, ct);
+             await repository.UpdateAsync(correlationId, s =>
+             {
+                 s.Status = newState;
+                 s.ErrorMessage = request.ErrorMessage;
 
-            // Notify via SignalR
-            var groupName = DownloadHub.GetDownloadGroupName(correlationId);
-            await hub.Clients.Group(groupName)
-                .DownloadStatusChanged(correlationId, request.State);
+                 if (request.RetryCount.HasValue)
+                 {
+                     s.RetryCount = request.RetryCount.Value;
+                 }
 
-            return Results.NoContent();
-        })
-        .WithName("UpdateDownloadStatus")
-        .WithSummary("Update download status (worker callback)")
-        .WithOpenApi();
+                 if (newState == DownloadStatus.Downloading && s.StartedAt.HasValue == false)
+                 {
+                     s.StartedAt = DateTime.UtcNow;
+                 }
+
+                 if (newState is DownloadStatus.Completed or DownloadStatus.Failed or DownloadStatus.Cancelled or DownloadStatus.DeadLetter)
+                 {
+                     s.CompletedAt = DateTime.UtcNow;
+                 }
+             }, ct);
+
+             // Notify via SignalR
+             var groupName = DownloadHub.GetDownloadGroupName(correlationId);
+             await hub.Clients.Group(groupName)
+                 .DownloadStatusChanged(correlationId, request.State);
+
+             return Results.NoContent();
+         })
+         .WithName("UpdateDownloadStatus")
+         .WithSummary("Update download status (worker callback)")
+         .WithOpenApi();
 
         // POST /api/downloads/{correlationId}/progress - Worker progress callback
         group.MapPost("/{correlationId}/progress", async (
