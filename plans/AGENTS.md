@@ -102,5 +102,3 @@ public void Process() { /* full implementation */ }
 
 - [PLAN-EPICO-TEMPLATE.md](PLAN-EPICO-TEMPLATE.md)
 - [PLAN-FASE-TEMPLATE.md](PLAN-FASE-TEMPLATE.md)
-- Example Epic: [epico-3-integracao-rabbitmq.md](epico-3-integracao-rabbitmq.md)
-- Example Phase: [fase-3.5-retry-dead-letter-queue.md](fase-3.5-retry-dead-letter-queue.md)

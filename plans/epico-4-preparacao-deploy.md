@@ -8,6 +8,21 @@
 
 ---
 
+## Índice
+
+- [Objetivo](#objetivo)
+- [Visão Arquitetural](#visão-arquitetural)
+- [Tarefas](#tarefas)
+  - [4.1 Implementar CI/CD com GitHub Actions](#41-implementar-cicd-com-github-actions)
+  - [4.2 Criar Docker Compose na Raiz](#42-criar-docker-compose-na-raiz)
+  - [4.3 Criar Instalador para CLI](#43-criar-instalador-para-cli)
+- [Dockerfile dos Serviços](#dockerfile-dos-serviços)
+- [Checklist Geral do Épico](#checklist-geral-do-épico)
+- [Próximos Passos](#próximos-passos)
+- [Notas](#notas)
+
+---
+
 ## Objetivo
 
 Preparar o sistema Cutube para deploy em produção, criando toda a infraestrutura necessária para rodar os serviços de forma confiável e escalável. Este épico inclui:
