@@ -1,49 +1,88 @@
 using Cutube.Worker.Configuration;
 using Cutube.Worker.Consumers;
+using Cutube.Worker.Services;
 using MassTransit;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Polly;
+using Polly.Extensions.Http;
+using Serilog;
+using Cutube.Api.Queuing.Messages;
 
-var builder = Host.CreateApplicationBuilder(args);
-
-// Configuration
-builder.Services.Configure<RabbitMqOptions>(
-    builder.Configuration.GetSection(RabbitMqOptions.SectionName)
-);
-
-// MassTransit
-builder.Services.AddMassTransit(x =>
-{
-    x.AddConsumer<DownloadConsumer>();
-
-    x.UsingRabbitMq((context, cfg) =>
+IHost host = Host.CreateDefaultBuilder(args)
+    .UseSerilog((context, services, loggerConfiguration) =>
     {
-        var options = context.GetRequiredService<Microsoft.Extensions.Options.IOptions<RabbitMqOptions>>().Value;
+        loggerConfiguration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext();
+    })
+    .ConfigureServices((context, services) =>
+    {
+        // Configuration
+        services.Configure<WorkerOptions>(
+            context.Configuration.GetSection(WorkerOptions.SectionName)
+        );
 
-        cfg.Host($"amqp://{options.UserName}:{options.Password}@{options.Host}:{options.Port}{options.VirtualHost}");
-
-        // Configure retry for connection issues
-        cfg.UseMessageRetry(r =>
+        // HttpClient for API communication
+        services.AddHttpClient<IDownloadStatusNotificationService, DownloadStatusNotificationService>(client =>
         {
-            r.Incremental(3, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30));
+            var apiBaseUrl = context.Configuration.GetValue<string>("Worker:ApiBaseUrl") ?? "http://localhost:5000";
+            client.BaseAddress = new Uri(apiBaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(30);
+        })
+        .AddPolicyHandler(GetRetryPolicy());
+
+        // Domain services
+        services.AddSingleton<IDownloadProcessingService, DownloadProcessingService>();
+
+        // MassTransit (Consumer)
+        services.AddMassTransit(x =>
+        {
+            x.AddConsumer<DownloadConsumer>();
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var rabbitMqConfig = context.GetRequiredService<RabbitMqOptions>();
+
+                cfg.Host($"amqp://{rabbitMqConfig.UserName}:{rabbitMqConfig.Password}@{rabbitMqConfig.Host}:{rabbitMqConfig.Port}{rabbitMqConfig.VirtualHost}");
+
+                cfg.ReceiveEndpoint("cutube.downloads", e =>
+                {
+                    e.ConfigureConsumer<DownloadConsumer>(context);
+
+                    // Prefetch count: 1 message at a time (avoids overload)
+                    e.PrefetchCount = 1;
+
+                    // Concurrent message limit
+                    var workerOptions = context.GetRequiredService<Microsoft.Extensions.Options.IOptions<WorkerOptions>>().Value;
+                    e.ConcurrentMessageLimit = workerOptions.MaxConcurrentDownloads;
+
+                    // Retry policy: 3 attempts with exponential backoff
+                    e.UseMessageRetry(r =>
+                    {
+                        r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(2));
+                        r.Handle<Exception>();
+                    });
+                });
+            });
         });
 
-        // Configure prefetch count
-        cfg.PrefetchCount = RabbitMqConfig.PrefetchCount;
+        // Worker service
+        services.AddHostedService<Cutube.Worker.Worker>();
+    })
+    .Build();
 
-        // Configure receive endpoint for downloads queue
-        cfg.ReceiveEndpoint(RabbitMqConfig.DownloadsQueue, e =>
-        {
-            e.ConfigureConsumer<DownloadConsumer>(context);
-            e.ConfigureDownloadsQueue();
-        });
+await host.RunAsync();
 
-        cfg.ConfigureEndpoints(context);
-    });
-});
-
-// Health checks - basic TCP check for RabbitMQ
-builder.Services.AddHealthChecks()
-    .AddCheck<RabbitMqHealthCheck>("rabbitmq");
-
-var host = builder.Build();
-host.Run();
+static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+{
+    return HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .OrResult(msg => !msg.IsSuccessStatusCode)
+        .WaitAndRetryAsync(
+            retryCount: 3,
+            sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+            onRetry: (outcome, timespan, retryAttempt, context) =>
+            {
+                Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds}s due to: {outcome.Exception?.Message}");
+            });
+}
