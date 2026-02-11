@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { DownloadRequest } from "@/types";
+import type { CreateDownloadResponse, DownloadRequest } from "@/types";
 import { api } from "@/lib/api";
 import { DOWNLOAD_POLL_INTERVAL, POLL_INTERVAL, QUERY_KEYS } from "@/lib/constants";
 
@@ -26,11 +26,12 @@ export function useCreateDownload() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: DownloadRequest) => api.downloads.create(request),
-    onSuccess: async (downloadId) => {
+    mutationFn: (request: DownloadRequest): Promise<CreateDownloadResponse> =>
+      api.downloads.create(request),
+    onSuccess: async (response) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.downloads }),
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.download(downloadId) }),
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.download(response.downloadId) }),
       ]);
     },
   });

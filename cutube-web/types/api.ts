@@ -15,8 +15,11 @@ export interface ApiError {
 
 export interface CreateDownloadResponse {
   downloadId: string;
+  correlationId: string;
   status: string;
-  message?: string;
+  message: string;
+  enqueuedAt: string;
+  statusUrl: string;
 }
 
 export interface GetDownloadsResponse {
