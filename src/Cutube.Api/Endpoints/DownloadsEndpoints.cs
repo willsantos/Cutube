@@ -1,5 +1,8 @@
 using Cutube.Api.DTOs;
 using Cutube.Api.Models;
+using Cutube.Api.Queuing;
+using Cutube.Api.Queuing.Exceptions;
+using Cutube.Api.Queuing.Messages;
 using Cutube.Api.Services;
 using Cutube.Domain.Models;
 using Cutube.Domain.Services;
@@ -16,41 +19,91 @@ public static class DownloadsEndpoints
         var group = app.MapGroup("/api/downloads")
             .WithTags("Downloads");
 
-        // POST /api/downloads - Create download
+        // POST /api/downloads - Enqueue download to RabbitMQ
         group.MapPost("/", async (
             [FromBody] CreateDownloadRequest request,
-            IDownloadQueue downloadQueue,
+            IQueueProducer queueProducer,
+            ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
-            // 1. Validate request
-            var validationResult = ValidateRequest(request);
-            if (validationResult.IsFailed)
+            var logger = loggerFactory.CreateLogger("DownloadsEndpoints");
+            
+            try
             {
-                return Results.Problem(
-                    detail: validationResult.Errors.First().Message,
-                    statusCode: 400,
-                    title: "Validation Error");
+                // 1. Validate request
+                var validationResult = ValidateRequest(request);
+                if (validationResult.IsFailed)
+                {
+                    return Results.BadRequest(new { error = validationResult.Errors.First().Message });
+                }
+
+                logger.LogInformation("Creating download for URL: {Url}", request.Url);
+
+                // 2. Create message for RabbitMQ
+                var message = new DownloadMessage
+                {
+                    CorrelationId = Guid.NewGuid().ToString(),
+                    Url = request.Url,
+                    StartTime = request.StartTime,
+                    EndTime = request.EndTime,
+                    OutputPath = request.OutputPath,
+                    AudioOnly = request.AudioOnly ?? false,
+                    OutputFilename = request.OutputFilename,
+                    Priority = request.Priority ?? "normal",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                // 3. Publish to queue
+                var correlationId = await queueProducer.PublishDownloadAsync(message, ct);
+
+                logger.LogInformation(
+                    "Download enqueued: {CorrelationId}",
+                    correlationId);
+
+                // 4. Return 202 Accepted + correlation ID
+                return Results.Accepted(
+                    $"/api/downloads/{correlationId}",
+                    new CreateDownloadResponse
+                    {
+                        DownloadId = correlationId,
+                        CorrelationId = correlationId,
+                        Status = "queued",
+                        Message = "Download enqueued successfully",
+                        EnqueuedAt = DateTime.UtcNow
+                    });
             }
-
-            // 2. Convert to Domain Request
-            var domainRequest = MapToDomainRequest(request);
-
-            // 3. Enqueue (background processing)
-            var downloadId = await downloadQueue.EnqueueAsync(domainRequest, ct);
-
-            // 4. Return immediately (202 Accepted)
-            var response = new CreateDownloadResponse
+            catch (QueuePublishException ex)
             {
-                DownloadId = downloadId,
-                Status = "queued",
-                Message = "Download enqueued successfully"
-            };
+                logger.LogError(ex, "Failed to enqueue download");
 
-            return Results.Accepted($"/api/downloads/{downloadId}", response);
+                // Return 503 Service Unavailable
+                return Results.Json(new
+                {
+                    error = "Failed to enqueue download",
+                    message = "Queue service is unavailable. Please try again later.",
+                    correlationId = ex.CorrelationId
+                }, statusCode: 503);
+            }
+            catch (ArgumentException ex)
+            {
+                logger.LogWarning(ex, "Invalid download request");
+                return Results.BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected error creating download");
+                return Results.Problem(
+                    detail: ex.Message,
+                    statusCode: 500,
+                    title: "Internal server error"
+                );
+            }
         })
         .WithName("CreateDownload")
+        .WithSummary("Enqueue a new download")
         .Produces<CreateDownloadResponse>(202)
-        .Produces<ProblemDetails>(400);
+        .Produces<object>(400)
+        .Produces<object>(503);
 
         // GET /api/downloads - List all downloads
         group.MapGet("/", async (
@@ -219,31 +272,5 @@ public static class DownloadsEndpoints
             return Result.Fail("OutputPath is required");
 
         return Result.Ok();
-    }
-
-    private static DownloadRequest MapToDomainRequest(CreateDownloadRequest apiRequest)
-    {
-        Domain.Models.TimeRange? timeRange = null;
-
-        if (!string.IsNullOrEmpty(apiRequest.StartTime) && !string.IsNullOrEmpty(apiRequest.EndTime))
-        {
-            var start = TimeSpan.Parse(apiRequest.StartTime);
-            var end = TimeSpan.Parse(apiRequest.EndTime);
-
-            // Convert to domain TimeRange
-            timeRange = new Domain.Models.TimeRange
-            {
-                StartSeconds = (int)start.TotalSeconds,
-                EndSeconds = (int)end.TotalSeconds
-            };
-        }
-
-        return new DownloadRequest
-        {
-            Url = apiRequest.Url,
-            OutputPath = apiRequest.OutputPath,
-            TimeRange = timeRange,
-            AudioOnly = apiRequest.AudioOnly
-        };
     }
 }
