@@ -44,6 +44,12 @@ public class TestDownloadHubClient : IDownloadHubClient
         return Task.CompletedTask;
     }
 
+    public Task DownloadStatusChanged(string correlationId, string newStatus)
+    {
+        AddEvent("DownloadStatusChanged", new { correlationId, newStatus });
+        return Task.CompletedTask;
+    }
+
     private void AddEvent(string eventType, object data)
     {
         if (!_receivedEvents.ContainsKey(eventType))

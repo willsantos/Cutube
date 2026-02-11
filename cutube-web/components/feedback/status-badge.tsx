@@ -40,6 +40,16 @@ const STATUS_META: Record<DownloadStatus, StatusMeta> = {
     icon: CircleSlash,
     className: "bg-muted text-muted-foreground",
   },
+  dead_letter: {
+    label: "Dead Letter",
+    icon: Cog,
+    className: "bg-orange-500 text-white",
+  },
+  expired: {
+    label: "Expirado",
+    icon: Clock3,
+    className: "bg-gray-500 text-white",
+  },
 };
 
 export function StatusBadge({ status }: { status: DownloadStatus }) {

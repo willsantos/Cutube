@@ -33,4 +33,9 @@ public interface IDownloadHubClient
     /// Cliente recebe evento quando download é cancelado
     /// </summary>
     Task DownloadCancelled(string downloadId);
+
+    /// <summary>
+    /// Cliente recebe evento quando status do download muda (monitor)
+    /// </summary>
+    Task DownloadStatusChanged(string correlationId, string newStatus);
 }

@@ -179,7 +179,7 @@ public static class DownloadsEndpoints
                 Progress = download.Progress,
                 Speed = download.Speed,
                 Eta = null, // ETA - not currently tracked
-                DownloadedBytes = download.DownloadedBytes ?? 0,
+                DownloadedBytes = download.DownloadedBytes,
                 TotalBytes = download.TotalBytes ?? 0,
                 FilePath = download.FilePath,
                 ErrorMessage = download.ErrorMessage,

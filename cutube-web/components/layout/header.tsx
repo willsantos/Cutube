@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/", label: "Dashboard" },
   { href: "/downloads", label: "Downloads" },
+  { href: "/monitor", label: "Monitor" },
 ];
 
 export function Header() {
