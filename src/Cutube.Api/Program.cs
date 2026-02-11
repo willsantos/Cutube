@@ -76,32 +76,35 @@ builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepositor
 builder.Services.AddSingleton<ConnectionTracker>();
 builder.Services.AddHostedService<BackgroundDownloadWorker>();
 
-// RabbitMQ Configuration
-builder.Services.Configure<RabbitMqOptions>(
-    builder.Configuration.GetSection(RabbitMqOptions.SectionName)
-);
-
-// MassTransit (Producer apenas - não configura consumers na API)
-builder.Services.AddMassTransit(x =>
+// RabbitMQ Configuration - Skip if running in tests
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    x.UsingRabbitMq((context, cfg) =>
+    builder.Services.Configure<RabbitMqOptions>(
+        builder.Configuration.GetSection(RabbitMqOptions.SectionName)
+    );
+
+    // MassTransit (Producer apenas - não configura consumers na API)
+    builder.Services.AddMassTransit(x =>
     {
-        var options = context.GetRequiredService<RabbitMqOptions>();
-
-        cfg.Host($"rabbitmq://{options.UserName}:{options.Password}@{options.Host}:{options.Port}{options.VirtualHost}");
-
-        // Configurar retry
-        cfg.UseMessageRetry(r =>
+        x.UsingRabbitMq((context, cfg) =>
         {
-            r.Interval(options.RetryCount, TimeSpan.FromSeconds(1));
+            var options = context.GetRequiredService<RabbitMqOptions>();
+
+            cfg.Host($"rabbitmq://{options.UserName}:{options.Password}@{options.Host}:{options.Port}{options.VirtualHost}");
+
+            // Configurar retry
+            cfg.UseMessageRetry(r =>
+            {
+                r.Interval(options.RetryCount, TimeSpan.FromSeconds(1));
+            });
+
+            cfg.ConfigureEndpoints(context);
         });
-
-        cfg.ConfigureEndpoints(context);
     });
-});
 
-// Registrar producer
-builder.Services.AddSingleton<IQueueProducer, RabbitMqProducer>();
+    // Registrar producer
+    builder.Services.AddSingleton<IQueueProducer, RabbitMqProducer>();
+}
 
 // Configure options
 builder.Services.Configure<DiskSpaceHealthCheckOptions>(
