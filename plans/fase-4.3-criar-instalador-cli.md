@@ -2,7 +2,7 @@
 
 **Status:** 🎯 Planejamento
 **Épico:** Cutube-858 (Épico 4: Preparação para Deploy)
-**Duração:** 3-4 horas
+**Duração:** 3.5-4.5 horas
 **Responsável:** Backend Developer
 **Prioridade:** 🔥 Alta
 **Dependência:** ✅ Fase 4.1 completa (CI/CD funcionando)
@@ -14,11 +14,12 @@
 Criar instalador automático para o Cutube CLI que permite aos usuários instalarem a ferramenta com um único comando.
 
 **Benefícios:**
-- ✅ One-command install - `curl -sSL https://get.cutube.dev | bash`
+- ✅ One-command install - `curl -sSL https://willsantos.github.io/Cutube/install.sh | bash`
 - ✅ Multi-plataforma - Linux, macOS, Windows
 - ✅ Multi-arquitetura - amd64, arm64
 - ✅ Detecção automática - OS e arch
 - ✅ Verificação de dependências - yt-dlp, ffmpeg
+- ✅ Hospedado gratuitamente no GitHub Pages
 
 ---
 
@@ -27,21 +28,23 @@ Criar instalador automático para o Cutube CLI que permite aos usuários instala
 ### Fluxo de Instalação
 
 ```
-User executa: curl -sSL https://get.cutube.dev | bash
+User executa: curl -sSL https://willsantos.github.io/Cutube/install.sh | bash
         ↓
-1. Detect Platform (Linux/macOS/Windows, amd64/arm64)
+1. GitHub Pages serve o script install.sh
         ↓
-2. Get Latest Version from GitHub
+2. Script detecta Platform (Linux/macOS/Windows, amd64/arm64)
         ↓
-3. Download Binary from GitHub Releases
+3. Script busca Latest Version da GitHub API
         ↓
-4. Extract and Install (/usr/local/bin or ~/.local/bin)
+4. Script download Binary da GitHub Releases
         ↓
-5. Verify Installation
+5. Script extrai e Install (/usr/local/bin ou ~/.local/bin)
         ↓
-6. Check Dependencies (yt-dlp, ffmpeg)
+6. Script Verify Installation
         ↓
-7. Create Config (~/.cutube/config.json)
+7. Script Check Dependencies (yt-dlp, ffmpeg)
+        ↓
+8. Script Create Config (~/.cutube/config.json)
         ↓
 Success!
 ```
@@ -49,6 +52,135 @@ Success!
 ---
 
 ## Tarefas
+
+### 4.3.0 Configurar GitHub Pages
+
+**Estimativa:** 30 minutos
+
+**Objetivo:** Hospedar o script de instalação no GitHub Pages para ter uma URL curta e amigável sem custo.
+
+#### 4.3.0.1 Criar Página HTML Simples
+
+**Arquivo:** `docs/index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cutube CLI Installer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📥 Cutube CLI Installer</h1>
+    <p>Instale o Cutube CLI com um comando:</p>
+
+    <h2>Linux/macOS</h2>
+    <pre><code>curl -sSL https://willsantos.github.io/Cutube/install.sh | bash</code></pre>
+
+    <h2>Windows (PowerShell)</h2>
+    <pre><code>iwr -useb https://willsantos.github.io/Cutube/install.ps1 | iex</code></pre>
+
+    <h2>Alternativa: Raw GitHub</h2>
+    <p>Se o GitHub Pages estiver indisponível:</p>
+    <pre><code>curl -sSL https://raw.githubusercontent.com/willsantos/cutube/main/scripts/install.sh | bash</code></pre>
+
+    <h2>Documentação</h2>
+    <p>Veja a <a href="https://github.com/willsantos/cutube/blob/main/docs/installation.md">documentação completa</a>.</p>
+</body>
+</html>
+```
+
+#### 4.3.0.2 Criar Workflow de Deploy
+
+**Arquivo:** `.github/workflows/deploy-pages.yml`
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'scripts/install.sh'
+      - 'docs/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Copy install.sh to docs
+        run: cp scripts/install.sh docs/install.sh
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+#### 4.3.0.3 Configurar GitHub Pages
+
+**Passos manuais (1 vez):**
+
+1. No repositório GitHub, vá em **Settings** → **Pages**
+2. **Source**: Selecionar **GitHub Actions**
+3. Clicar em **Save**
+
+**Checklist:**
+- [ ] Criar `docs/index.html`
+- [ ] Criar `.github/workflows/deploy-pages.yml`
+- [ ] Configurar GitHub Pages no repo (Settings → Pages → GitHub Actions)
+- [ ] Testar acesso após primeiro deploy
+
+**Critérios de aceito:**
+- ✅ https://willsantos.github.io/Cutube/ acessível
+- ✅ https://willsantos.github.io/Cutube/install.sh acessível
+- ✅ Deploy automático funciona quando muda scripts/install.sh
+
+**URLs Finais:**
+- **Principal (GitHub Pages)**: `https://willsantos.github.io/Cutube/install.sh`
+- **Fallback (Raw GitHub)**: `https://raw.githubusercontent.com/willsantos/cutube/main/scripts/install.sh`
+
+---
 
 ### 4.3.1 Criar Script de Instalação
 
@@ -59,7 +191,8 @@ Success!
 ```bash
 #!/bin/bash
 # Cutube CLI Installer
-# Usage: curl -sSL https://get.cutube.dev | bash
+# Usage: curl -sSL https://willsantos.github.io/Cutube/install.sh | bash
+# Alternative: curl -sSL https://raw.githubusercontent.com/willsantos/cutube/main/scripts/install.sh | bash
 
 set -e
 
@@ -341,12 +474,22 @@ echo "✅ Tag criada. GitHub Actions vai buildar e publicar."
 
 ### Linux/macOS
 ```bash
-curl -sSL https://get.cutube.dev | bash
+curl -sSL https://willsantos.github.io/Cutube/install.sh | bash
+```
+
+**Alternativa (se GitHub Pages estiver down):**
+```bash
+curl -sSL https://raw.githubusercontent.com/willsantos/cutube/main/scripts/install.sh | bash
 ```
 
 ### Windows (PowerShell)
 ```powershell
-iwr -useb https://get.cutube.dev/win | iex
+iwr -useb https://willsantos.github.io/Cutube/install.ps1 | iex
+```
+
+**Alternativa:**
+```powershell
+iwr -useb https://raw.githubusercontent.com/willsantos/cutube/main/scripts/install.ps1 | iex
 ```
 
 ## Instalação Manual
@@ -418,11 +561,12 @@ Remova o executável e `%USERPROFILE%\.cutube`.
 
 | Tarefa | Estimativa | Dependencies |
 |--------|-----------|--------------|
-| 4.3.1 Script Install | 2h | Nenhuma |
+| 4.3.0 GitHub Pages | 30m | Nenhuma |
+| 4.3.1 Script Install | 2h | 4.3.0 |
 | 4.3.2 Release Script | 30m | Nenhuma |
 | 4.3.3 Documentação | 1h | Nenhuma |
 
-**Total:** 3.5 horas
+**Total:** 4 horas
 
 ---
 
