@@ -165,9 +165,10 @@ public class BackgroundDownloadWorker : BackgroundService
                 await NotifyStartedAsync(downloadId, request);
 
                 // 2. Inicializar status no repository
-                await _statusRepository.AddAsync(downloadId, new DownloadStatusRecord
+                await _statusRepository.AddAsync(new DownloadStatusRecord
                 {
                     Id = downloadId,
+                    CorrelationId = downloadId, // Set both Id and CorrelationId
                     Url = request.Url,
                     Status = DownloadStatus.Queued,
                     Progress = 0,
@@ -175,7 +176,7 @@ public class BackgroundDownloadWorker : BackgroundService
                     DownloadedBytes = 0,
                     TotalBytes = 0,
                     CreatedAt = DateTime.UtcNow
-                });
+                }, stoppingToken);
 
                 // 3. Criar progress reporter que:
                 //    a) Atualiza repository

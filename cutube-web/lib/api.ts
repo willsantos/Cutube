@@ -1,8 +1,10 @@
 import type {
   CreateDownloadResponse,
   DownloadDetails,
+  DownloadListResponse,
   DownloadRequest,
   GetDownloadsResponse,
+  MetricsResponse,
   VideoMetadata,
 } from "@/types";
 import { buildQueryString, fetchApi } from "./api-helpers";
@@ -31,9 +33,31 @@ export const api = {
       return fetchApi<DownloadDetails>(`/api/downloads/${id}`);
     },
 
+    getActive: async (): Promise<DownloadListResponse> => {
+      return fetchApi<DownloadListResponse>("/api/downloads/queue/active");
+    },
+
+    getFailed: async (): Promise<DownloadListResponse> => {
+      return fetchApi<DownloadListResponse>("/api/downloads/queue/failed");
+    },
+
     cancel: async (id: string): Promise<void> => {
       await fetchApi<void>(`/api/downloads/${id}`, {
         method: "DELETE",
+      });
+    },
+
+    updateStatus: async (correlationId: string, state: string, errorMessage?: string): Promise<void> => {
+      await fetchApi<void>(`/api/downloads/${correlationId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ state, errorMessage }),
+      });
+    },
+
+    updateProgress: async (correlationId: string, progress: number, speed: number, downloadedBytes: number): Promise<void> => {
+      await fetchApi<void>(`/api/downloads/${correlationId}/progress`, {
+        method: "POST",
+        body: JSON.stringify({ progress, speed, downloadedBytes }),
       });
     },
   },
@@ -49,6 +73,12 @@ export const api = {
         ...response,
         formats: [],
       };
+    },
+  },
+
+  metrics: {
+    get: async (): Promise<MetricsResponse> => {
+      return fetchApi<MetricsResponse>("/api/metrics");
     },
   },
 

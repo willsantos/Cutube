@@ -1,4 +1,4 @@
-import type { DownloadSummary } from "./download";
+import type { DownloadSummary, CreateDownloadResponse } from "./download";
 
 export interface ApiResponse<T> {
   data: T;
@@ -13,16 +13,20 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
-export interface CreateDownloadResponse {
-  downloadId: string;
-  correlationId: string;
-  status: string;
-  message: string;
-  enqueuedAt: string;
-  statusUrl: string;
-}
-
 export interface GetDownloadsResponse {
   downloads: DownloadSummary[];
   totalCount: number;
+}
+
+export interface MetricsResponse {
+  totalDownloads: number;
+  pendingCount: number;
+  queuedCount: number;
+  processingCount: number;
+  completedCount: number;
+  failedCount: number;
+  deadLetterCount: number;
+  averageProcessingTimeSeconds: number;
+  errorRate: number;
+  throughputPerMinute: number;
 }

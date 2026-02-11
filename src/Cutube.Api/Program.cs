@@ -75,6 +75,7 @@ builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
 builder.Services.AddSingleton<ConnectionTracker>();
 builder.Services.AddHostedService<BackgroundDownloadWorker>();
+builder.Services.AddHostedService<DownloadStatusCleanupService>();
 
 // RabbitMQ Configuration - Skip if running in tests
 if (!builder.Environment.IsEnvironment("Testing"))
@@ -144,6 +145,7 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
 // Map endpoints
 app.MapDownloadsEndpoints();
 app.MapVideosEndpoints();
+app.MapStatusEndpoints();
 
 // Root endpoint
 app.MapGet("/", () => "Cutube API - Video Download Service");

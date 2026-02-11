@@ -24,6 +24,7 @@ public class InMemoryStatusRepositoryTests
         var status = new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
@@ -31,8 +32,8 @@ public class InMemoryStatusRepositoryTests
         };
 
         // Act
-        await _repository.AddAsync("test-id", status);
-        var retrieved = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        await _repository.AddAsync(status, CancellationToken.None);
+        var retrieved = await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
 
         // Assert
         retrieved.Should().NotBeNull();
@@ -48,6 +49,7 @@ public class InMemoryStatusRepositoryTests
         var status1 = new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test1.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
@@ -56,6 +58,7 @@ public class InMemoryStatusRepositoryTests
         var status2 = new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test2.com",
             Status = DownloadStatus.Downloading,
             Progress = 50,
@@ -63,9 +66,9 @@ public class InMemoryStatusRepositoryTests
         };
 
         // Act
-        await _repository.AddAsync("test-id", status1);
-        await _repository.AddAsync("test-id", status2);
-        var retrieved = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        await _repository.AddAsync(status1, CancellationToken.None);
+        await _repository.AddAsync(status2, CancellationToken.None);
+        var retrieved =         await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
 
         // Assert
         retrieved.Should().NotBeNull();
@@ -81,15 +84,16 @@ public class InMemoryStatusRepositoryTests
         var status = new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
             CreatedAt = DateTime.UtcNow
         };
-        await _repository.AddAsync("test-id", status);
+        await _repository.AddAsync(status, CancellationToken.None);
 
         // Act
-        var retrieved = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        var retrieved =         await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
 
         // Assert
         retrieved.Should().NotBeNull();
@@ -110,22 +114,24 @@ public class InMemoryStatusRepositoryTests
     public async Task GetAllAsync_ShouldReturnAllDownloads()
     {
         // Arrange
-        await _repository.AddAsync("id1", new DownloadStatusRecord
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = "id1",
+            CorrelationId = "id1",
             Url = "https://test1.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
             CreatedAt = DateTime.UtcNow
-        });
-        await _repository.AddAsync("id2", new DownloadStatusRecord
+        }, CancellationToken.None);
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = "id2",
+            CorrelationId = "id2",
             Url = "https://test2.com",
             Status = DownloadStatus.Downloading,
             Progress = 50,
             CreatedAt = DateTime.UtcNow
-        });
+        }, CancellationToken.None);
 
         // Act
         var all = await _repository.GetAllAsync(CancellationToken.None);
@@ -149,9 +155,10 @@ public class InMemoryStatusRepositoryTests
     public async Task UpdateProgressAsync_ShouldUpdateExistingDownload()
     {
         // Arrange
-        await _repository.AddAsync("test-id", new DownloadStatusRecord
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
@@ -169,7 +176,7 @@ public class InMemoryStatusRepositoryTests
             ErrorMessage = null
         });
 
-        var result = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        var result =         await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
 
         // Assert
         result!.Status.Should().Be(DownloadStatus.Downloading);
@@ -195,14 +202,15 @@ public class InMemoryStatusRepositoryTests
     {
         // Arrange
         var testId = $"test-{state}";
-        await _repository.AddAsync(testId, new DownloadStatusRecord
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = testId,
+            CorrelationId = testId,
             Url = "https://test.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
             CreatedAt = DateTime.UtcNow
-        });
+        }, CancellationToken.None);
 
         // Act
         await _repository.UpdateProgressAsync(testId, new Domain.Models.DownloadProgress
@@ -215,7 +223,7 @@ public class InMemoryStatusRepositoryTests
             ErrorMessage = null
         });
 
-        var result = await _repository.GetByIdAsync(testId, CancellationToken.None);
+        var result = await _repository.GetByCorrelationIdAsync(testId, CancellationToken.None);
 
         // Assert
         result!.Status.Should().Be(expectedStatus);
@@ -225,9 +233,10 @@ public class InMemoryStatusRepositoryTests
     public async Task UpdateProgressAsync_Finished_ShouldSetCompletedAt()
     {
         // Arrange
-        await _repository.AddAsync("test-id", new DownloadStatusRecord
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test.com",
             Status = DownloadStatus.Downloading,
             Progress = 50,
@@ -245,7 +254,7 @@ public class InMemoryStatusRepositoryTests
             ErrorMessage = null
         });
 
-        var result = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        var result =         await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
 
         // Assert
         result!.Status.Should().Be(DownloadStatus.Completed);
@@ -274,9 +283,10 @@ public class InMemoryStatusRepositoryTests
     public async Task UpdateProgressAsync_ShouldUpdateErrorMessage()
     {
         // Arrange
-        await _repository.AddAsync("test-id", new DownloadStatusRecord
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test.com",
             Status = DownloadStatus.Downloading,
             Progress = 50,
@@ -294,7 +304,7 @@ public class InMemoryStatusRepositoryTests
             ErrorMessage = "Download failed"
         });
 
-        var result = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        var result =         await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
 
         // Assert
         result!.Status.Should().Be(DownloadStatus.Failed);
@@ -305,9 +315,10 @@ public class InMemoryStatusRepositoryTests
     public async Task DeleteAsync_ShouldRemoveDownload()
     {
         // Arrange
-        await _repository.AddAsync("test-id", new DownloadStatusRecord
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
@@ -316,7 +327,7 @@ public class InMemoryStatusRepositoryTests
 
         // Act
         await _repository.DeleteAsync("test-id", CancellationToken.None);
-        var result = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        var result =         await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
 
         // Assert
         result.Should().BeNull();
@@ -326,9 +337,10 @@ public class InMemoryStatusRepositoryTests
     public async Task DeleteAsync_ShouldBeIdempotent()
     {
         // Arrange
-        await _repository.AddAsync("test-id", new DownloadStatusRecord
+        await _repository.AddAsync(new DownloadStatusRecord
         {
             Id = "test-id",
+            CorrelationId = "test-id",
             Url = "https://test.com",
             Status = DownloadStatus.Queued,
             Progress = 0,
@@ -341,7 +353,7 @@ public class InMemoryStatusRepositoryTests
         await _repository.DeleteAsync("test-id", CancellationToken.None);
 
         // Assert - No exception should be thrown
-        var result = await _repository.GetByIdAsync("test-id", CancellationToken.None);
+        var result =         await _repository.GetByCorrelationIdAsync("test-id", CancellationToken.None);
         result.Should().BeNull();
     }
 }
