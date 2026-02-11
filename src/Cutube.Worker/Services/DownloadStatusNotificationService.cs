@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace Cutube.Worker.Services;
 
 /// <summary>
-/// Implementation of the status notification service via HTTP callbacks to the API.
+/// Implementation of status notification service via HTTP callbacks to the API.
 /// </summary>
 public class DownloadStatusNotificationService : IDownloadStatusNotificationService
 {
@@ -59,7 +59,7 @@ public class DownloadStatusNotificationService : IDownloadStatusNotificationServ
         }
         catch (Exception ex)
         {
-            // Don't throw - notification failure should not break the download
+            // Don't throw - notification failure should not break download
             _logger.LogError(ex,
                 "Error notifying status: {CorrelationId}",
                 correlationId);
@@ -105,9 +105,57 @@ public class DownloadStatusNotificationService : IDownloadStatusNotificationServ
         }
         catch (Exception ex)
         {
-            // Don't throw - notification failure should not break the download
+            // Don't throw - notification failure should not break download
             _logger.LogDebug(ex,
                 "Error notifying progress: {CorrelationId}",
+                correlationId);
+        }
+    }
+
+    public async Task NotifyDeadLetterAsync(
+        string correlationId,
+        string errorMessage,
+        int retryCount,
+        CancellationToken cancellationToken = default)
+    {
+        var url = $"/api/downloads/{correlationId}/status";
+
+        var payload = new
+        {
+            state = "deadletter",
+            errorMessage,
+            retryCount
+        };
+
+        try
+        {
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PatchAsync(url, content, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to notify dead letter status: {CorrelationId}, Status: {StatusCode}",
+                    correlationId,
+                    response.StatusCode);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Dead letter status notified: {CorrelationId}, RetryCount: {RetryCount}",
+                    correlationId,
+                    retryCount);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't throw - notification failure should not break download
+            _logger.LogError(ex,
+                "Error notifying dead letter status: {CorrelationId}",
                 correlationId);
         }
     }

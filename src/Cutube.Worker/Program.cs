@@ -1,5 +1,6 @@
 using Cutube.Worker.Configuration;
 using Cutube.Worker.Consumers;
+using Cutube.Worker.Handlers;
 using Cutube.Worker.Services;
 using MassTransit;
 using Polly;
@@ -22,6 +23,10 @@ IHost host = Host.CreateDefaultBuilder(args)
             context.Configuration.GetSection(WorkerOptions.SectionName)
         );
 
+        services.Configure<RetryPolicyOptions>(
+            context.Configuration.GetSection(RetryPolicyOptions.SectionName)
+        );
+
         // HttpClient for API communication
         services.AddHttpClient<IDownloadStatusNotificationService, DownloadStatusNotificationService>(client =>
         {
@@ -34,10 +39,15 @@ IHost host = Host.CreateDefaultBuilder(args)
         // Domain services
         services.AddSingleton<IDownloadProcessingService, DownloadProcessingService>();
 
+        // Handlers
+        services.AddSingleton<RetryHandler>();
+        services.AddSingleton<DeadLetterHandler>();
+
         // MassTransit (Consumer)
         services.AddMassTransit(x =>
         {
             x.AddConsumer<DownloadConsumer>();
+            x.AddConsumer<DlqConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
@@ -45,23 +55,28 @@ IHost host = Host.CreateDefaultBuilder(args)
 
                 cfg.Host($"amqp://{rabbitMqConfig.UserName}:{rabbitMqConfig.Password}@{rabbitMqConfig.Host}:{rabbitMqConfig.Port}{rabbitMqConfig.VirtualHost}");
 
-                cfg.ReceiveEndpoint("cutube.downloads", e =>
+                // Configurar endpoint principal com DLQ
+                cfg.ReceiveEndpoint(RabbitMqConfig.DownloadsQueue, e =>
                 {
                     e.ConfigureConsumer<DownloadConsumer>(context);
 
-                    // Prefetch count: 1 message at a time (avoids overload)
-                    e.PrefetchCount = 1;
+                    // Prefetch count
+                    e.PrefetchCount = RabbitMqConfig.PrefetchCount;
 
                     // Concurrent message limit
                     var workerOptions = context.GetRequiredService<Microsoft.Extensions.Options.IOptions<WorkerOptions>>().Value;
                     e.ConcurrentMessageLimit = workerOptions.MaxConcurrentDownloads;
 
-                    // Retry policy: 3 attempts with exponential backoff
-                    e.UseMessageRetry(r =>
-                    {
-                        r.Intervals(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(2));
-                        r.Handle<Exception>();
-                    });
+                    // Configurar DLQ usando argumentos da fila RabbitMQ
+                    e.SetQueueArgument("x-dead-letter-exchange", RabbitMqConfig.DlqExchange);
+                    e.SetQueueArgument("x-dead-letter-routing-key", RabbitMqConfig.DlqRoutingKey);
+                });
+
+                // Configurar endpoint da DLQ
+                cfg.ReceiveEndpoint(RabbitMqConfig.DownloadsDlqQueue, e =>
+                {
+                    e.ConfigureConsumer<DlqConsumer>(context);
+                    e.PrefetchCount = 1; // Processar DLQ um por vez
                 });
             });
         });

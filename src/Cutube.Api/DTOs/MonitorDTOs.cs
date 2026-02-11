@@ -79,6 +79,7 @@ public class UpdateStatusRequest
 {
     public required string State { get; init; }
     public string? ErrorMessage { get; init; }
+    public int? RetryCount { get; init; }
 }
 
 /// <summary>

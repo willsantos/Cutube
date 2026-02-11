@@ -70,12 +70,13 @@ builder.Services.AddSingleton<IVideoDownloader, YtDlpDownloader>();
 builder.Services.AddSingleton<IVideoProcessor, FfmpegProcessor>();
 builder.Services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
 
-// API Services
-builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
-builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
-builder.Services.AddSingleton<ConnectionTracker>();
-builder.Services.AddHostedService<BackgroundDownloadWorker>();
-builder.Services.AddHostedService<DownloadStatusCleanupService>();
+ // API Services
+ builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
+ builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
+ builder.Services.AddSingleton<DlqService>();
+ builder.Services.AddSingleton<ConnectionTracker>();
+ builder.Services.AddHostedService<BackgroundDownloadWorker>();
+ builder.Services.AddHostedService<DownloadStatusCleanupService>();
 
 // RabbitMQ Configuration - Skip if running in tests
 if (!builder.Environment.IsEnvironment("Testing"))
@@ -142,10 +143,11 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     Predicate = check => check.Tags.Contains("ready")
 });
 
-// Map endpoints
-app.MapDownloadsEndpoints();
-app.MapVideosEndpoints();
-app.MapStatusEndpoints();
+ // Map endpoints
+ app.MapDownloadsEndpoints();
+ app.MapVideosEndpoints();
+ app.MapStatusEndpoints();
+ app.MapDlqEndpoints();
 
 // Root endpoint
 app.MapGet("/", () => "Cutube API - Video Download Service");
