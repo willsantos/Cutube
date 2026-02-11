@@ -483,3 +483,7 @@ Downloads
 
 #IA
 .opencode
+
+# Environment files
+.env
+.env.local
