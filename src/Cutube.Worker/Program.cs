@@ -39,13 +39,15 @@ IHost host = Host.CreateDefaultBuilder(args)
         // Domain services
         services.AddSingleton<IDownloadProcessingService, DownloadProcessingService>();
 
-        // Retry Handler
+        // Handlers
         services.AddSingleton<RetryHandler>();
+        services.AddSingleton<DeadLetterHandler>();
 
         // MassTransit (Consumer)
         services.AddMassTransit(x =>
         {
             x.AddConsumer<DownloadConsumer>();
+            x.AddConsumer<DlqConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
@@ -53,6 +55,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
                 cfg.Host($"amqp://{rabbitMqConfig.UserName}:{rabbitMqConfig.Password}@{rabbitMqConfig.Host}:{rabbitMqConfig.Port}{rabbitMqConfig.VirtualHost}");
 
+                // Configurar endpoint principal com DLQ
                 cfg.ReceiveEndpoint(RabbitMqConfig.DownloadsQueue, e =>
                 {
                     e.ConfigureConsumer<DownloadConsumer>(context);
@@ -67,6 +70,13 @@ IHost host = Host.CreateDefaultBuilder(args)
                     // Configurar DLQ usando argumentos da fila RabbitMQ
                     e.SetQueueArgument("x-dead-letter-exchange", RabbitMqConfig.DlqExchange);
                     e.SetQueueArgument("x-dead-letter-routing-key", RabbitMqConfig.DlqRoutingKey);
+                });
+
+                // Configurar endpoint da DLQ
+                cfg.ReceiveEndpoint(RabbitMqConfig.DownloadsDlqQueue, e =>
+                {
+                    e.ConfigureConsumer<DlqConsumer>(context);
+                    e.PrefetchCount = 1; // Processar DLQ um por vez
                 });
             });
         });
