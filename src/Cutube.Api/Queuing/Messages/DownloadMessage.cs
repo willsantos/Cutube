@@ -61,6 +61,11 @@ public record DownloadMessage
     /// Metadados adicionais (título, duração, thumbnail).
     /// </summary>
     public DownloadMetadata? Metadata { get; init; }
+
+    /// <summary>
+    /// Número de tentativas de processamento (para retry).
+    /// </summary>
+    public int RetryCount { get; init; } = 0;
 }
 
 /// <summary>
@@ -82,4 +87,9 @@ public record DownloadMetadata
     /// URL da thumbnail.
     /// </summary>
     public string? Thumbnail { get; init; }
+
+    /// <summary>
+    /// Nome do canal.
+    /// </summary>
+    public string? Channel { get; init; }
 }

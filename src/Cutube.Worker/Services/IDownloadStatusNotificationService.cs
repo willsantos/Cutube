@@ -25,4 +25,13 @@ public interface IDownloadStatusNotificationService
         long? totalBytes = null,
         string? eta = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Notify that a download has been moved to the Dead Letter Queue.
+    /// </summary>
+    Task NotifyDeadLetterAsync(
+        string correlationId,
+        string errorMessage,
+        int retryCount,
+        CancellationToken cancellationToken = default);
 }
