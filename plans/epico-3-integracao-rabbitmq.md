@@ -6,6 +6,19 @@
 
 **Dependências:** ✅ Épico 2 completado (API + Frontend funcionando)
 
+## Índice
+
+- [Fase 3.1: RabbitMQ Setup & Configuration](#fase-31-rabbitmq-setup--configuration)
+- [Fase 3.2: Producer (Frontend → Fila)](#fase-32-producer-frontend--fila)
+- [Fase 3.3: Consumer (Worker Dedicado)](#fase-33-consumer-worker-dedicado)
+- [Fase 3.4: Status Tracking & Dashboard](#fase-34-status-tracking--dashboard)
+- [Fase 3.5: Retry & Dead Letter Queue](#fase-35-retry--dead-letter-queue)
+- [Critérios de Aceito do Épico](#critérios-de-aceito-do-épico)
+- [Arquitetura Final](#arquitetura-final)
+- [Tecnologias](#tecnologias)
+- [Riscos e Mitigações](#riscos-e-mitigações)
+- [Próximos Passos](#próximos-passos)
+
 ---
 
 ## Fase 3.1: RabbitMQ Setup & Configuration
