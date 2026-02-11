@@ -1,25 +1,27 @@
-# Instruções para Agents: Criação de Planos
+# Instructions for Agents: Plan Creation
 
-> **Este documento define o padrão para criação de planos de Épicos e Fases no projeto Cutube.**
-
----
-
-## 📋 Visão Geral
-
-Este diretório (`plans/`) contém toda a documentação de planejamento do projeto. Existem dois tipos de planos:
-
-1. **Épicos** (`epico-N-nome.md`) - Objetivos macro, estratégicos
-2. **Fases** (`fase-N.M-nome.md`) - Implementações específicas, táticas
+> **This document defines the standard for creating Epic and Phase plans in the Cutube project.**
+> 
+> **IMPORTANT:** These instructions are in English, but the actual plans you create should be in **Portuguese (pt-BR)** as the product is for Portuguese-speaking users.
 
 ---
 
-## 📁 Estrutura do Diretório
+## 📋 Overview
+
+This directory (`plans/`) contains all project planning documentation. There are two types of plans:
+
+1. **Epics** (`epico-N-nome.md`) - Macro, strategic objectives
+2. **Phases** (`fase-N.M-nome.md`) - Specific, tactical implementations
+
+---
+
+## 📁 Directory Structure
 
 ```
 plans/
-├── PLAN-EPICO-TEMPLATE.md      # Template para criar épicos
-├── PLAN-FASE-TEMPLATE.md       # Template para criar fases
-├── AGENTS.md                   # Este arquivo
+├── PLAN-EPICO-TEMPLATE.md      # Template for creating epics
+├── PLAN-FASE-TEMPLATE.md       # Template for creating phases
+├── AGENTS.md                   # This file
 ├── epico-3-integracao-rabbitmq.md
 ├── epico-4-preparacao-deploy.md
 ├── fase-3.1-rabbitmq-setup.md
@@ -29,151 +31,151 @@ plans/
 
 ---
 
-## 🎯 Regras Fundamentais
+## 🎯 Fundamental Rules
 
-### 1. Separação de Responsabilidades
+### 1. Separation of Responsibilities
 
-| Tipo | Escopo | Conteúdo | Exemplo |
+| Type | Scope | Content | Example |
 |------|--------|----------|---------|
-| **Épico** | Macro (semanas) | Visão arquitetural, múltiplas tarefas | "Integração com RabbitMQ" |
-| **Fase** | Micro (dias) | Código completo, implementação detalhada | "RabbitMQ Setup" |
+| **Epic** | Macro (weeks) | Architectural vision, multiple tasks | "Integração com RabbitMQ" |
+| **Phase** | Micro (days) | Complete code, detailed implementation | "RabbitMQ Setup" |
 
-### 2. Hierarquia Numérica
+### 2. Numeric Hierarchy
 
-- **Épicos**: `1`, `2`, `3`, `4`...
-- **Fases**: `3.1`, `3.2`, `3.5`... (N.M onde N = épico, M = fase)
-- **Tarefas**: `3.5.1`, `3.5.2`... (N.M.X)
-- **Subtarefas**: `3.5.1.1`, `3.5.1.2`... (N.M.X.Y)
+- **Epics**: `1`, `2`, `3`, `4`...
+- **Phases**: `3.1`, `3.2`, `3.5`... (N.M where N = epic, M = phase)
+- **Tasks**: `3.5.1`, `3.5.2`... (N.M.X)
+- **Subtasks**: `3.5.1.1`, `3.5.1.2`... (N.M.X.Y)
 
-### 3. Nomenclatura de Arquivos
+### 3. File Naming
 
 ```bash
-# Épicos
-docs/epico-{N}-{nome-curto}.md
+# Epics
+plans/epico-{N}-{short-name}.md
 ex: epico-3-integracao-rabbitmq.md
 
-# Fases
-docs/fase-{N.M}-{nome-curto}.md
+# Phases
+plans/fase-{N.M}-{short-name}.md
 ex: fase-3.5-retry-dead-letter-queue.md
 ```
 
-**Regras para nomes:**
-- Use kebab-case (minúsculas com hífens)
-- Seja descritivo mas conciso
-- Evite acentos e caracteres especiais
-- Mantenha consistência com o título do documento
+**Naming rules:**
+- Use kebab-case (lowercase with hyphens)
+- Be descriptive but concise
+- Avoid accents and special characters
+- Maintain consistency with document title
 
 ---
 
-## 📝 Fluxo de Criação
+## 📝 Creation Workflow
 
-### Para Criar um Épico
+### To Create an Epic
 
-1. **Consulte o template**: Leia `PLAN-EPICO-TEMPLATE.md`
-2. **Defina o número**: Qual o próximo número disponível?
-3. **Crie o arquivo**: `plans/epico-{N}-{nome}.md`
-4. **Siga a estrutura**:
-   - Cabeçalho com metadados
-   - Índice com links âncora
-   - Objetivo claro
-   - Visão arquitetural
-   - Tarefas numeradas
-   - Checklist geral
-5. **Valide**: O épico está completo mas não detalhado demais?
-6. **Commit**: `docs: add Epic N plan for [objetivo]`
+1. **Consult the template**: Read `PLAN-EPICO-TEMPLATE.md`
+2. **Define the number**: What is the next available number?
+3. **Create the file**: `plans/epico-{N}-{name}.md`
+4. **Follow the structure**:
+   - Header with metadata
+   - Index with anchor links
+   - Clear objective
+   - Architectural vision
+   - Numbered tasks
+   - General checklist
+5. **Validate**: Is the epic complete but not overly detailed?
+6. **Commit**: `docs: add Epic N plan for [objective]`
 
-### Para Criar uma Fase
+### To Create a Phase
 
-1. **Consulte o template**: Leia `PLAN-FASE-TEMPLATE.md`
-2. **Identifique o épico pai**: A qual épico esta fase pertence?
-3. **Defina o número**: Qual o próximo N.M disponível?
-4. **Crie o arquivo**: `plans/fase-{N.M}-{nome}.md`
-5. **Siga a estrutura**:
-   - Cabeçalho com referência ao épico
-   - Objetivo específico
-   - Diagramas detalhados
-   - Código completo e funcional
-   - Checklists verificáveis
-6. **Valide**: O código pode ser copiado e funcionar?
-7. **Commit**: `docs: add Phase N.M plan for [objetivo]`
-
----
-
-## ✅ Checklist de Qualidade
-
-### Antes de Commitar
-
-- [ ] Nome do arquivo segue o padrão
-- [ ] Cabeçalho completo com todos os metadados
-- [ ] Índice presente (para épicos) e funcionando
-- [ ] Objetivo claro e mensurável
-- [ ] Diagramas ASCII bem formatados
-- [ ] Código completo (não pseudocódigo) para fases
-- [ ] Checklists são verificáveis (não subjetivos)
-- [ ] Critérios de aceite são mensuráveis
-- [ ] Referências a outros planos estão corretas
-- [ ] Nenhum placeholder [colchetes] foi esquecido
-
-### Validação de Conteúdo
-
-**Épicos devem ter:**
-- Visão de alto nível
-- Arquitetura macro
-- Tarefas bem definidas mas sem código detalhado
-- Benefícios claros listados
-
-**Fases devem ter:**
-- Código completo e funcional
-- Configurações específicas
-- Diagramas detalhados do fluxo
-- Checklists de implementação
+1. **Consult the template**: Read `PLAN-FASE-TEMPLATE.md`
+2. **Identify the parent epic**: Which epic does this phase belong to?
+3. **Define the number**: What is the next available N.M?
+4. **Create the file**: `plans/fase-{N.M}-{name}.md`
+5. **Follow the structure**:
+   - Header with epic reference
+   - Specific objective
+   - Detailed diagrams
+   - Complete and functional code
+   - Verifiable checklists
+6. **Validate**: Can the code be copied and work?
+7. **Commit**: `docs: add Phase N.M plan for [objective]`
 
 ---
 
-## 🎨 Convenções de Formatação
+## ✅ Quality Checklist
 
-### Emojis e Status
+### Before Committing
 
-| Uso | Emoji | Significado |
-|-----|-------|-------------|
-| Status | 🎯 | Planejamento |
-| Status | 🚧 | Em Andamento |
-| Status | ✅ | Concluído |
-| Prioridade | 🔥 | Alta |
-| Prioridade | ⚡ | Média |
-| Prioridade | 💤 | Baixa |
-| Dependência | ✅ | Completa |
-| Dependência | ⏳ | Pendente |
-| Critério | ✅ | Atingido |
+- [ ] File name follows the standard
+- [ ] Header complete with all metadata
+- [ ] Index present (for epics) and working
+- [ ] Clear and measurable objective
+- [ ] Well-formatted ASCII diagrams
+- [ ] Complete code (not pseudocode) for phases
+- [ ] Checklists are verifiable (not subjective)
+- [ ] Acceptance criteria are measurable
+- [ ] References to other plans are correct
+- [ ] No placeholder [brackets] left behind
 
-### Cabeçalho de Épico
+### Content Validation
+
+**Epics must have:**
+- High-level vision
+- Macro architecture
+- Well-defined tasks but no detailed code
+- Clear benefits listed
+
+**Phases must have:**
+- Complete and functional code
+- Specific configurations
+- Detailed flow diagrams
+- Implementation checklists
+
+---
+
+## 🎨 Formatting Conventions
+
+### Emojis and Status
+
+| Usage | Emoji | Meaning |
+|-------|-------|---------|
+| Status | 🎯 | Planning |
+| Status | 🚧 | In Progress |
+| Status | ✅ | Completed |
+| Priority | 🔥 | High |
+| Priority | ⚡ | Medium |
+| Priority | 💤 | Low |
+| Dependency | ✅ | Complete |
+| Dependency | ⏳ | Pending |
+| Criteria | ✅ | Achieved |
+
+### Epic Header
 
 ```markdown
-# Épico [N]: [Título]
+# Épico [N]: [Title]
 
 **Status:** 🎯 Planejamento  
-**Duração:** [X-Y dias/semanas]  
+**Duração:** [X-Y days/weeks]  
 **Responsável:** [Role/Team]  
 **Prioridade:** 🔥 [Alta/Média/Baixa]  
-**Dependência:** [Status] [Referência]
+**Dependência:** [Status] [Reference]
 ```
 
-### Cabeçalho de Fase
+### Phase Header
 
 ```markdown
-# Fase [N.M]: [Título]
+# Fase [N.M]: [Title]
 
 **Status:** 🎯 Planejamento  
-**Épico:** [ID] (Épico [N]: [Nome])  
-**Duração:** [X-Y dias]  
+**Épico:** [ID] (Épico [N]: [Name])  
+**Duração:** [X-Y days]  
 **Responsável:** [Role]  
 **Prioridade:** 🔥 [Alta/Média/Baixa]  
-**Dependência:** [Status] [Referência]
+**Dependência:** [Status] [Reference]
 ```
 
-### Seções Obrigatórias
+### Required Sections
 
-#### Índice (Apenas Épicos)
+#### Index (Epics Only)
 
 ```markdown
 ## Índice
@@ -181,8 +183,8 @@ ex: fase-3.5-retry-dead-letter-queue.md
 - [Objetivo](#objetivo)
 - [Visão Arquitetural](#visão-arquitetural)
 - [Tarefas](#tarefas)
-  - [4.1 Nome da Tarefa](#41-nome-da-tarefa)
-  - [4.2 Outra Tarefa](#42-outra-tarefa)
+  - [4.1 Task Name](#41-task-name)
+  - [4.2 Another Task](#42-another-task)
 - [Checklist Geral](#checklist-geral)
 - [Próximos Passos](#próximos-passos)
 ```
@@ -191,28 +193,28 @@ ex: fase-3.5-retry-dead-letter-queue.md
 
 ```markdown
 **Checklist:**
-- [ ] Item específico e verificável
-- [ ] Outro item com critério claro
+- [ ] Specific and verifiable item
+- [ ] Another item with clear criteria
 
 **Critérios de aceite:**
-- ✅ [Critério mensurável 1]
-- ✅ [Critério mensurável 2]
+- ✅ [Measurable criterion 1]
+- ✅ [Measurable criterion 2]
 ```
 
 ---
 
-## 💻 Padrões de Código
+## 💻 Code Standards
 
-### Para Fases (Código Completo)
+### For Phases (Complete Code)
 
-**Deve incluir:**
-- Nome do arquivo completo
-- Namespace correto
-- Todos os using/imports necessários
-- Comentários explicativos
-- Implementação completa (não stubs)
+**Must include:**
+- Complete file name
+- Correct namespace
+- All necessary using/imports
+- Explanatory comments
+- Complete implementation (not stubs)
 
-**Exemplo correto:**
+**Correct example:**
 ```csharp
 // src/Cutube.Worker/Configuration/RetryPolicyOptions.cs
 namespace Cutube.Worker.Configuration;
@@ -229,44 +231,44 @@ public class RetryPolicyOptions
     
     public TimeSpan GetDelayForAttempt(int attemptNumber)
     {
-        // Implementação completa aqui
+        // Complete implementation here
     }
 }
 ```
 
-**NÃO faça:**
+**DON'T do:**
 ```csharp
-// Stub incompleto
+// Incomplete stub
 public class RetryPolicyOptions 
 {
-    // TODO: implementar
+    // TODO: implement
 }
 ```
 
-### Diagramas ASCII
+### ASCII Diagrams
 
-**Use estruturas claras:**
+**Use clear structures:**
 ```
 ┌─────────────────────────────────────┐
 │           Container                 │
 │  ┌──────────────┐  ┌─────────────┐  │
-│  │ Componente A │──│ Componente B│  │
+│  │ Component A  │──│ Component B │  │
 │  └──────────────┘  └─────────────┘  │
 └─────────────────────────────────────┘
 ```
 
 ---
 
-## 🔗 Referências e Links
+## 🔗 References and Links
 
-### Link para outros planos
+### Link to other plans
 
 ```markdown
 **Dependência:** ✅ [Fase 3.4](fase-3.4-status-tracking.md) completa
 **Épico:** Cutube-858 ([Épico 3](epico-3-integracao-rabbitmq.md))
 ```
 
-### Referências internas
+### Internal references
 
 ```markdown
 Veja [PLAN-EPICO-TEMPLATE.md](PLAN-EPICO-TEMPLATE.md) para mais detalhes.
@@ -277,28 +279,28 @@ Consulte o [AGENTS.md](AGENTS.md) para instruções.
 
 ## 🚫 Anti-Patterns
 
-### O que EVITAR
+### What to AVOID
 
-❌ **Nomes de arquivo inconsistentes**
+❌ **Inconsistent file names**
 ```
-# Errado
+# Wrong
 epico_3_rabbitmq.md
 Epico3.md
 fase35retry.md
 
-# Certo
+# Correct
 epico-3-integracao-rabbitmq.md
 fase-3.5-retry-dead-letter-queue.md
 ```
 
-❌ **Código incompleto em fases**
+❌ **Incomplete code in phases**
 ```csharp
-// Errado - stub
+// Wrong - stub
 public void Process() {
-    // TODO: implementar lógica
+    // TODO: implement logic
 }
 
-// Certo - implementação completa
+// Correct - complete implementation
 public void Process() {
     var result = _service.Execute();
     if (result.IsSuccess) {
@@ -307,25 +309,25 @@ public void Process() {
 }
 ```
 
-❌ **Checklists subjetivos**
+❌ **Subjective checklists**
 ```markdown
-# Errado
-- [ ] Funciona bem
-- [ ] Está otimizado
+# Wrong
+- [ ] Works well
+- [ ] Is optimized
 
-# Certo
-- [ ] Testes passam: `dotnet test`
-- [ ] Build sem warnings: `dotnet build`
-- [ ] Tempo de resposta < 100ms
+# Correct
+- [ ] Tests pass: `dotnet test`
+- [ ] Build without warnings: `dotnet build`
+- [ ] Response time < 100ms
 ```
 
-❌ **Esquecer o índice em épicos**
+❌ **Forgetting index in epics**
 ```markdown
-# Errado - começa direto no Objetivo
+# Wrong - starts directly at Objective
 ## Objetivo
 ...
 
-# Certo - tem índice antes
+# Correct - has index before
 ## Índice
 - [Objetivo](#objetivo)
 ...
@@ -335,21 +337,21 @@ public void Process() {
 
 ---
 
-## 📚 Referências
+## 📚 References
 
-- [PLAN-EPICO-TEMPLATE.md](PLAN-EPICO-TEMPLATE.md) - Template para épicos
-- [PLAN-FASE-TEMPLATE.md](PLAN-FASE-TEMPLATE.md) - Template para fases
-- Exemplos:
+- [PLAN-EPICO-TEMPLATE.md](PLAN-EPICO-TEMPLATE.md) - Template for epics
+- [PLAN-FASE-TEMPLATE.md](PLAN-FASE-TEMPLATE.md) - Template for phases
+- Examples:
   - [epico-3-integracao-rabbitmq.md](epico-3-integracao-rabbitmq.md)
   - [fase-3.5-retry-dead-letter-queue.md](fase-3.5-retry-dead-letter-queue.md)
 
 ---
 
-## 🔄 Manutenção
+## 🔄 Maintenance
 
-Este documento deve ser atualizado quando:
-- Novos padrões forem estabelecidos
-- Templates forem modificados
-- Novos exemplos excelentes forem criados
+This document should be updated when:
+- New standards are established
+- Templates are modified
+- New excellent examples are created
 
-**Última atualização:** 11/02/2026
+**Last updated:** 11/02/2026
