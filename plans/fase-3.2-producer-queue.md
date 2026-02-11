@@ -7,6 +7,9 @@
 **Prioridade:** 🔥 Alta
 **Dependência:** ✅ Fase 3.1 (RabbitMQ Setup) completa
 
+**⚠️ PRÉ-REQUISITO PARA 3.2.3.3 (Fallback):**
+Antes de implementar a seção 3.2.3.3 (Fallback com Feature Toggle), é necessário completar o plano **`plans/fase-feature-toggle.md`** que implementa o sistema de Feature Toggle reutilizável.
+
 ---
 
 ## Objetivo
@@ -538,6 +541,8 @@ app.MapHealthChecks("/health");
 
 **Estimativa:** 4-5 horas
 
+**Dependência:** ⚠️ **Para implementar 3.2.3.3 (Fallback), primeiro complete o plano `fase-feature-toggle.md`**
+
 **Arquivos a modificar:**
 ```
 src/Cutube.Api/Endpoints/
@@ -692,21 +697,69 @@ public record CreateDownloadResponse
 }
 ```
 
-#### 3.2.3.3 Implementar Fallback (opcional)
+#### 3.2.3.3 Implementar Fallback com Feature Toggle (opcional)
+
+**⚠️ IMPORTANTE:** Esta tarefa depende da implementação prévia do sistema de Feature Toggle. Veja o plano em `plans/fase-feature-toggle.md`.
+
+**Feature Toggle Configuration:**
+
+```json
+// appsettings.json
+{
+  "FeatureToggles": {
+    "QueueFallbackEnabled": false
+  }
+}
+```
+
+**Arquivos:**
+```
+src/Cutube.Api/
+  ├── Configuration/
+  │   └── FeatureTogglesOptions.cs
+  └── Queuing/
+      └── RabbitMqProducerWithFallback.cs
+```
+
+#### 3.2.3.3.1 Criar FeatureTogglesOptions
 
 ```csharp
-// src/Cutube.Api/Queuing/QueueProducerFallback.cs
+// src/Cutube.Api/Configuration/FeatureTogglesOptions.cs
+namespace Cutube.Api.Configuration;
+
+/// <summary>
+/// Opções de configuração para feature toggles.
+/// </summary>
+public class FeatureTogglesOptions
+{
+    public const string SectionName = "FeatureToggles";
+
+    /// <summary>
+    /// Habilita fallback para processamento local quando RabbitMQ está indisponível.
+    /// Padrão: false (retorna 503 ao invés de fazer fallback).
+    /// </summary>
+    public bool QueueFallbackEnabled { get; set; } = false;
+}
+```
+
+#### 3.2.3.3.2 Criar RabbitMqProducerWithFallback com Feature Toggle
+
+```csharp
+// src/Cutube.Api/Queuing/RabbitMqProducerWithFallback.cs
 using Microsoft.Extensions.Options;
+using Cutube.Api.Configuration;
 
 namespace Cutube.Api.Queuing;
 
 /// <summary>
 /// Producer com fallback para processamento local se RabbitMQ indisponível.
+/// Fallback só é ativado se a feature toggle QueueFallbackEnabled estiver true.
 /// </summary>
 public class RabbitMqProducerWithFallback : IQueueProducer
 {
     private readonly RabbitMqProducer _producer;
     private readonly IQueueProducer _fallbackProducer;
+    private readonly FeatureTogglesOptions _featureToggles;
     private readonly ILogger<RabbitMqProducerWithFallback> _logger;
 
     public bool IsConnected => _producer.IsConnected;
@@ -714,10 +767,12 @@ public class RabbitMqProducerWithFallback : IQueueProducer
     public RabbitMqProducerWithFallback(
         RabbitMqProducer producer,
         IQueueProducer fallbackProducer,
+        IOptions<FeatureTogglesOptions> featureToggles,
         ILogger<RabbitMqProducerWithFallback> logger)
     {
         _producer = producer;
         _fallbackProducer = fallbackProducer;
+        _featureToggles = featureToggles.Value;
         _logger = logger;
     }
 
@@ -733,13 +788,56 @@ public class RabbitMqProducerWithFallback : IQueueProducer
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "RabbitMQ unavailable, falling back to local processing");
+            // Verificar se fallback está habilitado via feature toggle
+            if (!_featureToggles.QueueFallbackEnabled)
+            {
+                _logger.LogError(ex, "RabbitMQ unavailable and fallback is disabled. Error: {Error}", ex.Message);
+                throw; // Re-lançar exceção para retornar 503 ao cliente
+            }
+
+            _logger.LogWarning(ex, "RabbitMQ unavailable, falling back to local processing (feature toggle enabled)");
         }
 
-        // Fallback para processamento local
-        _logger.LogInformation("Using fallback producer for download: {CorrelationId}", message.CorrelationId);
-        return await _fallbackProducer.PublishDownloadAsync(message, cancellationToken);
+        // Fallback para processamento local (só se feature toggle enabled)
+        if (_featureToggles.QueueFallbackEnabled)
+        {
+            _logger.LogInformation("Using fallback producer for download: {CorrelationId}", message.CorrelationId);
+            return await _fallbackProducer.PublishDownloadAsync(message, cancellationToken);
+        }
+
+        // Se chegou aqui, RabbitMQ não está conectado e fallback está desabilitado
+        throw new QueuePublishException(
+            "RabbitMQ is unavailable and fallback is disabled",
+            message.CorrelationId);
     }
+}
+```
+
+#### 3.2.3.3.3 Configurar Feature Toggle no Program.cs
+
+```csharp
+// src/Cutube.Api/Program.cs
+using Cutube.Api.Configuration;
+
+// ... código existente ...
+
+// Feature Toggles Configuration
+builder.Services.Configure<FeatureTogglesOptions>(
+    builder.Configuration.GetSection(FeatureTogglesOptions.SectionName)
+);
+
+// Registrar producer baseado na feature toggle
+if (builder.Configuration.GetValue<bool>("FeatureToggles:QueueFallbackEnabled", false))
+{
+    // Com fallback
+    builder.Services.AddSingleton<IQueueProducer, RabbitMqProducerWithFallback>();
+    _logger.LogInformation("Queue producer with fallback ENABLED");
+}
+else
+{
+    // Sem fallback (padrão - retorna 503 se RabbitMQ indisponível)
+    builder.Services.AddSingleton<IQueueProducer, RabbitMqProducer>();
+    _logger.LogInformation("Queue producer without fallback (standard mode)");
 }
 ```
 
@@ -751,7 +849,10 @@ public class RabbitMqProducerWithFallback : IQueueProducer
 - [ ] Tratar QueuePublishException (503 Service Unavailable)
 - [ ] Tratar ArgumentException (400 Bad Request)
 - [ ] Adicionar logging detalhado
-- [ ] (Opcional) Implementar fallback para processamento local
+- [ ] Criar FeatureTogglesOptions.cs
+- [ ] Criar RabbitMqProducerWithFallback.cs com verificação de feature toggle
+- [ ] Configurar feature toggle no appsettings.json (default: false)
+- [ ] Atualizar Program.cs para registrar producer baseado na feature toggle
 
 **Critérios de aceito:**
 - ✅ Endpoint publica mensagem na fila
@@ -1149,7 +1250,8 @@ curl -u cutube:cutube123 http://localhost:15672/api/queues/%2F/cutube.downloads.
 - **MassTransit 8** - Abstração para RabbitMQ
 - **RabbitMQ.Client** - Cliente AMQP
 - **.NET 10** - ASP.NET Core Minimal API
-- **Next.js 15** - Frontend (TypeScript)
+- **Next.js 16.1.6** - Frontend (TypeScript)
+- **React 19.2.3** - UI Library
 - **Docker** - RabbitMQ container
 
 ---
@@ -1178,6 +1280,7 @@ Após completar Fase 3.2:
 
 ## Entregáveis (Deliverables)
 
+### Fase 3.2 (Producer Queue)
 - [x] IQueueProducer interface criada
 - [ ] RabbitMqProducer implementado
 - [ ] DownloadMessage schema definido
@@ -1187,6 +1290,22 @@ Após completar Fase 3.2:
 - [ ] Testes unitários criados
 - [ ] Documentação completa
 - [ ] Health check implementado
+
+### Feature Toggle System (Pré-requisito para 3.2.3.3)
+- [ ] IFeatureToggleService interface criada
+- [ ] FeatureToggleService implementado com reflection
+- [ ] FeatureFlag enum com constantes
+- [ ] FeatureTogglesOptions configurada
+- [ ] Extension methods para uso simplificado
+- [ ] Testes unitários criados
+- [ ] Documentação completa em docs/feature-toggle.md
+
+### Fallback com Feature Toggle (3.2.3.3 - Opcional)
+- [ ] FeatureTogglesOptions criado com QueueFallbackEnabled
+- [ ] RabbitMqProducerWithFallback implementado
+- [ ] Configuração no appsettings.json (default: false)
+- [ ] Program.cs atualizado para registrar producer baseado na feature toggle
+- [ ] Testes manuais com toggle ON/OFF
 
 ---
 
