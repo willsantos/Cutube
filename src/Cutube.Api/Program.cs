@@ -1,10 +1,13 @@
+using Cutube.Api.Configuration;
 using Cutube.Api.Endpoints;
 using Cutube.Api.HealthChecks;
 using Cutube.Api.Hubs;
+using Cutube.Api.Queuing;
 using Cutube.Api.Services;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
 using Cutube.Infrastructure;
+using MassTransit;
 
 // Program.cs is excluded from code coverage via GlobalSuppressions.cs or project configuration
 var builder = WebApplication.CreateBuilder(args);
@@ -72,6 +75,36 @@ builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
 builder.Services.AddSingleton<ConnectionTracker>();
 builder.Services.AddHostedService<BackgroundDownloadWorker>();
+
+// RabbitMQ Configuration - Skip if running in tests
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.Configure<RabbitMqOptions>(
+        builder.Configuration.GetSection(RabbitMqOptions.SectionName)
+    );
+
+    // MassTransit (Producer apenas - não configura consumers na API)
+    builder.Services.AddMassTransit(x =>
+    {
+        x.UsingRabbitMq((context, cfg) =>
+        {
+            var options = context.GetRequiredService<RabbitMqOptions>();
+
+            cfg.Host($"rabbitmq://{options.UserName}:{options.Password}@{options.Host}:{options.Port}{options.VirtualHost}");
+
+            // Configurar retry
+            cfg.UseMessageRetry(r =>
+            {
+                r.Interval(options.RetryCount, TimeSpan.FromSeconds(1));
+            });
+
+            cfg.ConfigureEndpoints(context);
+        });
+    });
+
+    // Registrar producer
+    builder.Services.AddSingleton<IQueueProducer, RabbitMqProducer>();
+}
 
 // Configure options
 builder.Services.Configure<DiskSpaceHealthCheckOptions>(

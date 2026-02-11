@@ -9,13 +9,13 @@ import { buildQueryString, fetchApi } from "./api-helpers";
 
 export const api = {
   downloads: {
-    create: async (request: DownloadRequest): Promise<string> => {
+    create: async (request: DownloadRequest): Promise<CreateDownloadResponse> => {
       const response = await fetchApi<CreateDownloadResponse>("/api/downloads", {
         method: "POST",
         body: JSON.stringify(request),
       });
 
-      return response.downloadId;
+      return response;
     },
 
     list: async (params?: {

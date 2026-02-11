@@ -31,5 +31,15 @@ public record CreateDownloadRequest
     /// <summary>
     /// Whether to download audio only
     /// </summary>
-    public bool AudioOnly { get; init; }
+    public bool? AudioOnly { get; init; }
+
+    /// <summary>
+    /// Optional custom filename for output
+    /// </summary>
+    public string? OutputFilename { get; init; }
+
+    /// <summary>
+    /// Priority for processing (default: "normal")
+    /// </summary>
+    public string? Priority { get; init; }
 }
