@@ -118,3 +118,21 @@ O Cutube detectará automaticamente e usará sua versão se for mais recente que
 5. O vídeo será salvo na mesma pasta
 6. Enjoy!
 7. (Opcional) Se quiser, pode adicionar o executável do programa no PATH do seu sistema operacional para poder executar o programa de qualquer lugar
+
+## RabbitMQ Setup
+
+O Cutube usa RabbitMQ para processamento assíncrono de downloads. Veja a [documentação completa](docs/setup-rabbitmq.md) para instruções detalhadas.
+
+### Início Rápido
+
+```bash
+# Iniciar RabbitMQ
+./scripts/docker-compose-up.sh
+
+# Acessar Management UI
+# http://localhost:15672 (User: cutube, Pass: cutube123)
+
+# Executar Worker
+cd src/Cutube.Worker
+dotnet run
+```
