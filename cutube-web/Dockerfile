@@ -13,6 +13,8 @@ RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
 
 # Build
+ARG API_INTERNAL_URL
+ENV API_INTERNAL_URL=${API_INTERNAL_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
