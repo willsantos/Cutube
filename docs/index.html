@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cutube CLI Installer</title>
+  <style>
+    :root {
+      --bg: #f5f8ff;
+      --surface: #ffffff;
+      --ink: #142033;
+      --muted: #49607a;
+      --accent: #0d6efd;
+      --accent-soft: #eaf2ff;
+      --border: #d9e3f1;
+      --code-bg: #0f1a2b;
+      --code-ink: #e7eef9;
+      --ok: #0a7d33;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "SF Pro Text", "Helvetica Neue", sans-serif;
+      background: radial-gradient(circle at top right, #e8f0ff 0%, var(--bg) 45%, #f8fbff 100%);
+      color: var(--ink);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 14px 44px rgba(20, 32, 51, 0.08);
+      overflow: hidden;
+    }
+
+    header {
+      padding: 30px 24px 22px;
+      background: linear-gradient(140deg, #f9fbff 0%, #eef4ff 100%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.7rem, 2.3vw, 2.2rem);
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    section {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-child { border-bottom: 0; }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.15rem;
+    }
+
+    pre {
+      margin: 0;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      padding: 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 0.92rem;
+    }
+
+    code {
+      font-family: "Cascadia Code", "Fira Code", monospace;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ok);
+      background: #e8faef;
+      padding: 5px 10px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      section, header { padding: 18px 16px; }
+      pre { font-size: 0.84rem; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="badge">Cutube CLI</span>
+      <h1>Instalador oficial</h1>
+      <p>Instale o Cutube com um comando em Linux, macOS ou Windows.</p>
+    </header>
+
+    <section>
+      <h2>Linux e macOS</h2>
+      <pre><code>curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash</code></pre>
+    </section>
+
+    <section>
+      <h2>Windows (PowerShell)</h2>
+      <pre><code>iwr -useb https://willsantos.github.io/Cutube/install.ps1 | iex</code></pre>
+    </section>
+
+    <section>
+      <h2>Fallback (Raw GitHub)</h2>
+      <pre><code>curl -fsSL https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.sh | bash</code></pre>
+      <pre style="margin-top: 10px;"><code>iwr -useb https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.ps1 | iex</code></pre>
+    </section>
+
+    <section>
+      <h2>Proximos passos</h2>
+      <ul>
+        <li>Confirme com <code>cutube --version</code>.</li>
+        <li>Veja instalacao manual e troubleshooting na <a href="https://github.com/willsantos/Cutube/blob/main/docs/installation.md">documentacao completa</a>.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
