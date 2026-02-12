@@ -8,6 +8,7 @@ using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
 using Cutube.Infrastructure;
 using MassTransit;
+using Microsoft.Extensions.Options;
 
 // Program.cs is excluded from code coverage via GlobalSuppressions.cs or project configuration
 var builder = WebApplication.CreateBuilder(args);
@@ -90,7 +91,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
     {
         x.UsingRabbitMq((context, cfg) =>
         {
-            var options = context.GetRequiredService<RabbitMqOptions>();
+            var options = context.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
 
             cfg.Host($"rabbitmq://{options.UserName}:{options.Password}@{options.Host}:{options.Port}{options.VirtualHost}");
 
