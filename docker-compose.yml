@@ -61,7 +61,6 @@ services:
     build:
       context: .
       dockerfile: src/Cutube.Worker/Dockerfile
-    container_name: cutube-worker
     environment:
       DOTNET_ENVIRONMENT: ${DOTNET_ENVIRONMENT:-Production}
       RabbitMq__Host: rabbitmq
