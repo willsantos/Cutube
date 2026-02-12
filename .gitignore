@@ -484,7 +484,11 @@ downloads
 
 #IA
 .opencode
+.agents
 
 # Environment files
 .env
 .env.local
+
+# Specs (project documentation and analysis)
+.specs/
