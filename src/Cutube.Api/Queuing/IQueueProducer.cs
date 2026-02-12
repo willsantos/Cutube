@@ -1,3 +1,5 @@
+using Cutube.Contracts.Messages;
+
 namespace Cutube.Api.Queuing;
 
 /// <summary>
@@ -11,7 +13,7 @@ public interface IQueueProducer
     /// <param name="message">Mensagem de download.</param>
     /// <param name="cancellationToken">Token de cancelamento.</param>
     /// <returns>Correlation ID para tracking.</returns>
-    Task<string> PublishDownloadAsync(Queuing.Messages.DownloadMessage message, CancellationToken cancellationToken = default);
+    Task<string> PublishDownloadAsync(DownloadMessage message, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Verifica se a conexão com RabbitMQ está ativa.

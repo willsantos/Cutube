@@ -1,5 +1,5 @@
 using System.Net;
-using Cutube.Api.Queuing.Messages;
+using Cutube.Contracts.Messages;
 using Cutube.Worker.Configuration;
 using Cutube.Worker.Consumers;
 using FluentAssertions;

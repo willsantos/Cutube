@@ -1,4 +1,4 @@
-using Cutube.Api.Queuing.Messages;
+using Cutube.Contracts.Messages;
 using Cutube.Worker.Configuration;
 using Cutube.Worker.Exceptions;
 using Cutube.Worker.Handlers;

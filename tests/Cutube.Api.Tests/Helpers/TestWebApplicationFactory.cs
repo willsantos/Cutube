@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Cutube.Api.Queuing;
-using Cutube.Api.Queuing.Messages;
+using Cutube.Contracts.Messages;
 using Moq;
 
 namespace Cutube.Api.Tests.Helpers;

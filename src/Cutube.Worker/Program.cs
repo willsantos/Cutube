@@ -2,9 +2,9 @@ using Cutube.Worker.Configuration;
 using Cutube.Worker.Consumers;
 using Cutube.Worker.Handlers;
 using Cutube.Worker.Services;
+using Cutube.Contracts.Configuration;
 using MassTransit;
 using Serilog;
-using Cutube.Api.Queuing.Messages;
 using Microsoft.Extensions.Options;
 
 IHost host = Host.CreateDefaultBuilder(args)

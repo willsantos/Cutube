@@ -2,10 +2,8 @@ using Cutube.Api.DTOs;
 using Cutube.Api.Models;
 using Cutube.Api.Queuing;
 using Cutube.Api.Queuing.Exceptions;
-using Cutube.Api.Queuing.Messages;
 using Cutube.Api.Services;
-using Cutube.Domain.Models;
-using Cutube.Domain.Services;
+using Cutube.Contracts.Messages;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -243,7 +241,6 @@ public static class DownloadsEndpoints
         group.MapDelete("/{id}", async (
             string id,
             IDownloadStatusRepository statusRepository,
-            IDownloadQueue downloadQueue,
             ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
@@ -260,17 +257,10 @@ public static class DownloadsEndpoints
                     title: "Not Found");
             }
 
-            // 2. Cancel download if in progress
-            if (download.Status == DownloadStatus.Downloading ||
-                download.Status == DownloadStatus.Queued)
-            {
-                await downloadQueue.CancelAsync(id, ct);
-            }
-
-            // 3. Remove from repository
+            // 2. Remove from repository
             await statusRepository.DeleteAsync(id, ct);
 
-            // 4. Delete partial files if exist
+            // 3. Delete partial files if exist
             if (!string.IsNullOrEmpty(download.FilePath) && File.Exists(download.FilePath))
             {
                 try

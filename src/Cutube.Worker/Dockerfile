@@ -5,20 +5,20 @@ WORKDIR /src
 # Copy solution and restore
 COPY cutube.sln ./
 COPY src/Cutube.Worker/Cutube.Worker.csproj src/Cutube.Worker/
-COPY src/Cutube.Api/Cutube.Api.csproj src/Cutube.Api/
+COPY src/Cutube.Contracts/Cutube.Contracts.csproj src/Cutube.Contracts/
 COPY src/Cutube.Domain/Cutube.Domain.csproj src/Cutube.Domain/
 COPY cutube/cutube.csproj cutube/
 RUN dotnet restore src/Cutube.Worker/Cutube.Worker.csproj
 
 # Copy source and build
 COPY src/Cutube.Worker/ src/Cutube.Worker/
-COPY src/Cutube.Api/ src/Cutube.Api/
+COPY src/Cutube.Contracts/ src/Cutube.Contracts/
 COPY src/Cutube.Domain/ src/Cutube.Domain/
 COPY cutube/ cutube/
 RUN dotnet publish src/Cutube.Worker/Cutube.Worker.csproj -c Release -o /app/publish -p:ErrorOnDuplicatePublishOutputFiles=false
 
 # Runtime stage
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/runtime:10.0-alpine AS runtime
 WORKDIR /app
 
 # Install dependencies

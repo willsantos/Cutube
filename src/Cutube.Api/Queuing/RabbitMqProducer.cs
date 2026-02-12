@@ -1,9 +1,9 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Cutube.Api.Queuing.Messages;
 using Cutube.Api.Queuing.Exceptions;
-using Cutube.Api.Configuration;
+using Cutube.Contracts.Configuration;
+using Cutube.Contracts.Messages;
 
 namespace Cutube.Api.Queuing;
 

@@ -1,4 +1,4 @@
-using Cutube.Api.Queuing.Messages;
+using Cutube.Contracts.Messages;
 
 namespace Cutube.Worker.Services;
 
