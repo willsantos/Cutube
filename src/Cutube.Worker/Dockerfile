@@ -40,7 +40,7 @@ RUN mkdir -p /downloads
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD pgrep -x "dotnet" > /dev/null || exit 1
+    CMD [ -f /tmp/cutube-worker-health ] && [ "$(cat /tmp/cutube-worker-health)" = "healthy" ] || exit 1
 
 # Run
 ENTRYPOINT ["dotnet", "Cutube.Worker.dll"]

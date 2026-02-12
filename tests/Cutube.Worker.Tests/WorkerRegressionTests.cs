@@ -1,9 +1,10 @@
 using System.Net;
-using Cutube.Contracts.Messages;
 using Cutube.Worker.Configuration;
+using Cutube.Contracts.Messages;
 using Cutube.Worker.Consumers;
 using FluentAssertions;
 using MassTransit;
+using Polly.CircuitBreaker;
 
 namespace Cutube.Worker.Tests;
 
@@ -24,6 +25,57 @@ public class WorkerRegressionTests
         var result = HttpRetryPolicyFactory.ShouldRetry(response);
 
         result.Should().Be(expected);
+    }
+
+    [Fact]
+    public async Task RetryPolicy_ShouldNotRetryClientErrors()
+    {
+        var options = new NotificationResilienceOptions { MaxRetries = 3 };
+        var attempts = 0;
+        var policy = HttpRetryPolicyFactory.CreateRetryPolicy(options);
+
+        using var response = await policy.ExecuteAsync(() =>
+        {
+            attempts++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        });
+
+        attempts.Should().Be(1);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task RetryPolicy_ShouldRetryServerErrors()
+    {
+        var options = new NotificationResilienceOptions { MaxRetries = 3, InitialRetryDelaySeconds = 1 };
+        var attempts = 0;
+        var policy = HttpRetryPolicyFactory.CreateRetryPolicy(options);
+
+        using var response = await policy.ExecuteAsync(() =>
+        {
+            attempts++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        });
+
+        attempts.Should().Be(4);
+        response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
+    }
+
+    [Fact]
+    public async Task CircuitBreaker_ShouldOpenAfterConfiguredFailures()
+    {
+        var options = new NotificationResilienceOptions
+        {
+            ConsecutiveFailuresBeforeBreak = 2,
+            CircuitBreakSeconds = 60
+        };
+        var policy = HttpRetryPolicyFactory.CreateCircuitBreakerPolicy(options);
+
+        await policy.ExecuteAsync(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.BadGateway)));
+        await policy.ExecuteAsync(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.BadGateway)));
+
+        await Assert.ThrowsAsync<BrokenCircuitException<HttpResponseMessage>>(
+            () => policy.ExecuteAsync(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK))));
     }
 
     [Fact]

@@ -6,6 +6,7 @@ using Cutube.Worker.Services;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SerilogLogContext = Serilog.Context.LogContext;
 
 namespace Cutube.Worker.Consumers;
 
@@ -38,6 +39,9 @@ public class DownloadConsumer : IConsumer<DownloadMessage>
     {
         var message = context.Message;
         var correlationId = message.CorrelationId;
+        using var correlationScope = SerilogLogContext.PushProperty("CorrelationId", correlationId);
+        using var messageScope = SerilogLogContext.PushProperty("MessageId", message.MessageId);
+        var startedAt = DateTime.UtcNow;
 
         _logger.LogInformation(
             "Processing download: {CorrelationId}, URL: {Url}, Attempt: {RetryCount}",
@@ -60,6 +64,10 @@ public class DownloadConsumer : IConsumer<DownloadMessage>
             _logger.LogInformation(
                 "Download completed successfully: {CorrelationId}",
                 correlationId);
+
+            _logger.LogInformation(
+                "Download pipeline duration: {ElapsedMs}ms",
+                (DateTime.UtcNow - startedAt).TotalMilliseconds);
         }
         catch (TransientException ex)
         {

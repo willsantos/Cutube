@@ -2,6 +2,7 @@ using Cutube.Contracts.Messages;
 using Cutube.Worker.Configuration;
 using Cutube.Worker.Services.Models;
 using Microsoft.Extensions.Options;
+using Serilog.Context;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -30,6 +31,10 @@ public partial class DownloadProcessingService : IDownloadProcessingService
     public async Task ProcessDownloadAsync(DownloadMessage message, CancellationToken cancellationToken = default)
     {
         var correlationId = message.CorrelationId;
+        using var correlationScope = LogContext.PushProperty("CorrelationId", correlationId);
+        using var messageScope = LogContext.PushProperty("MessageId", message.MessageId);
+        var totalStopwatch = Stopwatch.StartNew();
+        var notifyStopwatch = Stopwatch.StartNew();
 
         _logger.LogInformation("Starting download: {CorrelationId}, URL: {Url}", correlationId, message.Url);
 
@@ -37,6 +42,8 @@ public partial class DownloadProcessingService : IDownloadProcessingService
         {
             // Notify processing start
             await _notificationService.NotifyStatusAsync(correlationId, "processing", cancellationToken);
+            notifyStopwatch.Stop();
+            _logger.LogDebug("Processing notification sent in {ElapsedMs}ms", notifyStopwatch.ElapsedMilliseconds);
 
             // Create output directory if it doesn't exist
             var outputDirectory = Path.GetDirectoryName(message.OutputPath);
@@ -57,11 +64,14 @@ public partial class DownloadProcessingService : IDownloadProcessingService
                 correlationId,
                 cancellationToken);
 
+            _logger.LogDebug("yt-dlp execution finished with exit code {ExitCode}", exitCode);
+
             if (exitCode == 0)
             {
                 // Success
                 await _notificationService.NotifyStatusAsync(correlationId, "completed", cancellationToken);
                 _logger.LogInformation("Download completed: {CorrelationId}", correlationId);
+                _logger.LogInformation("Total processing duration: {ElapsedMs}ms", totalStopwatch.ElapsedMilliseconds);
             }
             else if (exitCode == 1 && cancellationToken.IsCancellationRequested)
             {
@@ -96,6 +106,7 @@ public partial class DownloadProcessingService : IDownloadProcessingService
                 ex.Message);
 
             _logger.LogError(ex, "Download failed: {CorrelationId}", correlationId);
+            _logger.LogInformation("Total processing duration: {ElapsedMs}ms", totalStopwatch.ElapsedMilliseconds);
             throw;
         }
     }
