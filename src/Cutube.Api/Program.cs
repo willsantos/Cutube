@@ -1,9 +1,9 @@
-using Cutube.Api.Configuration;
 using Cutube.Api.Endpoints;
 using Cutube.Api.HealthChecks;
 using Cutube.Api.Hubs;
 using Cutube.Api.Queuing;
 using Cutube.Api.Services;
+using Cutube.Contracts.Configuration;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
 using Cutube.Infrastructure;
@@ -63,7 +63,6 @@ builder.Services.AddSignalR(options =>
 
 // Domain Services
 builder.Services.AddSingleton<IValidationService, FluentValidationService>();
-builder.Services.AddSingleton<IDownloadService, FluentDownloadService>();
 builder.Services.AddSingleton<IMetadataService, FluentMetadataService>();
 
 // Infrastructure (from CLI project)
@@ -71,13 +70,11 @@ builder.Services.AddSingleton<IVideoDownloader, YtDlpDownloader>();
 builder.Services.AddSingleton<IVideoProcessor, FfmpegProcessor>();
 builder.Services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
 
- // API Services
- builder.Services.AddSingleton<IDownloadQueue, DownloadQueue>();
- builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
- builder.Services.AddScoped<DlqService>();
- builder.Services.AddSingleton<ConnectionTracker>();
- builder.Services.AddHostedService<BackgroundDownloadWorker>();
- builder.Services.AddHostedService<DownloadStatusCleanupService>();
+// API Services
+builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
+builder.Services.AddScoped<DlqService>();
+builder.Services.AddSingleton<ConnectionTracker>();
+builder.Services.AddHostedService<DownloadStatusCleanupService>();
 
 // RabbitMQ Configuration - Skip if running in tests
 if (!builder.Environment.IsEnvironment("Testing"))
@@ -144,11 +141,11 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
     Predicate = check => check.Tags.Contains("ready")
 });
 
- // Map endpoints
- app.MapDownloadsEndpoints();
- app.MapVideosEndpoints();
- app.MapStatusEndpoints();
- app.MapDlqEndpoints();
+// Map endpoints
+app.MapDownloadsEndpoints();
+app.MapVideosEndpoints();
+app.MapStatusEndpoints();
+app.MapDlqEndpoints();
 
 // Root endpoint
 app.MapGet("/", () => "Cutube API - Video Download Service");
