@@ -107,7 +107,7 @@ export function DownloadForm() {
             </div>
 
             <div className="bg-muted/50 flex items-center rounded-lg border px-3 py-2 text-sm">
-              Os arquivos sao salvos no servidor em <code className="ml-1">./downloads</code>.
+              Os arquivos sao salvos no servidor em <code className="ml-1">/downloads</code>.
             </div>
           </div>
 

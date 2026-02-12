@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as signalR from "@microsoft/signalr";
+import { SIGNALR_HUB_URL } from "@/lib/constants";
 
 interface SignalRCallbacks {
   onDownloadStatusChanged?: (correlationId: string, newStatus: string) => void;
@@ -14,11 +15,15 @@ export function useSignalR(callbacks: SignalRCallbacks) {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const callbacksRef = useRef(callbacks);
 
   useEffect(() => {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    callbacksRef.current = callbacks;
+  }, [callbacks]);
+
+  useEffect(() => {
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_BASE_URL}/hubs/downloads`)
+      .withUrl(SIGNALR_HUB_URL)
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Information)
       .build();
@@ -26,19 +31,19 @@ export function useSignalR(callbacks: SignalRCallbacks) {
     connectionRef.current = connection;
 
     connection.on("DownloadStatusChanged", (correlationId: string, newStatus: string) => {
-      callbacks.onDownloadStatusChanged?.(correlationId, newStatus);
+      callbacksRef.current.onDownloadStatusChanged?.(correlationId, newStatus);
     });
 
     connection.on("DownloadProgress", (correlationId: string, data: { progress: number; speed: number }) => {
-      callbacks.onDownloadProgress?.(correlationId, data.progress, data.speed);
+      callbacksRef.current.onDownloadProgress?.(correlationId, data.progress, data.speed);
     });
 
     connection.on("DownloadCompleted", (correlationId: string) => {
-      callbacks.onDownloadCompleted?.(correlationId);
+      callbacksRef.current.onDownloadCompleted?.(correlationId);
     });
 
     connection.on("DownloadFailed", (correlationId: string, error: string) => {
-      callbacks.onDownloadFailed?.(correlationId, error);
+      callbacksRef.current.onDownloadFailed?.(correlationId, error);
     });
 
     connection

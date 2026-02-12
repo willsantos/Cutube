@@ -1,6 +1,8 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.trim() ?? "";
 
-export const SIGNALR_HUB_URL = `${API_BASE_URL}/hubs/downloads`;
+export const SIGNALR_HUB_URL =
+  process.env.NEXT_PUBLIC_SIGNALR_URL?.trim() ??
+  (API_BASE_URL ? `${API_BASE_URL}/hubs/downloads` : "/hubs/downloads");
 
 export const QUERY_KEYS = {
   downloads: ["downloads"] as const,
