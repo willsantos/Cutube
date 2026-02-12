@@ -69,7 +69,7 @@
   --card-foreground: hsl(220 15% 10%);
 
   /* Primary — Teal */
-  --primary: hsl(172 66% 40%);
+  --primary: hsl(172 70% 28%);
   --primary-foreground: hsl(0 0% 100%);
 
   /* Secondary */
@@ -94,9 +94,9 @@
   --ring: hsl(172 66% 40%);
 
   /* Status colors */
-  --status-downloading: hsl(210 75% 55%);
+  --status-downloading: hsl(210 78% 36%);
   --status-processing: hsl(38 92% 50%);
-  --status-completed: hsl(160 72% 42%);
+  --status-completed: hsl(160 74% 30%);
 }
 
 /* ==========================================================================
