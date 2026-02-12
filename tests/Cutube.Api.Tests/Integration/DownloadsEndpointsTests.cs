@@ -61,7 +61,7 @@ public class DownloadsEndpointsTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task CreateDownload_WithMissingOutputPath_ReturnsBadRequest()
+    public async Task CreateDownload_WithMissingOutputPath_UsesDefaultPathAndReturnsAccepted()
     {
         // Arrange
         var request = new
@@ -73,7 +73,7 @@ public class DownloadsEndpointsTests : IClassFixture<TestWebApplicationFactory>
         var response = await _client.PostAsJsonAsync("/api/downloads", request);
 
         // Assert
-        response.StatusCode.Should().Be(System.Net.HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.Accepted);
     }
 
     [Fact]

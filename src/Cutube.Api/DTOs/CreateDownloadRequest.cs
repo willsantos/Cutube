@@ -14,9 +14,9 @@ public record CreateDownloadRequest
     public required string Url { get; init; }
 
     /// <summary>
-    /// Output directory path
+    /// Output directory path (optional, defaults to /downloads)
     /// </summary>
-    public required string OutputPath { get; init; }
+    public string? OutputPath { get; init; }
 
     /// <summary>
     /// Optional start time for video clip (format: HH:MM:SS)

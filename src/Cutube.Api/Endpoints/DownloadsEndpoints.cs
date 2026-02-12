@@ -14,6 +14,8 @@ namespace Cutube.Api.Endpoints;
 
 public static class DownloadsEndpoints
 {
+    private const string DefaultOutputPath = "/downloads";
+
     public static void MapDownloadsEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/downloads")
@@ -41,6 +43,10 @@ public static class DownloadsEndpoints
 
                 logger.LogInformation("Creating download for URL: {Url}", request.Url);
 
+                var resolvedOutputPath = string.IsNullOrWhiteSpace(request.OutputPath)
+                    ? DefaultOutputPath
+                    : request.OutputPath;
+
                 // 2. Create message for RabbitMQ
                 var message = new DownloadMessage
                 {
@@ -48,7 +54,7 @@ public static class DownloadsEndpoints
                     Url = request.Url,
                     StartTime = request.StartTime,
                     EndTime = request.EndTime,
-                    OutputPath = request.OutputPath,
+                    OutputPath = resolvedOutputPath,
                     AudioOnly = request.AudioOnly ?? false,
                     OutputFilename = request.OutputFilename,
                     Priority = request.Priority ?? "normal",
@@ -306,10 +312,6 @@ public static class DownloadsEndpoints
             if (start >= end)
                 return Result.Fail("StartTime must be less than EndTime");
         }
-
-        // Validate OutputPath
-        if (string.IsNullOrWhiteSpace(request.OutputPath))
-            return Result.Fail("OutputPath is required");
 
         return Result.Ok();
     }
