@@ -3,8 +3,6 @@ using Cutube.Worker.Consumers;
 using Cutube.Worker.Handlers;
 using Cutube.Worker.Services;
 using MassTransit;
-using Polly;
-using Polly.Extensions.Http;
 using Serilog;
 using Cutube.Api.Queuing.Messages;
 using Microsoft.Extensions.Options;
@@ -39,7 +37,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             client.BaseAddress = new Uri(apiBaseUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
-        .AddPolicyHandler(GetRetryPolicy());
+        .AddPolicyHandler(HttpRetryPolicyFactory.Create(Console.WriteLine));
 
         // Domain services
         services.AddSingleton<IDownloadProcessingService, DownloadProcessingService>();
@@ -52,7 +50,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddMassTransit(x =>
         {
             x.AddConsumer<DownloadConsumer>();
-            x.AddConsumer<DlqConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
@@ -72,16 +69,9 @@ IHost host = Host.CreateDefaultBuilder(args)
                     var workerOptions = context.GetRequiredService<Microsoft.Extensions.Options.IOptions<WorkerOptions>>().Value;
                     e.ConcurrentMessageLimit = workerOptions.MaxConcurrentDownloads;
 
-                    // Configurar DLQ usando argumentos da fila RabbitMQ
+                    // Keep explicit DLQ arguments to maintain compatibility with existing queue declarations.
                     e.SetQueueArgument("x-dead-letter-exchange", RabbitMqConfig.DlqExchange);
                     e.SetQueueArgument("x-dead-letter-routing-key", RabbitMqConfig.DlqRoutingKey);
-                });
-
-                // Configurar endpoint da DLQ
-                cfg.ReceiveEndpoint(RabbitMqConfig.DownloadsDlqQueue, e =>
-                {
-                    e.ConfigureConsumer<DlqConsumer>(context);
-                    e.PrefetchCount = 1; // Processar DLQ um por vez
                 });
             });
         });
@@ -92,17 +82,3 @@ IHost host = Host.CreateDefaultBuilder(args)
     .Build();
 
 await host.RunAsync();
-
-static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
-{
-    return HttpPolicyExtensions
-        .HandleTransientHttpError()
-        .OrResult(msg => !msg.IsSuccessStatusCode)
-        .WaitAndRetryAsync(
-            retryCount: 3,
-            sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-            onRetry: (outcome, timespan, retryAttempt, context) =>
-            {
-                Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds}s due to: {outcome.Exception?.Message}");
-            });
-}

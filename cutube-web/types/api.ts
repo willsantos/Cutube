@@ -1,4 +1,4 @@
-import type { DownloadSummary, CreateDownloadResponse } from "./download";
+import type { DownloadSummary } from "./download";
 
 export interface ApiResponse<T> {
   data: T;

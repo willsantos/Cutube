@@ -480,6 +480,7 @@ $RECYCLE.BIN/
 # Media Files
 *.mp4Downloads/
 Downloads
+downloads
 
 #IA
 .opencode

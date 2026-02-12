@@ -14,6 +14,8 @@ namespace Cutube.Api.Endpoints;
 
 public static class DownloadsEndpoints
 {
+    private const string DefaultOutputPath = "/downloads";
+
     public static void MapDownloadsEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/downloads")
@@ -23,10 +25,12 @@ public static class DownloadsEndpoints
         group.MapPost("/", async (
             [FromBody] CreateDownloadRequest request,
             IQueueProducer queueProducer,
+            IDownloadStatusRepository statusRepository,
             ILoggerFactory loggerFactory,
             CancellationToken ct) =>
         {
             var logger = loggerFactory.CreateLogger("DownloadsEndpoints");
+            DownloadStatusRecord? createdStatus = null;
             
             try
             {
@@ -39,6 +43,10 @@ public static class DownloadsEndpoints
 
                 logger.LogInformation("Creating download for URL: {Url}", request.Url);
 
+                var resolvedOutputPath = string.IsNullOrWhiteSpace(request.OutputPath)
+                    ? DefaultOutputPath
+                    : request.OutputPath;
+
                 // 2. Create message for RabbitMQ
                 var message = new DownloadMessage
                 {
@@ -46,12 +54,27 @@ public static class DownloadsEndpoints
                     Url = request.Url,
                     StartTime = request.StartTime,
                     EndTime = request.EndTime,
-                    OutputPath = request.OutputPath,
+                    OutputPath = resolvedOutputPath,
                     AudioOnly = request.AudioOnly ?? false,
                     OutputFilename = request.OutputFilename,
                     Priority = request.Priority ?? "normal",
                     CreatedAt = DateTime.UtcNow
                 };
+
+                createdStatus = new DownloadStatusRecord
+                {
+                    Id = message.CorrelationId,
+                    CorrelationId = message.CorrelationId,
+                    Url = message.Url,
+                    Status = DownloadStatus.Queued,
+                    OutputPath = message.OutputPath,
+                    OutputFilename = message.OutputFilename,
+                    AudioOnly = message.AudioOnly,
+                    CreatedAt = message.CreatedAt,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await statusRepository.AddAsync(createdStatus, ct);
 
                 // 3. Publish to queue
                 var correlationId = await queueProducer.PublishDownloadAsync(message, ct);
@@ -76,6 +99,17 @@ public static class DownloadsEndpoints
             {
                 logger.LogError(ex, "Failed to enqueue download");
 
+                if (!string.IsNullOrWhiteSpace(createdStatus?.CorrelationId))
+                {
+                    await statusRepository.UpdateAsync(createdStatus.CorrelationId, s =>
+                    {
+                        s.Status = DownloadStatus.Failed;
+                        s.ErrorMessage = "Queue service is unavailable. Please try again later.";
+                        s.UpdatedAt = DateTime.UtcNow;
+                        s.CompletedAt = DateTime.UtcNow;
+                    }, ct);
+                }
+
                 // Return 503 Service Unavailable
                 return Results.Json(new
                 {
@@ -92,6 +126,18 @@ public static class DownloadsEndpoints
             catch (Exception ex)
             {
                 logger.LogError(ex, "Unexpected error creating download");
+
+                if (!string.IsNullOrWhiteSpace(createdStatus?.CorrelationId))
+                {
+                    await statusRepository.UpdateAsync(createdStatus.CorrelationId, s =>
+                    {
+                        s.Status = DownloadStatus.Failed;
+                        s.ErrorMessage = ex.Message;
+                        s.UpdatedAt = DateTime.UtcNow;
+                        s.CompletedAt = DateTime.UtcNow;
+                    }, ct);
+                }
+
                 return Results.Problem(
                     detail: ex.Message,
                     statusCode: 500,
@@ -266,10 +312,6 @@ public static class DownloadsEndpoints
             if (start >= end)
                 return Result.Fail("StartTime must be less than EndTime");
         }
-
-        // Validate OutputPath
-        if (string.IsNullOrWhiteSpace(request.OutputPath))
-            return Result.Fail("OutputPath is required");
 
         return Result.Ok();
     }

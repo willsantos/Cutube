@@ -17,7 +17,6 @@ test.describe("Dashboard", () => {
     await page.goto("/");
 
     await page.getByLabel("URL do video").fill("https://www.youtube.com/watch?v=abc123");
-    await page.getByLabel("Diretorio de saida").fill("./Downloads");
     await page.getByRole("button", { name: "Iniciar download" }).click();
 
     await expect(page.getByText("Downloads recentes")).toBeVisible();

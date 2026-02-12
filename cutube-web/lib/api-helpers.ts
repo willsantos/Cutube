@@ -1,6 +1,14 @@
 import type { ApiError } from "@/types";
 import { API_BASE_URL } from "./constants";
 
+function resolveApiUrl(endpoint: string): string {
+  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+    return endpoint;
+  }
+
+  return API_BASE_URL ? `${API_BASE_URL}${endpoint}` : endpoint;
+}
+
 function extractErrorMessage(error: ApiError, fallback: string): string {
   if (error.detail) return error.detail;
   if (error.title) return error.title;
@@ -14,7 +22,7 @@ function extractErrorMessage(error: ApiError, fallback: string): string {
 }
 
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = resolveApiUrl(endpoint);
 
   const response = await fetch(url, {
     ...options,

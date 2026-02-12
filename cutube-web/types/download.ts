@@ -10,7 +10,7 @@ export type DownloadStatus =
 
 export interface DownloadRequest {
   url: string;
-  outputPath: string;
+  outputPath?: string;
   startTime?: string;
   endTime?: string;
   audioOnly?: boolean;

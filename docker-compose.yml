@@ -45,7 +45,7 @@ services:
       rabbitmq:
         condition: service_healthy
     volumes:
-      - downloads-data:/app/downloads
+      - ./downloads:/app/downloads
       - ./logs/api:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
@@ -61,7 +61,6 @@ services:
     build:
       context: .
       dockerfile: src/Cutube.Worker/Dockerfile
-    container_name: cutube-worker
     environment:
       DOTNET_ENVIRONMENT: ${DOTNET_ENVIRONMENT:-Production}
       RabbitMq__Host: rabbitmq
@@ -79,7 +78,7 @@ services:
       api:
         condition: service_healthy
     volumes:
-      - downloads-data:/downloads
+      - ./downloads:/downloads
       - ./logs/worker:/app/logs
     networks:
       - cutube-network
@@ -91,13 +90,14 @@ services:
     build:
       context: ./cutube-web
       dockerfile: Dockerfile
+      args:
+        API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
     container_name: cutube-web
     ports:
       - "4000:4000"
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000}
-      NEXT_PUBLIC_SIGNALR_URL: ${NEXT_PUBLIC_SIGNALR_URL:-http://localhost:5000/hubs/downloads}
+      API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
     depends_on:
       api:
         condition: service_healthy
@@ -113,8 +113,6 @@ services:
 
 volumes:
   rabbitmq-data:
-    driver: local
-  downloads-data:
     driver: local
 
 networks:

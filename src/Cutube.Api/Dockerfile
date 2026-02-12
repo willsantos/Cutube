@@ -23,6 +23,7 @@ WORKDIR /app
 RUN apk add --no-cache \
     curl \
     ffmpeg \
+    deno \
     python3 \
     py3-pip
 
