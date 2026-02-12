@@ -24,6 +24,7 @@ WORKDIR /app
 # Install dependencies
 RUN apk add --no-cache \
     ffmpeg \
+    deno \
     python3 \
     py3-pip \
     curl
