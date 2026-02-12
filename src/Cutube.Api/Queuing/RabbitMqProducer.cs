@@ -12,9 +12,7 @@ namespace Cutube.Api.Queuing;
 /// </summary>
 public class RabbitMqProducer : IQueueProducer
 {
-    private const string DownloadsQueue = "cutube.downloads";
-
-    private readonly IBus _bus;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly RabbitMqOptions _options;
     private readonly ILogger<RabbitMqProducer> _logger;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
@@ -23,11 +21,11 @@ public class RabbitMqProducer : IQueueProducer
     public bool IsConnected => _isConnected;
 
     public RabbitMqProducer(
-        IBus bus,
+        IPublishEndpoint publishEndpoint,
         IOptions<RabbitMqOptions> options,
         ILogger<RabbitMqProducer> logger)
     {
-        _bus = bus;
+        _publishEndpoint = publishEndpoint;
         _options = options.Value;
         _logger = logger;
         _isConnected = true; // MassTransit gerencia reconexão automaticamente
@@ -53,10 +51,8 @@ public class RabbitMqProducer : IQueueProducer
                 message.CorrelationId,
                 message.Url);
 
-            // Publicar mensagem usando MassTransit
-            var endpoint = await _bus.GetSendEndpoint(new Uri($"queue:{DownloadsQueue}"));
-
-            await endpoint.Send(message, cancellationToken);
+            // Publicar mensagem usando exchange de mensagem (evita conflito de declaração de fila)
+            await _publishEndpoint.Publish(message, cancellationToken);
 
             _isConnected = true;
             _logger.LogInformation(

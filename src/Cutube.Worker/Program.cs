@@ -7,6 +7,7 @@ using Polly;
 using Polly.Extensions.Http;
 using Serilog;
 using Cutube.Api.Queuing.Messages;
+using Microsoft.Extensions.Options;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .UseSerilog((context, services, loggerConfiguration) =>
@@ -25,6 +26,10 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.Configure<RetryPolicyOptions>(
             context.Configuration.GetSection(RetryPolicyOptions.SectionName)
+        );
+
+        services.Configure<RabbitMqOptions>(
+            context.Configuration.GetSection(RabbitMqOptions.SectionName)
         );
 
         // HttpClient for API communication
@@ -51,7 +56,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                var rabbitMqConfig = context.GetRequiredService<RabbitMqOptions>();
+                var rabbitMqConfig = context.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
 
                 cfg.Host($"amqp://{rabbitMqConfig.UserName}:{rabbitMqConfig.Password}@{rabbitMqConfig.Host}:{rabbitMqConfig.Port}{rabbitMqConfig.VirtualHost}");
 

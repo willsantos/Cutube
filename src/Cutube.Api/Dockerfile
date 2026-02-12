@@ -3,22 +3,31 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy solution and restore
-COPY Cutube.sln ./
+COPY cutube.sln ./
 COPY src/Cutube.Api/Cutube.Api.csproj src/Cutube.Api/
 COPY src/Cutube.Domain/Cutube.Domain.csproj src/Cutube.Domain/
+COPY cutube/cutube.csproj cutube/
 RUN dotnet restore src/Cutube.Api/Cutube.Api.csproj
 
 # Copy source and build
 COPY src/Cutube.Api/ src/Cutube.Api/
 COPY src/Cutube.Domain/ src/Cutube.Domain/
-RUN dotnet publish src/Cutube.Api/Cutube.Api.csproj -c Release -o /app/publish --no-restore
+COPY cutube/ cutube/
+RUN dotnet publish src/Cutube.Api/Cutube.Api.csproj -c Release -o /app/publish
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 
-# Install curl for healthcheck
-RUN apk add --no-cache curl
+# Install runtime dependencies
+RUN apk add --no-cache \
+    curl \
+    ffmpeg \
+    python3 \
+    py3-pip
+
+# Install yt-dlp
+RUN pip3 install --no-cache-dir --break-system-packages yt-dlp
 
 # Copy published app
 COPY --from=build /app/publish .

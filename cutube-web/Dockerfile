@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Copy source
 COPY . .
@@ -30,13 +30,13 @@ COPY --from=build /app/node_modules ./node_modules
 # Environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=4000
 
-EXPOSE 3000
+EXPOSE 4000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget -q --spider http://localhost:3000 || exit 1
+    CMD wget -q --spider http://localhost:4000 || exit 1
 
 # Run
 CMD ["npm", "start"]
