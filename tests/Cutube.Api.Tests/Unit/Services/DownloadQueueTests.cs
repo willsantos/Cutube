@@ -144,7 +144,7 @@ public class DownloadQueueTests
         var items = queue.DequeueAllAsync(cts.Token);
 
         // Should throw OperationCanceledException when cancelled
-        var exception = await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
         {
             await foreach (var _ in items)
             {
