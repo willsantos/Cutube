@@ -9,7 +9,7 @@ namespace Cutube.Worker.Consumers;
 /// Consumer dedicado para a Dead Letter Queue.
 /// Processa mensagens que falharam permanentemente.
 /// </summary>
-public class DlqConsumer : IConsumer<DownloadMessage>
+public class DlqConsumer : IConsumer<Fault<DownloadMessage>>
 {
     private readonly DeadLetterHandler _dlqHandler;
     private readonly ILogger<DlqConsumer> _logger;
@@ -22,15 +22,17 @@ public class DlqConsumer : IConsumer<DownloadMessage>
         _logger = logger;
     }
 
-    public async Task Consume(ConsumeContext<DownloadMessage> context)
+    public async Task Consume(ConsumeContext<Fault<DownloadMessage>> context)
     {
+        var fault = context.Message;
+        var message = fault.Message;
+
         _logger.LogInformation(
             "Processing message from DLQ: {CorrelationId}",
-            context.Message.CorrelationId);
+            message.CorrelationId);
 
-        // Obter informações de erro do header MassTransit
-        var faultMessage = context.Headers.Get<string>("MT-Fault-Message");
-        var faultException = new Exception(faultMessage ?? "Unknown fault");
+        var faultInfo = fault.Exceptions.FirstOrDefault();
+        var faultException = new Exception(faultInfo?.Message ?? "Unknown fault");
 
         await _dlqHandler.HandleAsync(context, faultException);
 

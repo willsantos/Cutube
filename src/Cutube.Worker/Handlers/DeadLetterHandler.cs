@@ -25,10 +25,10 @@ public class DeadLetterHandler
     /// Processa uma mensagem que foi enviada para a DLQ.
     /// </summary>
     public async Task HandleAsync(
-        ConsumeContext<DownloadMessage> context,
+        ConsumeContext<Fault<DownloadMessage>> context,
         Exception exception)
     {
-        var message = context.Message;
+        var message = context.Message.Message;
         var correlationId = message.CorrelationId;
 
         _logger.LogError(

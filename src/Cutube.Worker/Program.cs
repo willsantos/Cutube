@@ -2,6 +2,7 @@ using Cutube.Worker.Configuration;
 using Cutube.Worker.Consumers;
 using Cutube.Worker.Handlers;
 using Cutube.Worker.Services;
+using System.Net;
 using MassTransit;
 using Polly;
 using Polly.Extensions.Http;
@@ -52,7 +53,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddMassTransit(x =>
         {
             x.AddConsumer<DownloadConsumer>();
-            x.AddConsumer<DlqConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
@@ -72,16 +72,9 @@ IHost host = Host.CreateDefaultBuilder(args)
                     var workerOptions = context.GetRequiredService<Microsoft.Extensions.Options.IOptions<WorkerOptions>>().Value;
                     e.ConcurrentMessageLimit = workerOptions.MaxConcurrentDownloads;
 
-                    // Configurar DLQ usando argumentos da fila RabbitMQ
+                    // Keep explicit DLQ arguments to maintain compatibility with existing queue declarations.
                     e.SetQueueArgument("x-dead-letter-exchange", RabbitMqConfig.DlqExchange);
                     e.SetQueueArgument("x-dead-letter-routing-key", RabbitMqConfig.DlqRoutingKey);
-                });
-
-                // Configurar endpoint da DLQ
-                cfg.ReceiveEndpoint(RabbitMqConfig.DownloadsDlqQueue, e =>
-                {
-                    e.ConfigureConsumer<DlqConsumer>(context);
-                    e.PrefetchCount = 1; // Processar DLQ um por vez
                 });
             });
         });
@@ -97,12 +90,14 @@ static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
 {
     return HttpPolicyExtensions
         .HandleTransientHttpError()
-        .OrResult(msg => !msg.IsSuccessStatusCode)
+        .OrResult(msg => msg.StatusCode == HttpStatusCode.RequestTimeout || (int)msg.StatusCode >= 500)
         .WaitAndRetryAsync(
             retryCount: 3,
             sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
             onRetry: (outcome, timespan, retryAttempt, context) =>
             {
-                Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds}s due to: {outcome.Exception?.Message}");
+                var statusCode = outcome.Result?.StatusCode;
+                var reason = outcome.Exception?.Message ?? outcome.Result?.ReasonPhrase ?? "Unknown reason";
+                Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds}s due to status {(int?)statusCode ?? 0} - {reason}");
             });
 }
