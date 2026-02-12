@@ -7,6 +7,14 @@ import { Button } from "@/components/ui/button";
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
 
+  if (!resolvedTheme) {
+    return (
+      <Button variant="ghost" size="icon" aria-label="Alternar tema" disabled>
+        <span className="h-5 w-5" aria-hidden="true" />
+      </Button>
+    );
+  }
+
   const isDark = resolvedTheme === "dark";
 
   return (
