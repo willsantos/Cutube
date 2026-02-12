@@ -45,7 +45,7 @@ services:
       rabbitmq:
         condition: service_healthy
     volumes:
-      - downloads-data:/app/downloads
+      - ./downloads:/app/downloads
       - ./logs/api:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
@@ -79,7 +79,7 @@ services:
       api:
         condition: service_healthy
     volumes:
-      - downloads-data:/downloads
+      - ./downloads:/downloads
       - ./logs/worker:/app/logs
     networks:
       - cutube-network
@@ -113,8 +113,6 @@ services:
 
 volumes:
   rabbitmq-data:
-    driver: local
-  downloads-data:
     driver: local
 
 networks:

@@ -16,7 +16,6 @@ import { Switch } from "@/components/ui/switch";
 const formSchema = z
   .object({
     url: z.string().url("Informe uma URL valida"),
-    outputPath: z.string().min(1, "Informe o diretorio de saida"),
     startTime: z.string().optional(),
     endTime: z.string().optional(),
     audioOnly: z.boolean(),
@@ -37,7 +36,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 const defaultValues: FormValues = {
   url: "",
-  outputPath: "./Downloads",
   startTime: "",
   endTime: "",
   audioOnly: false,
@@ -67,12 +65,13 @@ export function DownloadForm() {
   const onSubmit = async (values: FormValues) => {
     await createMutation.mutateAsync({
       ...values,
+      outputPath: "/downloads",
       startTime: values.startTime || undefined,
       endTime: values.endTime || undefined,
       customFilename: values.customFilename || undefined,
     });
 
-    reset({ ...defaultValues, outputPath: values.outputPath });
+    reset(defaultValues);
   };
 
   return (
@@ -99,20 +98,16 @@ export function DownloadForm() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="outputPath">Diretorio de saida</Label>
-              <Input id="outputPath" placeholder="./Downloads" {...register("outputPath")} />
-              {errors.outputPath ? (
-                <p className="text-destructive text-sm">{errors.outputPath.message}</p>
-              ) : null}
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="customFilename">Nome personalizado</Label>
               <Input
                 id="customFilename"
                 placeholder="meu-video.mp4"
                 {...register("customFilename")}
               />
+            </div>
+
+            <div className="bg-muted/50 flex items-center rounded-lg border px-3 py-2 text-sm">
+              Os arquivos sao salvos no servidor em <code className="ml-1">./downloads</code>.
             </div>
           </div>
 
