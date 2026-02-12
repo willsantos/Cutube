@@ -30,6 +30,12 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Install yt-dlp and ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip3 install --break-system-packages yt-dlp
+
       - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
