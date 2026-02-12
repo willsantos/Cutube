@@ -15,7 +15,7 @@ services:
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: http://localhost:5000
-      NEXT_PUBLIC_SIGNALR_URL: http://localhost:5000/hub
+      NEXT_PUBLIC_SIGNALR_URL: http://localhost:5000/hubs/downloads
     volumes:
       - ./cutube-web:/app:cached
       - /app/node_modules

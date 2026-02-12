@@ -30,7 +30,7 @@ echo
 echo -e "${GREEN}Cutube is running.${NC}"
 echo
 echo "Available URLs:"
-echo "  - Web:           http://localhost:3000"
+echo "  - Web:           http://localhost:4000"
 echo "  - API:           http://localhost:5000"
 echo "  - RabbitMQ UI:   http://localhost:15672"
 echo
