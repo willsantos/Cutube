@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Logging__LogLevel__Default: Debug
+
+  worker:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      Logging__LogLevel__Default: Debug
+    deploy:
+      replicas: 1
+
+  web:
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:5000
+      NEXT_PUBLIC_SIGNALR_URL: http://localhost:5000/hub
+    volumes:
+      - ./cutube-web:/app:cached
+      - /app/node_modules
+    command: npm run dev
