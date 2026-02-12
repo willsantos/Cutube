@@ -23,15 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <!-- Incluir yt-dlp bundleado no build e publish -->
-      <None Include="bin\yt-dlp">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <Pack>true</Pack>
-        <PackagePath>bin\</PackagePath>
-      </None>
-    </ItemGroup>
-
-    <ItemGroup>
       <Content Include="..\.github\.gitkeep">
         <Link>.github\.gitkeep</Link>
       </Content>
