@@ -15,8 +15,7 @@ public static class StatusEndpoints
     public static void MapStatusEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/downloads")
-            .WithTags("Status")
-            .WithOpenApi();
+            .WithTags("Status");
 
         // GET /api/downloads/queue/active - Active downloads (queued + processing)
         group.MapGet("/queue/active", async (
@@ -34,8 +33,7 @@ public static class StatusEndpoints
             });
         })
         .WithName("GetActiveDownloads")
-        .WithSummary("Get active downloads (queued and processing)")
-        .WithOpenApi();
+        .WithSummary("Get active downloads (queued and processing)");
 
         // GET /api/downloads/queue/failed - Failed downloads
         group.MapGet("/queue/failed", async (
@@ -53,8 +51,7 @@ public static class StatusEndpoints
             });
         })
         .WithName("GetFailedDownloads")
-        .WithSummary("Get failed and dead letter downloads")
-        .WithOpenApi();
+        .WithSummary("Get failed and dead letter downloads");
 
          // PATCH /api/downloads/{correlationId}/status - Worker callback
          group.MapPatch("/{correlationId}/status", async (
@@ -102,10 +99,9 @@ public static class StatusEndpoints
                  .DownloadStatusChanged(correlationId, request.State);
 
              return Results.NoContent();
-         })
-         .WithName("UpdateDownloadStatus")
-         .WithSummary("Update download status (worker callback)")
-         .WithOpenApi();
+          })
+          .WithName("UpdateDownloadStatus")
+          .WithSummary("Update download status (worker callback)");
 
         // POST /api/downloads/{correlationId}/progress - Worker progress callback
         group.MapPost("/{correlationId}/progress", async (
@@ -145,8 +141,7 @@ public static class StatusEndpoints
             return Results.NoContent();
         })
         .WithName("UpdateDownloadProgress")
-        .WithSummary("Update download progress (worker callback)")
-        .WithOpenApi();
+        .WithSummary("Update download progress (worker callback)");
 
         // GET /api/metrics - System metrics
         app.MapGet("/api/metrics", async (
@@ -181,8 +176,7 @@ public static class StatusEndpoints
             return Results.Ok(response);
         })
         .WithName("GetMetrics")
-        .WithSummary("Get system metrics")
-        .WithOpenApi();
+        .WithSummary("Get system metrics");
     }
 
     private static DownloadStatusResponse MapToResponse(DownloadStatusRecord status)
