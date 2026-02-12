@@ -119,6 +119,13 @@ O Cutube detectará automaticamente e usará sua versão se for mais recente que
 6. Enjoy!
 7. (Opcional) Se quiser, pode adicionar o executável do programa no PATH do seu sistema operacional para poder executar o programa de qualquer lugar
 
+## Instalacao do CLI
+
+Para instalacao automatica em Linux/macOS/Windows, use os scripts em `scripts/install.sh` e `scripts/install.ps1`.
+
+- Pagina de instalacao: `https://willsantos.github.io/Cutube/`
+- Guia completo: `docs/installation.md`
+
 ## RabbitMQ Setup
 
 O Cutube usa RabbitMQ para processamento assíncrono de downloads. Veja a [documentação completa](docs/setup-rabbitmq.md) para instruções detalhadas.
