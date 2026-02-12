@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Cutube.Api.DTOs;
 using System.Net.Http.Json;
 using Cutube.Api.Tests.Helpers;
 
@@ -220,5 +220,76 @@ public class DownloadsEndpointsTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task CreateDownload_WithValidRequest_PersistsQueuedStatus()
+    {
+        var request = new
+        {
+            Url = "https://www.youtube.com/watch?v=test",
+            OutputPath = "/tmp/test"
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/downloads", request);
+
+        createResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.Accepted);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateDownloadResponse>();
+        created.Should().NotBeNull();
+        created!.CorrelationId.Should().NotBeNullOrWhiteSpace();
+
+        var listResponse = await _client.GetAsync("/api/downloads");
+        listResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+
+        var list = await listResponse.Content.ReadFromJsonAsync<GetDownloadsResponse>();
+        list.Should().NotBeNull();
+        list!.Downloads.Should().ContainSingle(d => d.DownloadId == created.CorrelationId && d.Status == "queued");
+    }
+
+    [Fact]
+    public async Task CreateDownload_WhenPublishFails_MarksStatusAsFailed()
+    {
+        await using var factory = new FailingQueueProducerFactory();
+        using var client = factory.CreateClient();
+
+        var request = new
+        {
+            Url = "https://www.youtube.com/watch?v=test",
+            OutputPath = "/tmp/test"
+        };
+
+        var createResponse = await client.PostAsJsonAsync("/api/downloads", request);
+
+        createResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.ServiceUnavailable);
+
+        var listResponse = await client.GetAsync("/api/downloads");
+        listResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
+
+        var list = await listResponse.Content.ReadFromJsonAsync<GetDownloadsResponse>();
+        list.Should().NotBeNull();
+        list!.Downloads.Should().ContainSingle();
+        list.Downloads[0].Status.Should().Be("failed");
+    }
+
+    [Fact]
+    public async Task CreateDownload_ThenStatusCallback_ReturnsNoContent()
+    {
+        var request = new
+        {
+            Url = "https://www.youtube.com/watch?v=test",
+            OutputPath = "/tmp/test"
+        };
+
+        var createResponse = await _client.PostAsJsonAsync("/api/downloads", request);
+        createResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.Accepted);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<CreateDownloadResponse>();
+        created.Should().NotBeNull();
+
+        var statusPayload = JsonContent.Create(new { state = "processing" });
+        var patchResponse = await _client.PatchAsync($"/api/downloads/{created!.CorrelationId}/status", statusPayload);
+
+        patchResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.NoContent);
     }
 }

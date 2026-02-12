@@ -2,10 +2,7 @@ using Cutube.Worker.Configuration;
 using Cutube.Worker.Consumers;
 using Cutube.Worker.Handlers;
 using Cutube.Worker.Services;
-using System.Net;
 using MassTransit;
-using Polly;
-using Polly.Extensions.Http;
 using Serilog;
 using Cutube.Api.Queuing.Messages;
 using Microsoft.Extensions.Options;
@@ -40,7 +37,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             client.BaseAddress = new Uri(apiBaseUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
-        .AddPolicyHandler(GetRetryPolicy());
+        .AddPolicyHandler(HttpRetryPolicyFactory.Create(Console.WriteLine));
 
         // Domain services
         services.AddSingleton<IDownloadProcessingService, DownloadProcessingService>();
@@ -85,19 +82,3 @@ IHost host = Host.CreateDefaultBuilder(args)
     .Build();
 
 await host.RunAsync();
-
-static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
-{
-    return HttpPolicyExtensions
-        .HandleTransientHttpError()
-        .OrResult(msg => msg.StatusCode == HttpStatusCode.RequestTimeout || (int)msg.StatusCode >= 500)
-        .WaitAndRetryAsync(
-            retryCount: 3,
-            sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-            onRetry: (outcome, timespan, retryAttempt, context) =>
-            {
-                var statusCode = outcome.Result?.StatusCode;
-                var reason = outcome.Exception?.Message ?? outcome.Result?.ReasonPhrase ?? "Unknown reason";
-                Console.WriteLine($"Retry {retryAttempt} after {timespan.TotalSeconds}s due to status {(int?)statusCode ?? 0} - {reason}");
-            });
-}
