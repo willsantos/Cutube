@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Polly.CircuitBreaker;
 
 namespace Cutube.Worker.Services;
 
@@ -8,6 +9,12 @@ namespace Cutube.Worker.Services;
 /// </summary>
 public class DownloadStatusNotificationService : IDownloadStatusNotificationService
 {
+    private static readonly System.Diagnostics.Metrics.Meter Meter = new("Cutube.Worker.Notifications", "1.0.0");
+    private static readonly System.Diagnostics.Metrics.Counter<long> SuccessCounter =
+        Meter.CreateCounter<long>("cutube.worker.notifications.success");
+    private static readonly System.Diagnostics.Metrics.Counter<long> FailureCounter =
+        Meter.CreateCounter<long>("cutube.worker.notifications.failure");
+
     private readonly HttpClient _httpClient;
     private readonly ILogger<DownloadStatusNotificationService> _logger;
 
@@ -33,37 +40,7 @@ public class DownloadStatusNotificationService : IDownloadStatusNotificationServ
             errorMessage = errorMessage
         };
 
-        try
-        {
-            var content = new StringContent(
-                JsonSerializer.Serialize(payload),
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await _httpClient.PatchAsync(url, content, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning(
-                    "Failed to notify status: {CorrelationId}, Status: {StatusCode}",
-                    correlationId,
-                    response.StatusCode);
-            }
-            else
-            {
-                _logger.LogDebug(
-                    "Status notified: {CorrelationId}, Status: {Status}",
-                    correlationId,
-                    status);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Don't throw - notification failure should not break download
-            _logger.LogError(ex,
-                "Error notifying status: {CorrelationId}",
-                correlationId);
-        }
+        await SendAsync(correlationId, "status", url, HttpMethod.Patch, payload, cancellationToken);
     }
 
     public async Task NotifyProgressAsync(
@@ -86,30 +63,7 @@ public class DownloadStatusNotificationService : IDownloadStatusNotificationServ
             eta
         };
 
-        try
-        {
-            var content = new StringContent(
-                JsonSerializer.Serialize(payload),
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await _httpClient.PostAsync(url, content, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogDebug(
-                    "Failed to notify progress: {CorrelationId}, StatusCode: {StatusCode}",
-                    correlationId,
-                    response.StatusCode);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Don't throw - notification failure should not break download
-            _logger.LogDebug(ex,
-                "Error notifying progress: {CorrelationId}",
-                correlationId);
-        }
+        await SendAsync(correlationId, "progress", url, HttpMethod.Post, payload, cancellationToken);
     }
 
     public async Task NotifyDeadLetterAsync(
@@ -127,6 +81,23 @@ public class DownloadStatusNotificationService : IDownloadStatusNotificationServ
             retryCount
         };
 
+        await SendAsync(correlationId, "deadletter", url, HttpMethod.Patch, payload, cancellationToken);
+    }
+
+    private async Task SendAsync(
+        string correlationId,
+        string notificationType,
+        string url,
+        HttpMethod method,
+        object payload,
+        CancellationToken cancellationToken)
+    {
+        using var scope = _logger.BeginScope(new Dictionary<string, object>
+        {
+            ["CorrelationId"] = correlationId,
+            ["NotificationType"] = notificationType
+        });
+
         try
         {
             var content = new StringContent(
@@ -134,29 +105,37 @@ public class DownloadStatusNotificationService : IDownloadStatusNotificationServ
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await _httpClient.PatchAsync(url, content, cancellationToken);
+            using var request = new HttpRequestMessage(method, url) { Content = content };
+            using var response = await _httpClient.SendAsync(request, cancellationToken);
 
-            if (!response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode)
+            {
+                SuccessCounter.Add(1);
+                _logger.LogDebug("Notification sent successfully with status code {StatusCode}", response.StatusCode);
+                return;
+            }
+
+            FailureCounter.Add(1);
+
+            if ((int)response.StatusCode >= 400 && (int)response.StatusCode < 500)
             {
                 _logger.LogWarning(
-                    "Failed to notify dead letter status: {CorrelationId}, Status: {StatusCode}",
-                    correlationId,
+                    "Permanent notification failure (no retry). Status code: {StatusCode}",
                     response.StatusCode);
+                return;
             }
-            else
-            {
-                _logger.LogInformation(
-                    "Dead letter status notified: {CorrelationId}, RetryCount: {RetryCount}",
-                    correlationId,
-                    retryCount);
-            }
+
+            _logger.LogError("Notification failed after retry policy. Status code: {StatusCode}", response.StatusCode);
+        }
+        catch (BrokenCircuitException ex)
+        {
+            FailureCounter.Add(1);
+            _logger.LogWarning(ex, "Notification skipped because circuit breaker is open");
         }
         catch (Exception ex)
         {
-            // Don't throw - notification failure should not break download
-            _logger.LogError(ex,
-                "Error notifying dead letter status: {CorrelationId}",
-                correlationId);
+            FailureCounter.Add(1);
+            _logger.LogError(ex, "Unexpected error while notifying API");
         }
     }
 }

@@ -1,5 +1,6 @@
 using Cutube.Worker.Configuration;
 using Cutube.Worker.Consumers;
+using Cutube.Worker.Health;
 using Cutube.Worker.Handlers;
 using Cutube.Worker.Services;
 using Cutube.Contracts.Configuration;
@@ -30,6 +31,14 @@ IHost host = Host.CreateDefaultBuilder(args)
             context.Configuration.GetSection(RabbitMqOptions.SectionName)
         );
 
+        services.Configure<NotificationResilienceOptions>(
+            context.Configuration.GetSection(NotificationResilienceOptions.SectionName)
+        );
+
+        var notificationResilience = context.Configuration
+            .GetSection(NotificationResilienceOptions.SectionName)
+            .Get<NotificationResilienceOptions>() ?? new NotificationResilienceOptions();
+
         // HttpClient for API communication
         services.AddHttpClient<IDownloadStatusNotificationService, DownloadStatusNotificationService>(client =>
         {
@@ -37,7 +46,11 @@ IHost host = Host.CreateDefaultBuilder(args)
             client.BaseAddress = new Uri(apiBaseUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
-        .AddPolicyHandler(HttpRetryPolicyFactory.Create(Console.WriteLine));
+        .AddPolicyHandler(HttpRetryPolicyFactory.CreateCircuitBreakerPolicy(notificationResilience, Console.WriteLine))
+        .AddPolicyHandler(HttpRetryPolicyFactory.CreateRetryPolicy(notificationResilience, Console.WriteLine));
+
+        services.AddHealthChecks()
+            .AddCheck<RabbitMqConnectionHealthCheck>("rabbitmq_connection");
 
         // Domain services
         services.AddSingleton<IDownloadProcessingService, DownloadProcessingService>();
@@ -78,6 +91,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         // Worker service
         services.AddHostedService<Cutube.Worker.Worker>();
+        services.AddHostedService<WorkerHealthReporterService>();
     })
     .Build();
 
