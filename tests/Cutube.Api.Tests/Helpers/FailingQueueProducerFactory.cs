@@ -1,6 +1,6 @@
 using Cutube.Api.Queuing;
 using Cutube.Api.Queuing.Exceptions;
-using Cutube.Api.Queuing.Messages;
+using Cutube.Contracts.Messages;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;

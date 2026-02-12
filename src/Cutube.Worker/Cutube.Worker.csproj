@@ -17,6 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cutube.Api\Cutube.Api.csproj" />
+    <ProjectReference Include="..\Cutube.Contracts\Cutube.Contracts.csproj" />
   </ItemGroup>
 </Project>

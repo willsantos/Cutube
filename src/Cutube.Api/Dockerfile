@@ -5,12 +5,14 @@ WORKDIR /src
 # Copy solution and restore
 COPY cutube.sln ./
 COPY src/Cutube.Api/Cutube.Api.csproj src/Cutube.Api/
+COPY src/Cutube.Contracts/Cutube.Contracts.csproj src/Cutube.Contracts/
 COPY src/Cutube.Domain/Cutube.Domain.csproj src/Cutube.Domain/
 COPY cutube/cutube.csproj cutube/
 RUN dotnet restore src/Cutube.Api/Cutube.Api.csproj
 
 # Copy source and build
 COPY src/Cutube.Api/ src/Cutube.Api/
+COPY src/Cutube.Contracts/ src/Cutube.Contracts/
 COPY src/Cutube.Domain/ src/Cutube.Domain/
 COPY cutube/ cutube/
 RUN dotnet publish src/Cutube.Api/Cutube.Api.csproj -c Release -o /app/publish

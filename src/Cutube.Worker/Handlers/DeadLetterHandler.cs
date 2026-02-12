@@ -1,4 +1,4 @@
-using Cutube.Api.Queuing.Messages;
+using Cutube.Contracts.Messages;
 using Cutube.Worker.Services;
 using MassTransit;
 using Microsoft.Extensions.Logging;

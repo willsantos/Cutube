@@ -1,6 +1,6 @@
 using Cutube.Api.Models;
 using Cutube.Api.Queuing;
-using Cutube.Api.Queuing.Messages;
+using Cutube.Contracts.Messages;
 using Microsoft.Extensions.Logging;
 
 namespace Cutube.Api.Services;
@@ -79,7 +79,7 @@ public class DlqService
             Priority = "normal",
             CreatedAt = DateTime.UtcNow,
             RetryCount = status.RetryCount + 1,
-            Metadata = new Queuing.Messages.DownloadMetadata
+            Metadata = new Cutube.Contracts.Messages.DownloadMetadata
             {
                 Title = status.Metadata?.Title,
                 Duration = status.Metadata?.Duration,
