@@ -5,7 +5,7 @@ using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 using YtdlDownloadProgress = YoutubeDLSharp.DownloadProgress;
 
-namespace Cutube.Cli.Infrastructure;
+namespace Cutube.Infrastructure;
 
 /// <summary>
 /// Downloads videos using yt-dlp

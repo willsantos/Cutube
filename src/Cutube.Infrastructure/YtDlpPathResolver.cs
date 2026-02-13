@@ -1,4 +1,4 @@
-namespace Cutube.Cli.Infrastructure;
+namespace Cutube.Infrastructure;
 
 /// <summary>
 /// Resolves the path to yt-dlp binary using the same priority as the original YtDlpHelper:

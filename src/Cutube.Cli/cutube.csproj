@@ -17,11 +17,12 @@
       <PackageReference Include="YoutubeDLSharp" Version="1.2.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Cutube.Domain\Cutube.Domain.csproj" />
-      <ProjectReference Include="..\Cutube.Application\Cutube.Application.csproj" />
-      <ProjectReference Include="..\Cutube.Core\Cutube.Core.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cutube.Domain\Cutube.Domain.csproj" />
+    <ProjectReference Include="..\Cutube.Application\Cutube.Application.csproj" />
+    <ProjectReference Include="..\Cutube.Core\Cutube.Core.csproj" />
+    <ProjectReference Include="..\Cutube.Infrastructure\Cutube.Infrastructure.csproj" />
+  </ItemGroup>
 
     <ItemGroup>
       <Content Include="..\.github\.gitkeep">

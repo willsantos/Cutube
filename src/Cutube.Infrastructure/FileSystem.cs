@@ -1,6 +1,6 @@
 using Cutube.Domain.Interfaces;
 
-namespace Cutube.Cli.Infrastructure;
+namespace Cutube.Infrastructure;
 
 /// <summary>
 /// Default implementation of IFileSystem using System.IO
