@@ -1,4 +1,4 @@
-namespace Cutube.Recovery;
+namespace Cutube.Cli.Recovery;
 
 /// <summary>
 /// Serviço de gerenciamento de estado de downloads com persistência

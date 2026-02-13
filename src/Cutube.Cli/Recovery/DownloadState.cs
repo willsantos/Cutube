@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Cutube.Recovery;
+namespace Cutube.Cli.Recovery;
 
 /// <summary>
 /// Estado persistente de um download para recuperação

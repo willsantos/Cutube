@@ -1,6 +1,6 @@
 using Cutube.ErrorHandling;
 
-namespace cutube.Validation;
+namespace Cutube.Cli.Validation;
 
 public static class InteractiveValidator
 {

@@ -1,4 +1,4 @@
-namespace cutube;
+namespace Cutube.Cli;
 
 public interface IHttpClientService : System.IDisposable
 {

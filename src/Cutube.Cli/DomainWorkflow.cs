@@ -6,7 +6,7 @@ using FluentResults;
 using CliResult = Cutube.ErrorHandling.Result;
 using CliResultT = Cutube.ErrorHandling.Result<string>;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 /// <summary>
 /// Orchestrates the download workflow using Domain services

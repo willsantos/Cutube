@@ -4,7 +4,7 @@ using Serilog.Formatting.Compact;
 using Cutube.Logging;
 using cutube;
 
-namespace Cutube.Logging;
+namespace Cutube.Cli.Logging;
 
 public class FileLoggerService : ILoggerService, IDisposable
 {

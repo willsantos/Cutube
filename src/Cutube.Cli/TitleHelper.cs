@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public class TitleHelper(string title)
 {

@@ -3,7 +3,7 @@ using YoutubeDLSharp;
 using Cutube.Logging;
 using Cutube.ErrorHandling;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public class ProgramWorkflow : IDisposable
 {

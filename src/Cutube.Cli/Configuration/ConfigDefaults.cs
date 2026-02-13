@@ -1,4 +1,4 @@
-namespace Cutube.Configuration;
+namespace Cutube.Cli.Configuration;
 
 /// <summary>
 /// Default configuration values for Cutube CLI

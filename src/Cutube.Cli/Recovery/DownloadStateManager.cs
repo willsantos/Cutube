@@ -2,7 +2,7 @@ using Cutube.Logging;
 using cutube;
 using System.Text.Json;
 
-namespace Cutube.Recovery;
+namespace Cutube.Cli.Recovery;
 
 /// <summary>
 /// Implementação de gerenciador de estado com persistência em JSON

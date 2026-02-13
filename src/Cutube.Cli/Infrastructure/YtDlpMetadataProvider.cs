@@ -3,7 +3,7 @@ using System.Text.Json;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Models;
 
-namespace Cutube.Infrastructure;
+namespace Cutube.Cli.Infrastructure;
 
 /// <summary>
 /// Provides video metadata using yt-dlp

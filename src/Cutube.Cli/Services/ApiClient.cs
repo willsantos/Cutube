@@ -6,7 +6,7 @@ using Cutube.Recovery;
 using Cutube.Logging;
 using FluentResults;
 
-namespace Cutube.Services;
+namespace Cutube.Cli.Services;
 
 /// <summary>
 /// HTTP client for communicating with remote Cutube API

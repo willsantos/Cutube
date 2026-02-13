@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Cutube.ErrorHandling;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public interface IMenuService
 {

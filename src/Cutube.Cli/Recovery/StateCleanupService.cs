@@ -1,6 +1,6 @@
 using Cutube.Logging;
 
-namespace Cutube.Recovery;
+namespace Cutube.Cli.Recovery;
 
 /// <summary>
 /// Serviço de limpeza automática de estados antigos e arquivos órfãos

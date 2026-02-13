@@ -1,6 +1,6 @@
 using Cutube.Logging;
 
-namespace Cutube.ErrorHandling;
+namespace Cutube.Cli.ErrorHandling;
 
 /// <summary>
 /// Retry policy with exponential backoff

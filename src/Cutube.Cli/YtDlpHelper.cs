@@ -8,7 +8,7 @@ using Cutube.ErrorHandling;
 using Cutube.Recovery;
 using YtdlDownloadState = YoutubeDLSharp.DownloadState;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 /// <summary>
 /// Helper para interagir com yt-dlp (YouTube downloader)

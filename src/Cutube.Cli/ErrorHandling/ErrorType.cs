@@ -1,4 +1,4 @@
-namespace Cutube.ErrorHandling;
+namespace Cutube.Cli.ErrorHandling;
 
 public enum ErrorType
 {

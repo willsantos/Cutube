@@ -1,6 +1,6 @@
 using System.Threading;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public interface IFfmpegHelper
 {

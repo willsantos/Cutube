@@ -1,4 +1,4 @@
-namespace Cutube.Logging;
+namespace Cutube.Cli.Logging;
 
 public enum LogLevel
 {

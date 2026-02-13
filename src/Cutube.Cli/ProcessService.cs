@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 [ExcludeFromCodeCoverage]
 public class ProcessService : IProcessService

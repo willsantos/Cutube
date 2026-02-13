@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Cutube.Configuration;
+namespace Cutube.Cli.Configuration;
 
 /// <summary>
 /// Service for managing application configuration

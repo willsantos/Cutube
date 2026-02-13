@@ -1,7 +1,7 @@
 using System.Threading;
 using YoutubeDLSharp;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public interface IYtDlpService : IDisposable
 {

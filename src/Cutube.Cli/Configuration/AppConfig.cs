@@ -1,4 +1,4 @@
-namespace Cutube.Configuration;
+namespace Cutube.Cli.Configuration;
 
 using System.Text.Json.Serialization;
 

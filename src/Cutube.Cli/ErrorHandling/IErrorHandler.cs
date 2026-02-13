@@ -1,6 +1,6 @@
 using Cutube.Logging;
 
-namespace Cutube.ErrorHandling;
+namespace Cutube.Cli.ErrorHandling;
 
 /// <summary>
 /// Centralized error handling service with retry and user-friendly messages

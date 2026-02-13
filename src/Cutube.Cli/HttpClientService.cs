@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 [ExcludeFromCodeCoverage]
 public class HttpClientService : IHttpClientService, IDisposable

@@ -4,7 +4,7 @@ using System.Threading;
 using Cutube.Logging;
 using Cutube.ErrorHandling;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public class FfmpegHelper : IFfmpegHelper
 {

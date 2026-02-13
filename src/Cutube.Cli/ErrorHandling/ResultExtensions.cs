@@ -1,4 +1,4 @@
-namespace Cutube.ErrorHandling;
+namespace Cutube.Cli.ErrorHandling;
 
 /// <summary>
 /// Extension methods for Result pattern

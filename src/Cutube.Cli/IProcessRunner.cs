@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public interface IProcessRunner
 {

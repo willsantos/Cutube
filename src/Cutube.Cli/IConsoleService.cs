@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public interface IConsoleService
 {

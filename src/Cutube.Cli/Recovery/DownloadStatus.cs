@@ -1,4 +1,4 @@
-namespace Cutube.Recovery;
+namespace Cutube.Cli.Recovery;
 
 /// <summary>
 /// Status de um download em andamento

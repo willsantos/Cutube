@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Cutube.ErrorHandling;
 using cutube.Validation;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 
 [ExcludeFromCodeCoverage]

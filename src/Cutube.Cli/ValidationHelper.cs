@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 public static class ValidationHelper
 {

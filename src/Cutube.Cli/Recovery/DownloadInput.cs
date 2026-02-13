@@ -1,4 +1,4 @@
-namespace Cutube.Recovery;
+namespace Cutube.Cli.Recovery;
 
 /// <summary>
 /// Parâmetros de entrada para operação de download

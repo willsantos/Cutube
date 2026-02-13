@@ -11,7 +11,7 @@ using Cutube.Recovery;
 using Cutube.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 [ExcludeFromCodeCoverage]
 public static class Program

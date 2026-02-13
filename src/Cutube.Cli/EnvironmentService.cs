@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace cutube;
+namespace Cutube.Cli;
 
 [ExcludeFromCodeCoverage]
 public class EnvironmentService : IEnvironmentService

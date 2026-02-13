@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Models;
 
-namespace Cutube.Infrastructure;
+namespace Cutube.Cli.Infrastructure;
 
 /// <summary>
 /// Processes videos using FFmpeg (cutting, audio extraction, format conversion)
