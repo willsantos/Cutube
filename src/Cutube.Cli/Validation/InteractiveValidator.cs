@@ -144,7 +144,7 @@ public static class InteractiveValidator
             try
             {
                 ValidationHelper.ValidateDirectory(input, fileService);
-                return input;
+                return input.Trim();
             }
             catch (Exception ex)
             {
