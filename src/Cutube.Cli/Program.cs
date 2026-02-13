@@ -4,7 +4,7 @@ using Cutube.Cli.Configuration;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Models;
 using Cutube.Domain.Services;
-using Cutube.Cli.Infrastructure;
+using Cutube.Infrastructure;
 using Cutube.Cli.Logging;
 using Cutube.Cli.ErrorHandling;
 using Cutube.Cli.Recovery;
