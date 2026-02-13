@@ -492,4 +492,19 @@ downloads
 
 # Specs (project documentation and analysis)
 .specs/
+
+# Turborepo
 .turbo/
+
+# pnpm
+.pnpm-store/
+
+# Node (Turborepo installs in root)
+node_modules/
+
+# Next.js (Web)
+.next/
+out/
+
+# Environment
+.env*.local
