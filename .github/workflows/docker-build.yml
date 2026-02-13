@@ -6,6 +6,15 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'plans/**'
+      - '.specs/**'
+      - '**/*.md'
+      - 'README.md'
+      - 'docs/**'
+      - '.github/**/*.md'
+      - 'AGENTS.md'
+      - 'PLAN*.md'
 
 env:
   REGISTRY: ghcr.io
