@@ -492,3 +492,4 @@ downloads
 
 # Specs (project documentation and analysis)
 .specs/
+.turbo/
