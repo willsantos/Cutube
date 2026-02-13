@@ -3,7 +3,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Cutube.Domain\Cutube.Domain.csproj" />
     <ProjectReference Include="..\Cutube.Contracts\Cutube.Contracts.csproj" />
-    <ProjectReference Include="..\..\cutube\cutube.csproj" />
+    <ProjectReference Include="..\Cutube.Application\Cutube.Application.csproj" />
+    <ProjectReference Include="..\Cutube.Core\Cutube.Core.csproj" />
+    <ProjectReference Include="..\Cutube.Cli\cutube.csproj" />
   </ItemGroup>
 
   <ItemGroup>

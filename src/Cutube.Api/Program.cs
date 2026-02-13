@@ -6,7 +6,6 @@ using Cutube.Api.Services;
 using Cutube.Contracts.Configuration;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
-using Cutube.Infrastructure;
 using MassTransit;
 using Microsoft.Extensions.Options;
 
@@ -66,9 +65,9 @@ builder.Services.AddSingleton<IValidationService, FluentValidationService>();
 builder.Services.AddSingleton<IMetadataService, FluentMetadataService>();
 
 // Infrastructure (from CLI project)
-builder.Services.AddSingleton<IVideoDownloader, YtDlpDownloader>();
-builder.Services.AddSingleton<IVideoProcessor, FfmpegProcessor>();
-builder.Services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
+builder.Services.AddSingleton<IVideoDownloader, Cutube.Cli.Infrastructure.YtDlpDownloader>();
+builder.Services.AddSingleton<IVideoProcessor, Cutube.Cli.Infrastructure.FfmpegProcessor>();
+builder.Services.AddSingleton<IVideoMetadataProvider, Cutube.Cli.Infrastructure.YtDlpMetadataProvider>();
 
 // API Services
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();
