@@ -64,10 +64,10 @@ builder.Services.AddSignalR(options =>
 builder.Services.AddSingleton<IValidationService, FluentValidationService>();
 builder.Services.AddSingleton<IMetadataService, FluentMetadataService>();
 
-// Infrastructure (from CLI project)
-builder.Services.AddSingleton<IVideoDownloader, Cutube.Cli.Infrastructure.YtDlpDownloader>();
-builder.Services.AddSingleton<IVideoProcessor, Cutube.Cli.Infrastructure.FfmpegProcessor>();
-builder.Services.AddSingleton<IVideoMetadataProvider, Cutube.Cli.Infrastructure.YtDlpMetadataProvider>();
+// Infrastructure (moved from CLI to Infrastructure project)
+builder.Services.AddSingleton<IVideoDownloader, Cutube.Infrastructure.YtDlpDownloader>();
+builder.Services.AddSingleton<IVideoProcessor, Cutube.Infrastructure.FfmpegProcessor>();
+builder.Services.AddSingleton<IVideoMetadataProvider, Cutube.Infrastructure.YtDlpMetadataProvider>();
 
 // API Services
 builder.Services.AddSingleton<IDownloadStatusRepository, InMemoryStatusRepository>();

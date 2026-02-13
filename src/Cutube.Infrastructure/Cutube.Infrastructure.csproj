@@ -1,9 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="YoutubeDLSharp" Version="1.2.0" />
+    <PackageReference Include="FluentResults" Version="4.0.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cutube.Domain\Cutube.Domain.csproj" />
+    <ProjectReference Include="..\Cutube.Contracts\Cutube.Contracts.csproj" />
+  </ItemGroup>
 
 </Project>
