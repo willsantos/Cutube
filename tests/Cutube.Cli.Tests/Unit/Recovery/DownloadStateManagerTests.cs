@@ -1,5 +1,5 @@
-using Cutube.Logging;
-using Cutube.Recovery;
+using Cutube.Cli.Logging;
+using Cutube.Cli.Recovery;
 using Cutube.Cli;
 using Moq;
 using Xunit;

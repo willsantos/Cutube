@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Moq;
 using Xunit;
-using Cutube.Logging;
+using Cutube.Cli.Logging;
 using Cutube.Cli;
 using System.IO;
 

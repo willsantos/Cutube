@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Xunit;
-using Cutube.ErrorHandling;
+using Cutube.Cli.ErrorHandling;
 
 namespace Cutube.Tests.Unit.ErrorHandling;
 

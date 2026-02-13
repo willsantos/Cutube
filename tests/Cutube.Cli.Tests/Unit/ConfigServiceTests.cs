@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Xunit;
-using Cutube.Configuration;
+using Cutube.Cli.Configuration;
 
 namespace Cutube.Tests.Unit;
 

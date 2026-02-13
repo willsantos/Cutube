@@ -3,7 +3,7 @@ using System.IO;
 using Xunit;
 using Xunit.Abstractions;
 using Moq;
-using Cutube.ErrorHandling;
+using Cutube.Cli.ErrorHandling;
 using Cutube.Cli;
 
 namespace Cutube.Tests.Unit;

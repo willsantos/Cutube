@@ -1,8 +1,8 @@
 using FluentAssertions;
 using Moq;
 using Xunit;
-using Cutube.ErrorHandling;
-using Cutube.Logging;
+using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Logging;
 using System.Net;
 
 namespace Cutube.Tests.Unit.ErrorHandling;
