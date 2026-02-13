@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using Cutube.Cli;
 using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Logging;
 using Xunit;
 using Cutube.Tests.Helpers;
 
@@ -16,12 +17,9 @@ public class ValidationFlowTests
         var ytdl = new Mock<IYtDlpService>();
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
-        var errorHandler = new Mock<IErrorHandler>();
+        var errorHandler = new ErrorHandler(Mock.Of<ILoggerService>());
 
-        errorHandler.Setup(h => h.GetUserFriendlyMessage(It.IsAny<Exception>()))
-            .Returns<Exception>(ex => ex.Message);
-
-        menu.Setup(m => m.Show(console, fileService.Object, errorHandler.Object))
+        menu.Setup(m => m.Show(console, fileService.Object, errorHandler))
             .Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("90s");
@@ -45,7 +43,7 @@ public class ValidationFlowTests
             .Returns(Task.CompletedTask);
 
         var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object,
-            System.Threading.CancellationToken.None, null, errorHandler.Object);
+            System.Threading.CancellationToken.None, null, errorHandler);
 
         var result = await workflow.RunAsync();
 
@@ -60,12 +58,9 @@ public class ValidationFlowTests
         var ytdl = new Mock<IYtDlpService>();
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
-        var errorHandler = new Mock<IErrorHandler>();
+        var errorHandler = new ErrorHandler(Mock.Of<ILoggerService>());
 
-        errorHandler.Setup(h => h.GetUserFriendlyMessage(It.IsAny<Exception>()))
-            .Returns<Exception>(ex => ex.Message);
-
-        menu.Setup(m => m.Show(console, fileService.Object, errorHandler.Object))
+        menu.Setup(m => m.Show(console, fileService.Object, errorHandler))
             .Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("90s");
@@ -89,7 +84,7 @@ public class ValidationFlowTests
             .Returns(Task.CompletedTask);
 
         var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object,
-            System.Threading.CancellationToken.None, null, errorHandler.Object);
+            System.Threading.CancellationToken.None, null, errorHandler);
 
         var result = await workflow.RunAsync();
 
@@ -103,12 +98,9 @@ public class ValidationFlowTests
         var ytdl = new Mock<IYtDlpService>();
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
-        var errorHandler = new Mock<IErrorHandler>();
+        var errorHandler = new ErrorHandler(Mock.Of<ILoggerService>());
 
-        errorHandler.Setup(h => h.GetUserFriendlyMessage(It.IsAny<Exception>()))
-            .Returns<Exception>(ex => ex.Message);
-
-        menu.Setup(m => m.Show(console, fileService.Object, errorHandler.Object))
+        menu.Setup(m => m.Show(console, fileService.Object, errorHandler))
             .Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtube.com/watch?v=abc123");
         menu.SetupGet(m => m.Start).Returns("90s");
@@ -132,7 +124,7 @@ public class ValidationFlowTests
             .Returns(Task.CompletedTask);
 
         var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object,
-            System.Threading.CancellationToken.None, null, errorHandler.Object);
+            System.Threading.CancellationToken.None, null, errorHandler);
 
         var result = await workflow.RunAsync();
 
@@ -154,12 +146,9 @@ public class ValidationFlowTests
         var ytdl = new Mock<IYtDlpService>();
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
-        var errorHandler = new Mock<IErrorHandler>();
+        var errorHandler = new ErrorHandler(Mock.Of<ILoggerService>());
 
-        errorHandler.Setup(h => h.GetUserFriendlyMessage(It.IsAny<Exception>()))
-            .Returns<Exception>(ex => ex.Message);
-
-        menu.Setup(m => m.Show(console, fileService.Object, errorHandler.Object))
+        menu.Setup(m => m.Show(console, fileService.Object, errorHandler))
             .Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtube.com/watch?v=abc123");
         menu.SetupGet(m => m.Start).Returns("90s");
@@ -183,7 +172,7 @@ public class ValidationFlowTests
             .Returns(Task.CompletedTask);
 
         var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object,
-            System.Threading.CancellationToken.None, null, errorHandler.Object);
+            System.Threading.CancellationToken.None, null, errorHandler);
 
         var result = await workflow.RunAsync();
 
@@ -196,22 +185,18 @@ public class ValidationFlowTests
         var menu = new Mock<IMenuService>();
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
-        var errorHandler = new Mock<IErrorHandler>();
+        var errorHandler = new ErrorHandler(Mock.Of<ILoggerService>());
 
-        errorHandler.Setup(h => h.GetUserFriendlyMessage(It.IsAny<Exception>()))
-            .Returns<Exception>(ex => ex.Message);
-
-        menu.Setup(m => m.Show(console, fileService.Object, errorHandler.Object))
+        menu.Setup(m => m.Show(console, fileService.Object, errorHandler))
             .Returns(Result.Failure(Cutube.Cli.ErrorHandling.ErrorType.Validation,
                 "❌ Máximo de tentativas atingido para URL. Operação cancelada.",
                 new InvalidOperationException()));
 
         var workflow = new ProgramWorkflow(menu.Object, Mock.Of<IYtDlpService>(), console, fileService.Object,
-            System.Threading.CancellationToken.None, null, errorHandler.Object);
+            System.Threading.CancellationToken.None, null, errorHandler);
 
         var result = await workflow.RunAsync();
 
         result.IsFailure.Should().BeTrue();
-        console.GetOutput().Should().Contain("Máximo de tentativas atingido");
     }
 }

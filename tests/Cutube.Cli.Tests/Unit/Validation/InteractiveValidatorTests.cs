@@ -20,7 +20,9 @@ public class InteractiveValidatorTests
         _fileService = new Mock<IFileService>();
 
         _errorHandler.Setup(h => h.GetUserFriendlyMessage(It.IsAny<Exception>()))
-            .Returns<Exception>(ex => ex.Message);
+            .Returns<Exception>(ex => "❌ " + ex.Message);
+        _errorHandler.Setup(h => h.ShouldRetry(It.IsAny<Exception>()))
+            .Returns(false);
     }
 
     #region URL Tests

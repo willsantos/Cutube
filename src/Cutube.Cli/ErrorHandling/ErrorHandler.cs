@@ -21,12 +21,12 @@ public class ErrorHandler : IErrorHandler
 
     private static readonly Dictionary<ErrorType, string> UserFriendlyMessages = new()
     {
-        [ErrorType.Network] = "Erro de conexão. Verifique sua internet.",
-        [ErrorType.FileSystem] = "Erro ao acessar arquivo. Verifique permissões e espaço em disco.",
-        [ErrorType.Validation] = "Entrada inválida. Verifique os dados informados.",
-        [ErrorType.DependencyMissing] = "Dependência não encontrada. Instale yt-dlp e FFmpeg.",
-        [ErrorType.Critical] = "Erro fatal. O aplicativo será encerrado.",
-        [ErrorType.Unknown] = "Ocorreu um erro inesperado."
+        [ErrorType.Network] = "❌ Erro de conexão. Verifique sua internet.",
+        [ErrorType.FileSystem] = "❌ Erro ao acessar arquivo. Verifique permissões e espaço em disco.",
+        [ErrorType.Validation] = "❌ Entrada inválida. Verifique os dados informados.",
+        [ErrorType.DependencyMissing] = "❌ Dependência não encontrada. Instale yt-dlp e FFmpeg.",
+        [ErrorType.Critical] = "❌ Erro fatal. O aplicativo será encerrado.",
+        [ErrorType.Unknown] = "❌ Ocorreu um erro inesperado. Tente novamente."
     };
 
     public ErrorHandler(ILoggerService logger)
@@ -109,9 +109,9 @@ public class ErrorHandler : IErrorHandler
         // Specific messages by exception type
         return exception switch
         {
-            FileNotFoundException => "Arquivo não encontrado.",
-            DirectoryNotFoundException => "Diretório não encontrado.",
-            _ => "Ocorreu um erro inesperado. Tente novamente."
+            FileNotFoundException => "❌ Arquivo não encontrado.",
+            DirectoryNotFoundException => "❌ Diretório não encontrado.",
+            _ => "❌ Ocorreu um erro inesperado. Tente novamente."
         };
     }
 

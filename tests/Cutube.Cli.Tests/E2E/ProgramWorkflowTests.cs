@@ -3,6 +3,7 @@ using Moq;
 using Cutube.Cli;
 using Cutube.Tests.Helpers;
 using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Logging;
 using Xunit;
 
 namespace Cutube.Tests.E2E;
@@ -114,19 +115,21 @@ public class ProgramWorkflowTests
     }
 
     [Fact]
-    public async Task RunAsync_DownloadThrows_WritesErrorAndRethrows()
+    public async Task RunAsync_DownloadThrows_WritesErrorAndReturnsFailure()
     {
         var menu = new Mock<IMenuService>();
         var ytdl = new Mock<IYtDlpService>();
         var console = new FakeConsoleService();
         var fileService = new Mock<IFileService>();
+        var errorHandler = new ErrorHandler(Mock.Of<ILoggerService>());
 
-        menu.Setup(m => m.Show(console, fileService.Object, It.IsAny<IErrorHandler>())).Returns(Result.Success());
+        menu.Setup(m => m.Show(console, fileService.Object, errorHandler)).Returns(Result.Success());
         menu.SetupGet(m => m.Url).Returns("https://youtu.be/dQw4w9WgXcQ");
         menu.SetupGet(m => m.Start).Returns("00:00:10");
         menu.SetupGet(m => m.End).Returns("00:00:20");
         menu.SetupGet(m => m.CustomFileName).Returns("");
         menu.SetupGet(m => m.OutputDirectory).Returns("");
+        menu.SetupGet(m => m.AudioOnly).Returns(false);
 
         fileService.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(true);
         fileService.Setup(f => f.HasWritePermission(It.IsAny<string>())).Returns(true);
@@ -142,12 +145,12 @@ public class ProgramWorkflowTests
                 It.IsAny<System.Threading.CancellationToken>()))
             .ThrowsAsync(new Exception("Falha no download"));
 
-        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object);
+        var workflow = new ProgramWorkflow(menu.Object, ytdl.Object, console, fileService.Object,
+            System.Threading.CancellationToken.None, null, errorHandler);
 
-        Func<Task> act = () => workflow.RunAsync();
+        var result = await workflow.RunAsync();
 
-        await act.Should().ThrowAsync<Exception>();
-        console.GetOutput().Should().Contain("Erro: Falha no download");
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]

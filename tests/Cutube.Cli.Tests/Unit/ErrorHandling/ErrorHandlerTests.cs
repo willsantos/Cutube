@@ -64,7 +64,7 @@ public class ErrorHandlerTests
         var exception = new HttpRequestException("Connection failed");
         var message = _errorHandler.GetUserFriendlyMessage(exception);
 
-        message.Should().Be("Erro de conexão. Verifique sua internet.");
+        message.Should().Be("❌ Erro de conexão. Verifique sua internet.");
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class ErrorHandlerTests
         var exception = new IOException("Disk full");
         var message = _errorHandler.GetUserFriendlyMessage(exception);
 
-        message.Should().Be("Erro ao acessar arquivo. Verifique permissões e espaço em disco.");
+        message.Should().Be("❌ Erro ao acessar arquivo. Verifique permissões e espaço em disco.");
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class ErrorHandlerTests
         var exception = new ArgumentException("Invalid input");
         var message = _errorHandler.GetUserFriendlyMessage(exception);
 
-        message.Should().Be("Entrada inválida. Verifique os dados informados.");
+        message.Should().Be("❌ Entrada inválida. Verifique os dados informados.");
     }
 
     [Fact]
@@ -91,16 +91,16 @@ public class ErrorHandlerTests
         var exception = new DllNotFoundException("ffmpeg not found");
         var message = _errorHandler.GetUserFriendlyMessage(exception);
 
-        message.Should().Be("Dependência não encontrada. Instale yt-dlp e FFmpeg.");
+        message.Should().Be("❌ Dependência não encontrada. Instale yt-dlp e FFmpeg.");
     }
 
     [Fact]
-    public void GetUserFriendlyMessage_GenericException_ReturnsCriticalMessage()
+    public void GetUserFriendlyMessage_GenericException_ReturnsUnknownMessage()
     {
         var exception = new Exception("Unknown error");
         var message = _errorHandler.GetUserFriendlyMessage(exception);
 
-        message.Should().Be("Erro fatal. O aplicativo será encerrado.");
+        message.Should().Be("❌ Ocorreu um erro inesperado. Tente novamente.");
     }
 
     [Fact]
@@ -154,7 +154,7 @@ public class ErrorHandlerTests
                 throw new HttpRequestException("Network error");
             }
             return "success after retries";
-        }, ErrorType.Network);
+        }, ErrorType.Network, null, retryPolicy);
 
         result.IsSuccess.Should().BeTrue();
         attemptCount.Should().Be(4);

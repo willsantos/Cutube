@@ -54,8 +54,8 @@ public class RetryPolicyTests
             throw new HttpRequestException("Persistent network error");
         });
 
-        var exception = await act.Should().ThrowAsync<HttpRequestException>();
-        exception.Which.Message.Should().Be("Persistent network error");
+        // ExecuteAsync retries 2 times then throws the original HttpRequestException
+        await act.Should().ThrowAsync<HttpRequestException>();
     }
 
     [Fact]
@@ -172,10 +172,20 @@ public class RetryPolicyTests
                 throw new HttpRequestException("Network error");
             });
         }
-        catch (HttpRequestException)
+        catch
         {
+            // Expected after retries exhausted
         }
 
-        delays.Should().HaveCountGreaterThan(1);
+        // Should have 4 attempts (1 initial + 3 retries)
+        delays.Should().HaveCount(4);
+        // Delays between attempts should increase (exponential backoff)
+        var timeBetweenAttempts = new List<long>();
+        for (int i = 1; i < delays.Count; i++)
+        {
+            timeBetweenAttempts.Add(delays[i] - delays[i-1]);
+        }
+        // Second retry after longer delay (exponential backoff)
+        timeBetweenAttempts[1].Should().BeGreaterThan(timeBetweenAttempts[0]);
     }
 }

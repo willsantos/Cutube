@@ -69,10 +69,8 @@ public class RetryPolicy
 
                 if (attempt == MaxRetries)
                 {
-                    // Last attempt failed, throw exception
-                    throw new Exception(
-                        $"Operation failed after {MaxRetries} retries",
-                        lastException);
+                    // Last attempt failed, throw original exception
+                    throw;
                 }
 
                 // Wait with exponential backoff
