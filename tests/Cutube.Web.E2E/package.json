@@ -1,0 +1,8 @@
+{
+  "name": "Cutube.Web.E2E",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test"
+  }
+}

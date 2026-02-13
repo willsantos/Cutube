@@ -1,0 +1,10 @@
+{
+  "name": "Cutube.Worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotnet watch --project Cutube.Worker.csproj",
+    "build": "dotnet build Cutube.Worker.csproj",
+    "test": "dotnet test ../../tests/Cutube.Worker.Tests/Cutube.Worker.Tests.csproj"
+  }
+}

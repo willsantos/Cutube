@@ -1,0 +1,8 @@
+{
+  "name": "Cutube.Api.Tests",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "dotnet test Cutube.Api.Tests.csproj"
+  }
+}
