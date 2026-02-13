@@ -6,7 +6,7 @@ echo "🚀 Starting Cutube development environment..."
 
 # Start infrastructure
 echo "📦 Starting infrastructure (RabbitMQ)..."
-docker-compose -f docker/docker-compose.yml up -d rabbitmq
+docker-compose -f docker-compose.yml up -d rabbitmq
 
 # Wait for infrastructure
 echo "⏳ Waiting for infrastructure to be ready..."
