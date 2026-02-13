@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Moq;
 using Xunit;
-using cutube.Validation;
+using Cutube.Cli.Validation;
 using Cutube.Cli.ErrorHandling;
 using Cutube.Cli;
 

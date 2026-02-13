@@ -18,7 +18,7 @@ public class ValidationHelperTests
     [InlineData("http://youtu.be/dQw4w9WgXcQ")]
     public void IsValidUrl_ValidYouTubeUrl_ReturnsTrue(string url)
     {
-        var result = cutube.ValidationHelper.IsValidUrl(url);
+        var result = Cutube.Cli.ValidationHelper.IsValidUrl(url);
         result.Should().BeTrue();
     }
 
@@ -28,7 +28,7 @@ public class ValidationHelperTests
     [InlineData(null)]
     public void IsValidUrl_NullOrWhitespace_ReturnsFalse(string? url)
     {
-        var result = cutube.ValidationHelper.IsValidUrl(url!);
+        var result = Cutube.Cli.ValidationHelper.IsValidUrl(url!);
         result.Should().BeFalse();
     }
 
@@ -40,14 +40,14 @@ public class ValidationHelperTests
     [InlineData("https://vimeo.com/12345")]
     public void IsValidUrl_InvalidUrl_ReturnsFalse(string url)
     {
-        var result = cutube.ValidationHelper.IsValidUrl(url);
+        var result = Cutube.Cli.ValidationHelper.IsValidUrl(url);
         result.Should().BeFalse();
     }
 
     [Fact]
     public void ValidateUrl_ValidUrl_DoesNotThrow()
     {
-        var act = () => cutube.ValidationHelper.ValidateUrl("https://youtube.com/watch?v=dQw4w9WgXcQ");
+        var act = () => Cutube.Cli.ValidationHelper.ValidateUrl("https://youtube.com/watch?v=dQw4w9WgXcQ");
         act.Should().NotThrow();
     }
 
@@ -58,7 +58,7 @@ public class ValidationHelperTests
     [InlineData("https://google.com")]
     public void ValidateUrl_InvalidUrl_ThrowsArgumentException(string url)
     {
-        var act = () => cutube.ValidationHelper.ValidateUrl(url);
+        var act = () => Cutube.Cli.ValidationHelper.ValidateUrl(url);
         act.Should().Throw<ArgumentException>()
             .WithMessage("*URL inválida*");
     }
@@ -73,7 +73,7 @@ public class ValidationHelperTests
     [InlineData(90, 5400)]
     public void IsValidTimeRange_ValidRange_ReturnsTrue(int start, int end)
     {
-        var result = cutube.ValidationHelper.IsValidTimeRange(start, end);
+        var result = Cutube.Cli.ValidationHelper.IsValidTimeRange(start, end);
         result.Should().BeTrue();
     }
 
@@ -83,7 +83,7 @@ public class ValidationHelperTests
     [InlineData(120, 60)]
     public void IsValidTimeRange_InvalidRange_ReturnsFalse(int start, int end)
     {
-        var result = cutube.ValidationHelper.IsValidTimeRange(start, end);
+        var result = Cutube.Cli.ValidationHelper.IsValidTimeRange(start, end);
         result.Should().BeFalse();
     }
 
@@ -94,14 +94,14 @@ public class ValidationHelperTests
     [InlineData("1:30", "2:00")]
     public void ValidateTimeRange_ValidRange_DoesNotThrow(string start, string end)
     {
-        var act = () => cutube.ValidationHelper.ValidateTimeRange(start, end);
+        var act = () => Cutube.Cli.ValidationHelper.ValidateTimeRange(start, end);
         act.Should().NotThrow();
     }
 
     [Fact]
     public void ValidateTimeRange_StartIsZero_ThrowsArgumentException()
     {
-        var act = () => cutube.ValidationHelper.ValidateTimeRange("0", "60");
+        var act = () => Cutube.Cli.ValidationHelper.ValidateTimeRange("0", "60");
         act.Should().Throw<ArgumentException>()
             .WithMessage("*Tempo de início deve ser maior que zero*");
     }
@@ -109,7 +109,7 @@ public class ValidationHelperTests
     [Fact]
     public void ValidateTimeRange_StartEqualsEnd_ThrowsArgumentException()
     {
-        var act = () => cutube.ValidationHelper.ValidateTimeRange("60", "60");
+        var act = () => Cutube.Cli.ValidationHelper.ValidateTimeRange("60", "60");
         act.Should().Throw<ArgumentException>()
             .WithMessage("*Tempo de fim deve ser maior que o tempo de início*");
     }
@@ -117,7 +117,7 @@ public class ValidationHelperTests
     [Fact]
     public void ValidateTimeRange_StartGreaterThanEnd_ThrowsArgumentException()
     {
-        var act = () => cutube.ValidationHelper.ValidateTimeRange("120", "60");
+        var act = () => Cutube.Cli.ValidationHelper.ValidateTimeRange("120", "60");
         act.Should().Throw<ArgumentException>()
             .WithMessage("*Tempo de fim deve ser maior que o tempo de início*");
     }
@@ -127,7 +127,7 @@ public class ValidationHelperTests
     [InlineData("h30m")]
     public void ValidateTimeRange_InvalidFormat_ThrowsFormatException(string time)
     {
-        var act = () => cutube.ValidationHelper.ValidateTimeRange(time, "120");
+        var act = () => Cutube.Cli.ValidationHelper.ValidateTimeRange(time, "120");
         act.Should().Throw<FormatException>();
     }
 
@@ -144,7 +144,7 @@ public class ValidationHelperTests
     [InlineData(null)]
     public void IsValidFileName_ValidName_ReturnsTrue(string? name)
     {
-        var result = cutube.ValidationHelper.IsValidFileName(name!);
+        var result = Cutube.Cli.ValidationHelper.IsValidFileName(name!);
         result.Should().BeTrue();
     }
 
@@ -160,7 +160,7 @@ public class ValidationHelperTests
     [InlineData("../file")]
     public void IsValidFileName_InvalidName_ReturnsFalse(string name)
     {
-        var result = cutube.ValidationHelper.IsValidFileName(name);
+        var result = Cutube.Cli.ValidationHelper.IsValidFileName(name);
         result.Should().BeFalse();
     }
 
@@ -169,14 +169,14 @@ public class ValidationHelperTests
     [InlineData("My Video 2024")]
     public void ValidateFileName_ValidName_DoesNotThrow(string name)
     {
-        var act = () => cutube.ValidationHelper.ValidateFileName(name);
+        var act = () => Cutube.Cli.ValidationHelper.ValidateFileName(name);
         act.Should().NotThrow();
     }
 
     [Fact]
     public void ValidateFileName_EmptyOrWhitespace_DoesNotThrow()
     {
-        var act = () => cutube.ValidationHelper.ValidateFileName("");
+        var act = () => Cutube.Cli.ValidationHelper.ValidateFileName("");
         act.Should().NotThrow();
     }
 
@@ -186,7 +186,7 @@ public class ValidationHelperTests
     [InlineData("path\\file")]
     public void ValidateFileName_InvalidName_ThrowsArgumentException(string name)
     {
-        var act = () => cutube.ValidationHelper.ValidateFileName(name);
+        var act = () => Cutube.Cli.ValidationHelper.ValidateFileName(name);
         act.Should().Throw<ArgumentException>()
             .WithMessage("*Nome do arquivo inválido*");
     }
@@ -202,7 +202,7 @@ public class ValidationHelperTests
         mockFileService.Setup(f => f.DirectoryExists("/valid/path")).Returns(true);
         mockFileService.Setup(f => f.HasWritePermission("/valid/path")).Returns(true);
 
-        var result = cutube.ValidationHelper.IsDirectoryWritable("/valid/path", mockFileService.Object);
+        var result = Cutube.Cli.ValidationHelper.IsDirectoryWritable("/valid/path", mockFileService.Object);
         result.Should().BeTrue();
     }
 
@@ -212,7 +212,7 @@ public class ValidationHelperTests
         var mockFileService = new Mock<IFileService>();
         mockFileService.Setup(f => f.DirectoryExists("/invalid/path")).Returns(false);
 
-        var result = cutube.ValidationHelper.IsDirectoryWritable("/invalid/path", mockFileService.Object);
+        var result = Cutube.Cli.ValidationHelper.IsDirectoryWritable("/invalid/path", mockFileService.Object);
         result.Should().BeFalse();
     }
 
@@ -223,7 +223,7 @@ public class ValidationHelperTests
         mockFileService.Setup(f => f.DirectoryExists("/readonly/path")).Returns(true);
         mockFileService.Setup(f => f.HasWritePermission("/readonly/path")).Returns(false);
 
-        var result = cutube.ValidationHelper.IsDirectoryWritable("/readonly/path", mockFileService.Object);
+        var result = Cutube.Cli.ValidationHelper.IsDirectoryWritable("/readonly/path", mockFileService.Object);
         result.Should().BeFalse();
     }
 
@@ -234,7 +234,7 @@ public class ValidationHelperTests
         mockFileService.Setup(f => f.DirectoryExists("/valid/path")).Returns(true);
         mockFileService.Setup(f => f.HasWritePermission("/valid/path")).Returns(true);
 
-        var act = () => cutube.ValidationHelper.ValidateDirectory("/valid/path", mockFileService.Object);
+        var act = () => Cutube.Cli.ValidationHelper.ValidateDirectory("/valid/path", mockFileService.Object);
         act.Should().NotThrow();
     }
 
@@ -244,7 +244,7 @@ public class ValidationHelperTests
         var mockFileService = new Mock<IFileService>();
         mockFileService.Setup(f => f.DirectoryExists("/invalid/path")).Returns(false);
 
-        var act = () => cutube.ValidationHelper.ValidateDirectory("/invalid/path", mockFileService.Object);
+        var act = () => Cutube.Cli.ValidationHelper.ValidateDirectory("/invalid/path", mockFileService.Object);
         act.Should().Throw<DirectoryNotFoundException>()
             .WithMessage("*Diretório não encontrado*");
     }
@@ -256,7 +256,7 @@ public class ValidationHelperTests
         mockFileService.Setup(f => f.DirectoryExists("/readonly/path")).Returns(true);
         mockFileService.Setup(f => f.HasWritePermission("/readonly/path")).Returns(false);
 
-        var act = () => cutube.ValidationHelper.ValidateDirectory("/readonly/path", mockFileService.Object);
+        var act = () => Cutube.Cli.ValidationHelper.ValidateDirectory("/readonly/path", mockFileService.Object);
         act.Should().Throw<UnauthorizedAccessException>()
             .WithMessage("*Sem permissão de escrita*");
     }

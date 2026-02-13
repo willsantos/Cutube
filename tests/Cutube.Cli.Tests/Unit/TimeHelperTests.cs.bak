@@ -21,7 +21,7 @@ public class TimeHelperTests
     [InlineData("2h", 7200)]
     public void GetStartSeconds_ValidFormat_ReturnsCorrectSeconds(string time, int expected)
     {
-        var result = Cutube.Cli.TimeHelper.GetStartSeconds(time);
+        var result = cutube.TimeHelper.GetStartSeconds(time);
         result.Should().Be(expected);
     }
 
@@ -32,7 +32,7 @@ public class TimeHelperTests
     [InlineData("1h 30m")]
     public void GetStartSeconds_InvalidFormat_ThrowsFormatException(string time)
     {
-        Action act = () => Cutube.Cli.TimeHelper.GetStartSeconds(time);
+        Action act = () => cutube.TimeHelper.GetStartSeconds(time);
         act.Should().Throw<FormatException>();
     }
 
@@ -44,7 +44,7 @@ public class TimeHelperTests
     [InlineData("01:30:45", 5445)]
     public void GetEndSeconds_ValidFormat_ReturnsCorrectSeconds(string time, int expected)
     {
-        var result = Cutube.Cli.TimeHelper.GetEndSeconds(time);
+        var result = cutube.TimeHelper.GetEndSeconds(time);
         result.Should().Be(expected);
     }
 
@@ -54,7 +54,7 @@ public class TimeHelperTests
     [InlineData("00:10:00", "00:05:00", -300)]
     public void GetTimeDiff_ValidInputs_ReturnsCorrectDifference(string start, string end, int expected)
     {
-        var result = Cutube.Cli.TimeHelper.GetTimeDiff(start, end);
+        var result = cutube.TimeHelper.GetTimeDiff(start, end);
         result.Should().Be(expected);
     }
 
@@ -67,7 +67,7 @@ public class TimeHelperTests
     [InlineData("2h15m30s", 8130)]
     public void ParseToSeconds_CompactNotation_ReturnsCorrectSeconds(string input, int expected)
     {
-        var result = Cutube.Cli.TimeHelper.ParseToSeconds(input);
+        var result = cutube.TimeHelper.ParseToSeconds(input);
         result.Should().Be(expected);
     }
 
@@ -77,7 +77,7 @@ public class TimeHelperTests
     [InlineData("3600", 3600)]
     public void ParseToSeconds_DecimalFormat_ReturnsCorrectSeconds(string input, int expected)
     {
-        var result = Cutube.Cli.TimeHelper.ParseToSeconds(input);
+        var result = cutube.TimeHelper.ParseToSeconds(input);
         result.Should().Be(expected);
     }
 
@@ -86,7 +86,7 @@ public class TimeHelperTests
     [InlineData("5:45", 345)]
     public void ParseToSeconds_MinutesSecondsFormat_ReturnsCorrectSeconds(string input, int expected)
     {
-        var result = Cutube.Cli.TimeHelper.ParseToSeconds(input);
+        var result = cutube.TimeHelper.ParseToSeconds(input);
         result.Should().Be(expected);
     }
 
@@ -96,7 +96,7 @@ public class TimeHelperTests
     [InlineData(null)]
     public void ParseToSeconds_EmptyInput_ThrowsArgumentException(string? input)
     {
-        Action act = () => Cutube.Cli.TimeHelper.ParseToSeconds(input!);
+        Action act = () => cutube.TimeHelper.ParseToSeconds(input!);
         act.Should().Throw<ArgumentException>();
     }
 }

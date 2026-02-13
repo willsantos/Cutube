@@ -202,7 +202,7 @@ public class ValidationFlowTests
             .Returns<Exception>(ex => ex.Message);
 
         menu.Setup(m => m.Show(console, fileService.Object, errorHandler.Object))
-            .Returns(Result.Failure(Cutube.ErrorHandling.ErrorType.Validation,
+            .Returns(Result.Failure(Cutube.Cli.ErrorHandling.ErrorType.Validation,
                 "❌ Máximo de tentativas atingido para URL. Operação cancelada.",
                 new InvalidOperationException()));
 

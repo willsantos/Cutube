@@ -6,7 +6,6 @@ using Cutube.Api.Services;
 using Cutube.Contracts.Configuration;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Services;
-using Cutube.Infrastructure;
 using MassTransit;
 using Microsoft.Extensions.Options;
 

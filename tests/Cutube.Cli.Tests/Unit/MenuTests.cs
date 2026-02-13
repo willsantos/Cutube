@@ -16,7 +16,7 @@ public class MenuTests
 
     public MenuTests()
     {
-        cutube.Menu.Reset();
+        Cutube.Cli.Menu.Reset();
         _fileService = new Mock<IFileService>();
         _fileService.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(true);
         _fileService.Setup(f => f.HasWritePermission(It.IsAny<string>())).Returns(true);
@@ -36,12 +36,12 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.Url.Should().Be("https://youtube.com/watch?v=abc123");
-        cutube.Menu.Start.Should().Be("00:00:10");
-        cutube.Menu.End.Should().Be("00:01:00");
+        Cutube.Cli.Menu.Url.Should().Be("https://youtube.com/watch?v=abc123");
+        Cutube.Cli.Menu.Start.Should().Be("00:00:10");
+        Cutube.Cli.Menu.End.Should().Be("00:01:00");
     }
 
     [Fact]
@@ -54,12 +54,12 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.Url.Should().Be("https://youtu.be/dQw4w9WgXcQ");
-        cutube.Menu.Start.Should().Be("00:01:00");
-        cutube.Menu.End.Should().Be("00:02:00");
+        Cutube.Cli.Menu.Url.Should().Be("https://youtu.be/dQw4w9WgXcQ");
+        Cutube.Cli.Menu.Start.Should().Be("00:01:00");
+        Cutube.Cli.Menu.End.Should().Be("00:02:00");
     }
 
     [Fact]
@@ -72,10 +72,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.CustomFileName.Should().Be("meu-podcast-01");
+        Cutube.Cli.Menu.CustomFileName.Should().Be("meu-podcast-01");
     }
 
     [Fact]
@@ -88,10 +88,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.CustomFileName.Should().Be("meu-video");
+        Cutube.Cli.Menu.CustomFileName.Should().Be("meu-video");
     }
 
     [Fact]
@@ -104,10 +104,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.CustomFileName.Should().BeEmpty();
+        Cutube.Cli.Menu.CustomFileName.Should().BeEmpty();
     }
 
     [Fact]
@@ -120,10 +120,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.CustomFileName.Should().BeEmpty();
+        Cutube.Cli.Menu.CustomFileName.Should().BeEmpty();
     }
 
     [Fact]
@@ -136,10 +136,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.OutputDirectory.Should().Be("");
+        Cutube.Cli.Menu.OutputDirectory.Should().Be("");
     }
 
     [Fact]
@@ -152,10 +152,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.OutputDirectory.Should().Be("/tmp/downloads");
+        Cutube.Cli.Menu.OutputDirectory.Should().Be("/tmp/downloads");
     }
 
     [Fact]
@@ -168,10 +168,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.OutputDirectory.Should().Be("C:\\Videos");
+        Cutube.Cli.Menu.OutputDirectory.Should().Be("C:\\Videos");
     }
 
     [Fact]
@@ -184,10 +184,10 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.OutputDirectory.Should().Be("/tmp/videos");
+        Cutube.Cli.Menu.OutputDirectory.Should().Be("/tmp/videos");
     }
 
     [Fact]
@@ -200,9 +200,9 @@ public class MenuTests
         Console.SetIn(sr);
 
         var console = new ConsoleService();
-        var result = cutube.Menu.Show(console, _fileService.Object, _errorHandler.Object);
+        var result = Cutube.Cli.Menu.Show(console, _fileService.Object, _errorHandler.Object);
 
         result.IsSuccess.Should().BeTrue();
-        cutube.Menu.OutputDirectory.Should().Be("../downloads");
+        Cutube.Cli.Menu.OutputDirectory.Should().Be("../downloads");
     }
 }
