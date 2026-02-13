@@ -1,4 +1,4 @@
-using Cutube.Logging;
+using Cutube.Cli.Logging;
 
 namespace Cutube.Cli.ErrorHandling;
 

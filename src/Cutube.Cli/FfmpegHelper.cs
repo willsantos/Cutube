@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Cutube.Logging;
-using Cutube.ErrorHandling;
+using Cutube.Cli.Logging;
+using Cutube.Cli.ErrorHandling;
 
 namespace Cutube.Cli;
 

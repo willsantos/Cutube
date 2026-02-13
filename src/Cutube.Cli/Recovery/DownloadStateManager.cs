@@ -1,5 +1,4 @@
-using Cutube.Logging;
-using cutube;
+using Cutube.Cli.Logging;
 using System.Text.Json;
 
 namespace Cutube.Cli.Recovery;

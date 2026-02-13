@@ -1,8 +1,7 @@
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
-using Cutube.Logging;
-using cutube;
+using Cutube.Cli.Logging;
 
 namespace Cutube.Cli.Logging;
 

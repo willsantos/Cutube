@@ -1,10 +1,10 @@
 using System.Threading;
 using Cutube.Domain.Models;
 using Cutube.Domain.Services;
-using Cutube.ErrorHandling;
+using Cutube.Cli.ErrorHandling;
 using FluentResults;
-using CliResult = Cutube.ErrorHandling.Result;
-using CliResultT = Cutube.ErrorHandling.Result<string>;
+using CliResult = Cutube.Cli.ErrorHandling.Result;
+using CliResultT = Cutube.Cli.ErrorHandling.Result<string>;
 
 namespace Cutube.Cli;
 

@@ -1,4 +1,4 @@
-using Cutube.ErrorHandling;
+using Cutube.Cli.ErrorHandling;
 
 namespace Cutube.Cli.Validation;
 

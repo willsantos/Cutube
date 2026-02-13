@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
-using Cutube.Logging;
-using Cutube.ErrorHandling;
-using Cutube.Recovery;
+using Cutube.Cli.Logging;
+using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Recovery;
 using YtdlDownloadState = YoutubeDLSharp.DownloadState;
 
 namespace Cutube.Cli;
@@ -774,7 +774,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         if (_stateManager == null)
             return null;
 
-        var state = new Cutube.Recovery.DownloadState
+        var state = new Cutube.Cli.Recovery.DownloadState
         {
             Url = input.Url,
             OutputPath = input.OutputPath,

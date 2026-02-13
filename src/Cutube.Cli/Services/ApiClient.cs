@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
-using Cutube.Configuration;
+using Cutube.Cli.Configuration;
 using Cutube.Domain.Models;
 using Cutube.Domain.Services;
-using Cutube.Recovery;
-using Cutube.Logging;
+using Cutube.Cli.Recovery;
+using Cutube.Cli.Logging;
 using FluentResults;
 
 namespace Cutube.Cli.Services;

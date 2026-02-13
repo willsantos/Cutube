@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using Cutube.ErrorHandling;
+using Cutube.Cli.ErrorHandling;
 
 namespace Cutube.Cli;
 

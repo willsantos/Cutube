@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using Cutube.ErrorHandling;
-using cutube.Validation;
+using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Validation;
 
 namespace Cutube.Cli;
 
@@ -49,7 +49,7 @@ public static class Menu
         catch (InvalidOperationException ex)
         {
             console.WriteLine(ex.Message);
-            return Result.Failure(Cutube.ErrorHandling.ErrorType.Validation, ex.Message, ex);
+            return Result.Failure(Cutube.Cli.ErrorHandling.ErrorType.Validation, ex.Message, ex);
         }
     }
 

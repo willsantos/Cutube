@@ -1,7 +1,7 @@
 using System.Threading;
 using YoutubeDLSharp;
-using Cutube.Logging;
-using Cutube.ErrorHandling;
+using Cutube.Cli.Logging;
+using Cutube.Cli.ErrorHandling;
 
 namespace Cutube.Cli;
 

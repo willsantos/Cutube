@@ -1,14 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
-using Cutube.Configuration;
+using Cutube.Cli.Configuration;
 using Cutube.Domain.Interfaces;
 using Cutube.Domain.Models;
 using Cutube.Domain.Services;
-using Cutube.Infrastructure;
-using Cutube.Logging;
-using Cutube.ErrorHandling;
-using Cutube.Recovery;
-using Cutube.Services;
+using Cutube.Cli.Infrastructure;
+using Cutube.Cli.Logging;
+using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Recovery;
+using Cutube.Cli.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cutube.Cli;
