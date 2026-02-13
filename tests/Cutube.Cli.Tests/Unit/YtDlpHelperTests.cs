@@ -3,7 +3,7 @@ using Moq;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 using Xunit;
-using cutube;
+using Cutube.Cli;
 using System.Diagnostics;
 
 namespace Cutube.Tests.Unit;

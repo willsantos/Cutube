@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Moq;
-using cutube;
+using Cutube.Cli;
 using Cutube.Tests.Helpers;
 using Xunit;
 

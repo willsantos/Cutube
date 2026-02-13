@@ -3,7 +3,7 @@ using Moq;
 using Xunit;
 using cutube.Validation;
 using Cutube.ErrorHandling;
-using cutube;
+using Cutube.Cli;
 
 namespace Cutube.Tests.Unit.Validation;
 

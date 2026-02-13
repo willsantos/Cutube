@@ -2,7 +2,7 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 using Cutube.Logging;
-using cutube;
+using Cutube.Cli;
 using System.IO;
 
 namespace Cutube.Tests.Unit.Logging;

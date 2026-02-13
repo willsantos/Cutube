@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using cutube;
+using Cutube.Cli;
 
 namespace Cutube.Tests.Helpers;
 

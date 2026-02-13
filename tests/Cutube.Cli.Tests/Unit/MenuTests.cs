@@ -4,7 +4,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Moq;
 using Cutube.ErrorHandling;
-using cutube;
+using Cutube.Cli;
 
 namespace Cutube.Tests.Unit;
 

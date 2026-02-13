@@ -1,4 +1,4 @@
-using cutube;
+using Cutube.Cli;
 using ITimer = cutube.ITimer;
 
 namespace Cutube.Tests.Helpers;

@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Moq;
 using Xunit;
-using cutube;
+using Cutube.Cli;
 
 namespace Cutube.Tests.Unit;
 

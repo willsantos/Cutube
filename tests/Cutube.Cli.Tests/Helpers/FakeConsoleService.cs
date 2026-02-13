@@ -1,5 +1,5 @@
 using System.Text;
-using cutube;
+using Cutube.Cli;
 
 namespace Cutube.Tests.Helpers;
 
