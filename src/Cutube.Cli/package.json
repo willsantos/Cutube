@@ -1,0 +1,10 @@
+{
+  "name": "Cutube.Cli",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotnet watch --project Cutube.Cli.csproj",
+    "build": "dotnet build Cutube.Cli.csproj",
+    "test": "dotnet test ../../tests/Cutube.Cli.Tests/Cutube.Cli.Tests.csproj"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Cutube.Api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotnet watch --project Cutube.Api.csproj",
+    "build": "dotnet build Cutube.Api.csproj",
+    "test": "dotnet test ../../tests/Cutube.Api.Tests/Cutube.Api.Tests.csproj"
+  }
+}
