@@ -9,8 +9,21 @@ COPY src/Cutube.Web/package*.json ./
 # Install dependencies
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
-# Copy source
-COPY src/Cutube.Web/ ./
+# Copy source (excluding node_modules via .dockerignore in build context)
+COPY src/Cutube.Web/app ./app
+COPY src/Cutube.Web/components ./components
+COPY src/Cutube.Web/hooks ./hooks
+COPY src/Cutube.Web/lib ./lib
+COPY src/Cutube.Web/types ./types
+COPY src/Cutube.Web/public ./public
+COPY src/Cutube.Web/next.config.ts ./
+COPY src/Cutube.Web/next-env.d.ts ./
+COPY src/Cutube.Web/tsconfig.json ./
+COPY src/Cutube.Web/components.json ./
+COPY src/Cutube.Web/.prettierrc.json ./
+COPY src/Cutube.Web/eslint.config.mjs ./
+COPY src/Cutube.Web/postcss.config.mjs ./
+COPY src/Cutube.Web/tailwind.config.ts ./
 
 # Build
 ARG API_INTERNAL_URL
