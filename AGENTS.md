@@ -1,311 +1,146 @@
-# Agent Instructions
+# Agentes (IA) - Diretrizes para Especificação
 
-This project uses **bd** (beads) for **task tracking**. Run `bd onboard` to get started.
+## ⚠️ CRÍTICO: .specs NÃO deve ser commitado
 
-## Quick Reference
+**Status:** `.specs/` está listado no `.gitignore` (linha 494)
 
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
-```
+**Motivo:** 
+- Arquivos `.specs/` são **documentação de planejamento e análise**
+- Devem ser usados para **tomada de decisão** e **contexto**
+- **NÃO** são código ou documentação oficial do projeto
+- Mantém o repositório limpo focado em implementação
 
-## Task Sync Workflow
+## 📁 O que é .specs/
 
-This project uses dedicated branch `beads-sync` to synchronize task state from bd (beads) with git.
+- **Especificações funcionais**: `.specs/features/` - specs, design, tasks de features
+- **Documentação técnica**: `.specs/codebase/` - arquitetura, convenções, stack
+- **Documentação de projeto**: `.specs/project/` - roadmap, estado do projeto
 
-### Task vs Issue Tracking
+## 🚫 O que AGENTES NÃO devem fazer
 
-**⚠️ IMPORTANT DISTINCTION:**
+❌ **NÃO** criar tarefas para adicionar .specs ao git
+❌ **NÃO** commitar arquivos .specs/ (eles estão no .gitignore por motivo)
+❌ **NÃO** mover documentação oficial para .specs/ (use docs/ ou README.md)
 
-- **TASKS (bd/Beads):** Development tasks and features
-  - Tracked locally in `.beads/issues.jsonl`
-  - Managed via `bd` CLI commands
-  - Auto-synced with git
-  - Format: `Cutube-XXX` (e.g., Cutube-1yx)
+## ✅ O que AGENTES devem fazer
 
-- **ISSUES (Linear):** User-reported bugs and problems
-  - Tracked in Linear workspace "Oroborus"
-  - Managed via Linear API/MCP
-  - Associated with "Cutube" project
-  - Format: `ORO-XXX` (e.g., ORO-5, ORO-6)
+✅ **USAR** .specs/ como contexto para entender decisões e arquitetura
+✅ **LER** specs ao planejar features (entender requisitos, design, trade-offs)
+✅ **CRIAR** specs ao planejar features grandes (seguir template .oroborus-docs)
+✅ **ATUALIZAR** specs quando decisões técnicas mudam (via ADR)
+✅ **DOCUMENTAR** código em docs/ ou README.md (não em .specs/)
 
-**Workflow:**
-- Use BEADS for planned development work
-- Create Linear issues only when user explicitly requests
-- DO NOT automatically create Linear issues for minor bugs found during development
+## 📋 Quando criar .specs/
 
-**Beads Task Details:**
-- Created via `bd ready`, `bd create`
-- Have IDs like Cutube-abc, Cutube-123
-- Status: open, in_progress, closed
+Use `.oroborus-docs` skill para criar:
+- **PRD** (Product Requirements Document) - requisitos de feature
+- **SDD** (Software Design Document) - arquitetura e design técnico
+- **ADR** (Architecture Decision Record) - decisões técnicas
+- **EPIC** - quebras de épico em tarefas
+- **Status** - relatórios de progresso
 
-**Linear Issue Details:**
-- User-reported bugs or problems
-- **DO NOT** automatically create task
-- Evaluate if it needs to become a bd task
-- Document in code comments if obvious
-- Create task manually only if: user asks OR it's future work
+**Template:** Veja `.opencode/skills/oroborus-docs/`
 
-### Beads Sync Branch
+## 🎯 Diretrizes por Tipo de Documento
 
-**Dedicated branch:** `beads-sync`
-- Contains only task metadata (`.beads/`)
-- **NOT** project code
-- Auto-sync when switching branches (hook `post-checkout`)
+### PRD (Product Requirements)
+- **Onde:** `.specs/features/{nome}/spec.md`
+- **Quando:** Planejar nova feature ou epic
+- **Conteúdo:** Requisitos funcionais, critérios de aceitação, user stories
 
-### Sync Commands
+### SDD (Software Design)
+- **Onde:** `.specs/features/{nome}/design.md`
+- **Quando:** Feature requer decisões arquiteturais significativas
+- **Conteúdo:** Arquitetura, padrões, trade-offs, diagramas
 
-```bash
-# After modifying tasks (close, update, create)
-bd sync                                             # Auto-commit in beads-sync
-git push origin beads-sync                          # Push sync
+### ADR (Architecture Decision)
+- **Onde:** `.specs/codebase/decisions/` ou `.specs/features/{nome}/decisions.md`
+- **Quando:** Mudança em decisão técnica existente
+- **Conteúdo:** Contexto, decisão, consequências, alternativas
 
-# When switching branches (automatic via hook)
-git checkout feature/xyz                            # Hook runs: bd sync --import
-```
+### EPIC
+- **Onde:** `.specs/features/{epic}/epic.md`
+- **Quando:** Quebrar epic em tarefas
+- **Conteúdo:** Visão geral, dependências, riscos, milestones
 
-### Hook post-checkout
+## 🔍 Integração com Beads (bd)
 
-**Location:** `.githooks/post-checkout` and `.git/hooks/post-checkout`
+**Planejamento:**
+1. Criar spec/design em `.specs/features/{nome}/`
+2. Criar tarefa no Beads: `bd create`
+3. Vincular spec à tarefa: campo "Spec" da tarefa
+4. Implementar seguindo spec
 
-**Functionality:**
-```bash
-#!/bin/bash
-# Auto-import beads state when switching branches
-if [ "$3" -eq 1 ]; then
-    bd sync --import 2>/dev/null || true
-fi
-```
+**Decisões em código:**
+1. Criar ADR para decisão técnica
+2. Atualizar código
+3. Documentar consequências no ADR
 
-**When it runs:**
-- On branch checkout
-- **NOT** on file checkout
-- Imports task state for current branch
-
-### Correct Workflow
-
-1. **Modify tasks:**
-   ```bash
-   bd close Cutube-abc                              # Close task
-   bd update Cutube-xyz --status in_progress        # Update status
-   ```
-
-2. **Sync with git:**
-   ```bash
-   bd sync                                          # Commit in beads-sync
-   git push origin beads-sync                       # Push
-   ```
-
-3. **Switch branches:**
-   ```bash
-   git checkout feature/nova-feature               # Hook auto-imports
-   ```
-
-### Configuration
-
-**Check config:**
-```bash
-bd config get sync.branch                           # Should be "beads-sync"
-```
-
-**If not configured:**
-```bash
-bd config set sync.branch beads-sync
-# Edit .beads/config.yaml, uncomment sync-branch
-```
-
-### Best Practices
-
-✅ **Always run `bd sync` after modifying tasks**
-✅ **Push beads-sync after closing/updating tasks**
-✅ **Do NOT create task branches (ex: chore/close-xyz)**
-✅ **Use only beads-sync for task metadata**
-✅ **Documentation and code go in normal branches**
-
-❌ **Do NOT commit `.beads/` in feature branches**
-❌ **Do NOT force push to beads-sync**
-❌ **Do NOT manually modify `.beads/`**
-
-## Linear Issue Management
-
-**⚠️ IMPORTANT:** Issues are tracked in **Linear**, NOT in bd (beads).
-
-### Creating Issues
-
-**Issues should ONLY be created when the user explicitly requests it.**
-
-Do NOT automatically create issues for:
-- Minor bugs found during development
-- Edge cases discovered during testing
-- Nice-to-have improvements
-- Documentation updates
-
-ONLY create issues when:
-- User explicitly asks: "create an issue for this"
-- User asks to track a non-impediment bug/improvement
-- User requests work to be deferred/saved for later
-
-### Linear Issue Guidelines
-
-When creating issues in Linear for this project:
-
-1. **ALWAYS associate with the "Cutube" project**
-   - Use `project: "Cutube"` parameter
-   - The Cutube project already exists in Linear workspace "Oroborus"
-   - Project ID: `90c0cdae-e411-4fcd-80ce-eef703622671`
-   - **⚠️ MANDATORY:** ALL Linear issues for this project MUST be associated with the Cutube project
-
-2. **Team Assignment:**
-   - Use team ID: `2e51306a-fedf-4c10-8f46-f65c808dff79` (Oroborus team)
-   - Or use `team: "Oroborus"` parameter
-
-3. **Issue structure:**
-   - Clear, descriptive title
-   - Detailed problem description
-   - Proposed solution options (when applicable)
-   - Impact analysis
-   - Estimated effort
-
-4. **Labels:**
-   - Use appropriate labels (Bug, Feature, Improvement)
-   - Set appropriate priority
-
-Example:
-```
-linear_create_issue
-  title="Clear title"
-  description="Detailed description..."
-  project="Cutube"
-  team="2e51306a-fedf-4c10-8f46-f65c808dff79"
-  priority=3
-  labels=["Improvement"]
-```
-
-## Branch Strategy
-
-This project uses **one branch per feature** with Conventional Commits.
-
-### Workflow
-
-1. **Create feature branch:**
-   ```bash
-   git checkout -b feature/<name>
-   ```
-
-2. **Implement feature:**
-   - Write code
-   - Write tests
-   - Run tests: `dotnet test` ⚠️ **ALL tests MUST pass**
-   - Run build: `dotnet build` ⚠️ **NO warnings allowed**
-
-3. **Commit with conventional commit:**
-   ```bash
-   git add .
-   git commit -m "feat: description"
-   ```
-
-4. **Push and create PR:**
-   ```bash
-   git push origin feature/<name>
-   # Create PR on GitHub
-   ```
-
-5. **Merge and cleanup:**
-   ```bash
-   git checkout main
-   git pull
-   git branch -d feature/<name>
-   ```
-
-### Commit Types
-
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `refactor:` - Code refactoring
-- `test:` - Tests
-- `docs:` - Documentation
-- `chore:` - Build/deps
-
-### Examples
+## 📌 Exemplo de Fluxo Correto
 
 ```bash
-feat: add flexible time input parsing (1h30m, 90s, etc)
-feat: add custom filename option
-feat: add audio-only download with MP3 support
-feat: add CTRL+C cancellation support
-feat: add input validations
-docs: update README with new features
-test: add unit tests for TimeHelper
-```
+# 1. Planejar feature (opcional: usar skill oroborus-docs)
+mkdir .specs/features/nova-feature
+# Criar spec.md, design.md
 
-## Quality Gates (Mandatory)
+# 2. Criar tarefa no Beads
+bd create "Implement nova feature"
 
-**Before marking a task as complete, ALL quality gates MUST pass:**
+# 3. Implementar
+git checkout -b feat/nova-feature
+# ... código ...
 
-1. **Tests pass:** `dotnet test` ⚠️ **100% of tests MUST pass**
-   - No failing tests allowed
-   - No skipped tests without justification
-   - Run before every commit
+# 4. Commitar código (NÃO os .specs)
+git add src/ tests/
+git commit -m "feat: implement nova feature"
 
-2. **Build succeeds:** `dotnet build` ⚠️ **NO warnings allowed**
-   - Zero compiler warnings
-   - Zero build errors
-   - Clean build output
-
-3. **Code review:**
-   - Code follows project conventions
-   - Tests cover new functionality
-   - No hardcoded values or magic numbers
-
-**⚠️ CRITICAL: A task is ONLY complete when:**
-- All tests pass: `dotnet test` ✓
-- Build succeeds with no warnings: `dotnet build` ✓
-- Code committed with conventional commit ✓
-- Changes pushed to remote: `git push` ✓
-
-### Quality Gate Examples
-
-```bash
-# ❌ WRONG - Don't close issue without running tests
-bd close Cutube-gcb
-
-# ✅ CORRECT - Run quality gates first
-dotnet test                    # ALL tests must pass
-dotnet build                   # NO warnings allowed
-git add .
-git commit -m "feat: add flexible time parsing"
+# 5. Push e PR
 git push
-bd close Cutube-gcb            # NOW you can close
+gh pr create
 ```
 
-## Landing the Plane (Session Completion)
+## ⚠️ Erros Comuns a Evitar
 
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+### ❌ Errado: Commitar .specs
+```bash
+git add .specs/  # ERRADO - está no .gitignore
+```
 
-**MANDATORY WORKFLOW:**
+### ✅ Correto: Usar .specs como contexto
+```bash
+# Ler .specs/features/nova-feature/spec.md para entender requisitos
+# Implementar seguindo spec
+# Commitar apenas código
+```
 
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds ⚠️ **REQUIRED**
-   - `dotnet test` - ALL tests MUST pass (100%)
-   - `dotnet build` - NO warnings allowed
-3. **Update issue status** - Close finished work, update in-progress items ⚠️ **ONLY after tests pass**
-4. **PUSH TO REMOTE** - This is MANDATORY:
-   ```bash
-   git pull --rebase
-   bd sync
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
+### ❌ Errado: Criar tarefa para "adicionar .specs ao git"
+```bash
+bd create "Add .specs to git"  # NÃO FAZER
+```
 
-**CRITICAL RULES:**
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
+### ✅ Correto: Criar tarefa para feature
+```bash
+bd create "Implement user authentication"  # Spec está em .specs/features/auth/
+```
 
+## 📚 Recursos Adicionais
+
+- **Skill oroborus-docs:** Criar specs seguindo template padrão
+- **Beads:** Gerenciar tarefas e vincular a specs
+- **Git:** Versionar código e documentação oficial (README.md, docs/)
+- **.specs:** Contexto e planejamento (não versionado)
+
+## 🎓 Resumo para Agentes
+
+| Pergunta | Resposta |
+|-----------|----------|
+| Devo commitar .specs/? | **NÃO** - está no .gitignore |
+| Onde criar specs? | `.specs/features/{nome}/` |
+| Onde documentar código? | `README.md`, `docs/`, comentários |
+| Quando usar .specs? | Planejamento, decisões, contexto |
+| Quando versionar docs? | Documentação oficial (guias, manuais) |
+
+---
+
+**Última atualização:** 2025-02-13
+**Propósito:** Evitar que agentes commitem .specs/ acidentalmente
