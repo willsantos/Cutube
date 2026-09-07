@@ -51,7 +51,7 @@ pode mudar livremente sem quebrar a CLI).
 | D1 | Tecnologia do app desktop                                    | **Tauri** (WebView nativo, binário ~5-15MB, reaproveita UI React do web) | ✅ decided (2026-09-07) |
 | D2 | Arquitetura do motor                                         | **Híbrido**: motor como library C# embutida na CLI (standalone) e hospedável localmente no desktop (modo standalone) + **Engine Server** headless servindo web e desktop em modo fila | ✅ decided (2026-09-07) |
 | D3 | Destino da `develop` do Cutube após o PR para `main`         | **Reset como ÚLTIMO estágio da migração**: só quando tudo estiver movido e validado no Orotube (Track C) | ✅ decided (2026-09-07) |
-| D4 | Estratégia de criação do repo Orotube                        | **Repo novo** com o histórico do `develop` atual pushado (sem vínculo de fork GitHub) | ✅ decided (2026-09-07) |
+| D4 | Estratégia de criação do repo Orotube                        | **Repo novo no Azure DevOps**, remote `git@ssh.dev.azure.com:v3/oroborus/oroborus-auto/orotube`, com o histórico do `develop` atual pushado (sem vínculo de fork) | ✅ decided (2026-09-07) |
 | D5 | Namespaces `Cutube.*` → `Orotube.*` no novo repo             | **Sim**, em feature dedicada (migração mecânica ampla)                  | ⚠️ open (default provisório) |
 | D6 | Turborepo/pnpm no Cutube CLI-only                            | **Remover**: repo volta a ser solução .NET simples (sem workspace Node) | ⚠️ open (default provisório) |
 | D7 | CLI do Orotube                                               | **Embute o motor como library** (paridade standalone com Cutube CLI); fila/servidor ficam para web/desktop | ✅ decided (2026-09-07) |
@@ -141,12 +141,15 @@ Server) e CLI — todo o sistema distribuído atual funcionando lá.
 
 **Features**:
 
-- **B1 `orotube/repo-bootstrap`** (P1): criar repo novo `Orotube`, pushar o
-  histórico do `develop` atual, renomear solução (`cutube.sln` →
+- **B1 `orotube/repo-bootstrap`** (P1): criar/validar o repo no Azure DevOps
+  (`git@ssh.dev.azure.com:v3/oroborus/oroborus-auto/orotube`, acesso SSH
+  configurado — validar com `git ls-remote` antes do push), pushar o
+  histórico do `develop` atual, definir `develop` como branch default
+  (consistente com o fluxo de PRs atual), renomear solução (`cutube.sln` →
   `Orotube.sln`) e identidade do repo (README provisório apontando para esta
   spec)
 - **B2 `orotube/nx-monorepo`** (P1): Nx + pnpm, layout `apps/` + `libs/`,
-  integrar os projetos .NET (D8), CI skeleton
+  integrar os projetos .NET (D8), skeleton de CI (Azure Pipelines)
 - **B3 `orotube/engine-library`** (P1): consolidar o **motor** =
   `Core + Domain + Application + Infrastructure` como library única
   (`Orotube.Engine.*`) com namespaces migrados (D5); é a base que CLI, Engine
@@ -170,10 +173,13 @@ Server) e CLI — todo o sistema distribuído atual funcionando lá.
 - **B8 `orotube/cli`** (P2): CLI do Orotube embutindo o motor como library
   (D7), paridade de features com a Cutube CLI
 - **B9 `orotube/infra-cicd`** (P1): docker-compose (rabbitmq, engine-server,
-  worker, web), scripts de dev, GitHub Actions (build/test/release)
+  worker, web), scripts de dev, **Azure Pipelines** (build/test/release —
+  CI/CD do Azure DevOps, não GitHub Actions)
 - **B10 `orotube/docs-handoff`** (P1): README de arquitetura do monorepo,
-  setup local, handoff; README do Cutube ganha ponteiro para Orotube (sistema
-  distribuído mudou de casa)
+  setup local, handoff; **AGENTS.md próprio adaptado ao Azure DevOps**
+  (Azure Pipelines em vez de GitHub Actions, fluxo de PR do Azure Repos);
+  README do Cutube ganha ponteiro para Orotube (sistema distribuído mudou
+  de casa)
 
 **Acceptance Criteria**:
 1. WHEN `git log` no Orotube THEN o histórico do `develop` do Cutube SHALL
@@ -239,6 +245,9 @@ depois** de o Orotube estar completo e validado — o reset da `develop` é a
 - WHEN os dois repos rodam compose simultaneamente na mesma máquina THEN
   portas/nomes de container do Orotube SHALL ser distintos dos atuais do
   Cutube
+- WHEN push inicial do histórico para `ssh.dev.azure.com` THEN a chave SSH
+  SHALL estar configurada e validada antes (`git ls-remote` retorna as refs
+  do repo `v3/oroborus/oroborus-auto/orotube`)
 - WHEN desktop standalone THEN nada SHALL exigir docker/RabbitMQ/Engine
   Server rodando (zero dependências externas além do próprio app)
 - WHEN troca de modo no desktop (standalone ↔ fila) com download em
