@@ -208,6 +208,11 @@ public static class Program
                 Environment.Exit(1);
             }
         }
+        catch (FileNotFoundException ex)
+        {
+            Console.WriteLine($"\n❌ {ex.Message}");
+            Environment.Exit(1);
+        }
         catch (OperationCanceledException)
         {
             Console.WriteLine("\n✓ Operação cancelada com sucesso.");
