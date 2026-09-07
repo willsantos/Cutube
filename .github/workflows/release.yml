@@ -45,6 +45,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Publish CLI
+        shell: bash
         run: |
           dotnet publish ./src/Cutube.Cli/cutube.csproj \
             -c Release \
