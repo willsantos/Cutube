@@ -82,7 +82,11 @@ public class ProgressBar : IDisposable, IProgress<int>
         Interlocked.Exchange(ref _currentProgress, value);
         if (!_consoleService.IsOutputRedirected)
         {
-            ResetTimer();
+            lock (_sync)
+            {
+                if (_disposed) return;
+                ResetTimer();
+            }
         }
     }
     

@@ -495,3 +495,6 @@ downloads
 
 # Environment
 .env*.local
+
+# IDE
+.idea/

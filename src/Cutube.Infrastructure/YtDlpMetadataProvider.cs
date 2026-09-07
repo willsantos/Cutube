@@ -49,12 +49,17 @@ public class YtDlpMetadataProvider : IVideoMetadataProvider
         if (process == null)
             throw new InvalidOperationException("Failed to start yt-dlp process");
 
-        var output = await process.StandardOutput.ReadToEndAsync(ct);
+        // Read stdout and stderr concurrently so a full stderr pipe buffer
+        // can't deadlock the process before exit
+        var outputTask = process.StandardOutput.ReadToEndAsync(ct);
+        var errorTask = process.StandardError.ReadToEndAsync(ct);
         await process.WaitForExitAsync(ct);
+
+        var output = await outputTask;
+        var error = await errorTask;
 
         if (process.ExitCode != 0)
         {
-            var error = await process.StandardError.ReadToEndAsync(ct);
             throw new InvalidOperationException($"yt-dlp falhou (exit code {process.ExitCode}): {error}");
         }
 

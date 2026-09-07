@@ -37,16 +37,15 @@ public class FileSystem : IFileSystem
     }
 
     /// <inheritdoc/>
-    public Task WriteAllBytesAsync(string path, byte[] data)
+    public async Task WriteAllBytesAsync(string path, byte[] data)
     {
         try
         {
-            File.WriteAllBytes(path, data);
-            return Task.CompletedTask;
+            await File.WriteAllBytesAsync(path, data);
         }
-        catch
+        catch (Exception ex)
         {
-            return Task.FromException(new IOException($"Failed to write to {path}"));
+            throw new IOException($"Failed to write to {path}", ex);
         }
     }
 

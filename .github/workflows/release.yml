@@ -46,7 +46,7 @@ jobs:
 
       - name: Publish CLI
         run: |
-          dotnet publish ./cutube/cutube.csproj \
+          dotnet publish ./src/Cutube.Cli/cutube.csproj \
             -c Release \
             -r ${{ matrix.target }} \
             --self-contained true \

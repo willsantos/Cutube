@@ -37,8 +37,10 @@ public static class YtDlpPathResolver
 
         // 3. System PATH
         var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
-        var systemPath = pathEnv.Split(Path.PathSeparator)
-            .Select(folder => Path.Combine(folder, exeName))
+        var systemPath = pathEnv
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(folder => folder.Length > 0)
+            .Select(folder => Path.Combine(folder.Trim('"'), exeName))
             .FirstOrDefault(File.Exists);
 
         if (systemPath != null)

@@ -95,7 +95,7 @@ public class DownloadService : IVideoDownloader
             {
                 InputPath = actualDownloadedFile,
                 OutputPath = request.OutputPath,
-                TimeRange = request.TimeRange!,
+                TimeRange = request.TimeRange,
                 AudioOnly = request.AudioOnly
             };
 

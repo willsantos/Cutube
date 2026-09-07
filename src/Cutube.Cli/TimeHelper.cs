@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Cutube.Cli;
@@ -9,7 +10,7 @@ public class TimeHelper
         if (string.IsNullOrWhiteSpace(input))
             throw new ArgumentException("Tempo não pode ser vazio");
 
-        input = input.Trim().ToLower();
+        input = input.Trim().ToLowerInvariant();
 
         if (TryParseCompactNotation(input, out var seconds))
             return seconds;
@@ -17,7 +18,7 @@ public class TimeHelper
         if (TryParseColonFormat(input, out seconds))
             return seconds;
 
-        if (double.TryParse(input, out var totalSeconds))
+        if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out var totalSeconds))
             return (int)totalSeconds;
 
         throw new FormatException($"Formato de tempo não reconhecido: {input}");

@@ -16,9 +16,9 @@ public record ProcessingRequest
     public required string OutputPath { get; init; }
 
     /// <summary>
-    /// Time range to extract
+    /// Time range to extract (null processes the full media, e.g. audio-only conversion)
     /// </summary>
-    public required TimeRange TimeRange { get; init; }
+    public TimeRange? TimeRange { get; init; }
 
     /// <summary>
     /// Whether to extract audio only

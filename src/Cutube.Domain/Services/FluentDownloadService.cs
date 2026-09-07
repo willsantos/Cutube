@@ -106,7 +106,7 @@ public class FluentDownloadService : IDownloadService
             {
                 InputPath = actualDownloadedFile,
                 OutputPath = request.OutputPath,
-                TimeRange = request.TimeRange!, // Non-null because we checked earlier
+                TimeRange = request.TimeRange,
                 AudioOnly = request.AudioOnly
             };
 

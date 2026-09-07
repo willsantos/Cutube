@@ -20,6 +20,13 @@
 - Updated code to use yt-dlp for video downloads
 
 ### Fixed
+- Release workflow now publishes `src/Cutube.Cli/cutube.csproj` (old pre-monorepo path)
+- `ProcessingRequest.TimeRange` is now nullable — audio-only downloads without a time range no longer rely on `null!` suppression
+- Locale-dependent time parsing (`TimeHelper`) now uses `InvariantCulture`
+- Potential yt-dlp deadlock: stdout/stderr are now read concurrently
+- PATH resolution ignores empty entries (no accidental relative execution from CWD)
+- `FileSystem.WriteAllBytesAsync` no longer performs synchronous I/O; exceptions wrapped with path context
+- `ProgressBar.Report` no longer races with `Dispose` (timer access guarded)
 - Resolved 403 Forbidden errors caused by YouTube PO token requirement (Jan 2026)
 - Improved resilience against YouTube API changes
 
