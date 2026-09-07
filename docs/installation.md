@@ -60,6 +60,65 @@ python3 -m pip install -U yt-dlp
 winget install yt-dlp.yt-dlp Gyan.FFmpeg
 ```
 
+## Atualizacao
+
+### Automatica (padrao)
+
+A CLI verifica no maximo 1x por dia se existe versao nova
+(`releases/latest` no GitHub, timeout de 3s). Se houver e a sessao for
+interativa, ela pergunta:
+
+```
+Nova versao disponivel: v1.3.0 (atual: 1.2.1)
+Deseja atualizar agora? [S/n]:
+```
+
+- Enter ou `s`: baixa o binario da sua plataforma, substitui o executavel e
+  **reinicia o comando pedido na versao nova** (exit code propagado).
+- `n` ou qualquer outra resposta: o comando executa normalmente na versao atual.
+- Sem rede, timeout ou erro de permissao: a CLI apenas avisa e continua na
+  versao atual (com o comando manual abaixo como sugestao).
+
+Em scripts/CI (stdin redirecionado) a verificacao e pulada silenciosamente;
+o comando explicito `cutube update` nesse contexto atualiza sem perguntar.
+
+### Forcada
+
+```bash
+cutube update        # ignora o cache diario e verifica na hora
+```
+
+### Desativando a verificacao automatica
+
+No arquivo de configuracao (`cutube config show` mostra o caminho):
+
+```json
+{ "checkForUpdates": false }
+```
+
+Configs antigas sem esse campo ficam com o padrao `true`.
+
+### Manual
+
+Re-execute o instalador da sua plataforma (sempre instala a latest release
+e sobrescreve o binario):
+
+```bash
+# Linux e macOS
+curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash
+```
+
+```powershell
+# Windows (PowerShell)
+iwr -useb https://willsantos.github.io/Cutube/install.ps1 | iex
+```
+
+Ou baixe o asset da sua plataforma em
+https://github.com/willsantos/Cutube/releases e substitua o binario.
+
+Nota: no Windows, ao atualizar em execucao o binario anterior fica como
+`cutube.exe.old` ao lado do novo e e removido na proxima inicializacao.
+
 ## Verificacao
 
 ```bash

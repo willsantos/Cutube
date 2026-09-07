@@ -34,4 +34,11 @@ public class AppConfig
     /// </summary>
     [JsonPropertyName("verboseLogging")]
     public bool VerboseLogging { get; set; } = false;
+
+    /// <summary>
+    /// Enables the daily automatic update check on startup
+    /// Default: true
+    /// </summary>
+    [JsonPropertyName("checkForUpdates")]
+    public bool CheckForUpdates { get; set; } = true;
 }

@@ -136,6 +136,21 @@ Para instalacao automatica em Linux/macOS/Windows, use os scripts em `scripts/in
 - Pagina de instalacao: `https://willsantos.github.io/Cutube/`
 - Guia completo: `docs/installation.md`
 
+## Atualizacao do CLI
+
+O Cutube verifica sozinho (no maximo 1x por dia) se existe versao nova no
+GitHub. Em contexto interativo ele pergunta antes de atualizar; confirmado, o
+binario e substituido e **o comando pedido continua na versao nova**.
+
+```bash
+cutube update      # forcar verificacao/atualizacao na hora
+```
+
+- Para desativar a verificacao automatica: `checkForUpdates: false` no config
+  (`cutube config show` mostra a flag).
+- Atualizacao manual: re-execute o script de instalacao (veja
+  [docs/installation.md](docs/installation.md#atualizacao)).
+
 ## Cutube é uma CLI
 
 O Cutube é **apenas uma CLI standalone**: baixa, corta e converte vídeos
