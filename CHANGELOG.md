@@ -3,9 +3,9 @@
 ## [Unreleased]
 
 ### Changed
-- **Cutube is a standalone CLI again** — the distributed system (REST API,
-  Next.js web app, RabbitMQ worker, Docker setup) moved to the **Orotube**
-  repository (Azure DevOps: `oroborus/oroborus-auto/orotube`)
+- **Cutube is a standalone CLI again** — removed the distributed system
+  (REST API, Next.js web app, RabbitMQ worker, Docker setup) and the
+  remote API mode from the CLI
 - Removed `Cutube.Api`, `Cutube.Web`, `Cutube.Worker` and `Cutube.Contracts`
   projects and their test suites
 - Removed the CLI remote API mode (`--api-url`/`--local` flags, `ApiClient`);
