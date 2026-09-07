@@ -44,19 +44,21 @@ pode mudar livremente sem quebrar a CLI).
 
 | #  | Decisão                                                      | Escolha                                                                 | Status              |
 |----|--------------------------------------------------------------|-------------------------------------------------------------------------|---------------------|
-| D1 | Tecnologia do app desktop                                    | **Tauri** (WebView nativo, binário ~5-15MB, reaproveita UI React do web) | ⚠️ open (default provisório; alternativa: Avalonia) |
-| D2 | Arquitetura do motor                                         | **Híbrido**: motor como library C# embutida na CLI (standalone) + **Engine Server** headless servindo web e desktop | ⚠️ open (default provisório) |
-| D3 | Destino da `develop` do Cutube após o PR para `main`         | **Reset**: `develop` passa a espelhar a `main` CLI-only                  | ⚠️ open (default provisório) |
-| D4 | Estratégia de criação do repo Orotube                        | **Repo novo** com o histórico do `develop` atual pushado (sem vínculo de fork GitHub) | ⚠️ open (default provisório; user disse "fork" — confirmar) |
+| D1 | Tecnologia do app desktop                                    | **Tauri** (WebView nativo, binário ~5-15MB, reaproveita UI React do web) | ✅ decided (2026-09-07) |
+| D2 | Arquitetura do motor                                         | **Híbrido**: motor como library C# embutida na CLI (standalone) + **Engine Server** headless servindo web e desktop | ✅ decided (2026-09-07) |
+| D3 | Destino da `develop` do Cutube após o PR para `main`         | **Reset como ÚLTIMO estágio da migração**: só quando tudo estiver movido e validado no Orotube (Track C) | ✅ decided (2026-09-07) |
+| D4 | Estratégia de criação do repo Orotube                        | **Repo novo** com o histórico do `develop` atual pushado (sem vínculo de fork GitHub) | ✅ decided (2026-09-07) |
 | D5 | Namespaces `Cutube.*` → `Orotube.*` no novo repo             | **Sim**, em feature dedicada (migração mecânica ampla)                  | ⚠️ open (default provisório) |
 | D6 | Turborepo/pnpm no Cutube CLI-only                            | **Remover**: repo volta a ser solução .NET simples (sem workspace Node) | ⚠️ open (default provisório) |
-| D7 | CLI do Orotube                                               | **Embute o motor como library** (paridade standalone com Cutube CLI); modo cliente do Engine Server fica para depois | ⚠️ open (default provisório) |
+| D7 | CLI do Orotube                                               | **Embute o motor como library** (paridade standalone com Cutube CLI); fila/servidor ficam para web/desktop | ✅ decided (2026-09-07) |
 | D8 | Integração Nx ↔ .NET                                         | Preferir `@nx-dotnet/core`; fallback: targets `nx:run-commands`         | open (decidir no Design de B2) |
 | D9 | Versionar `.specs/` no git                                   | **Sim** — remover `.specs/` do `.gitignore` (executa intent da tarefa aberta Cutube-vxo.3) | ⚠️ open (default provisório) |
 
-> ⚠️ Todas as decisões acima foram escolhidas como default recomendado sem
-> confirmação explícita do usuário (perguntas ficaram sem resposta).
-> **Revisar/confirmar cada `open` antes de iniciar o Design das features.**
+> Decisões D1–D4 e D7 confirmadas pelo usuário em 2026-09-07. D3 inclui a
+> diretriz explícita: **o reset do repo atual é o último estágio**, executado
+> apenas quando todo o sistema distribuído já estiver movido e validado no
+> Orotube (Track C). Revisar os `open` restantes (D5, D6, D9) antes do Design
+> das features; D8 decide-se no Design de B2.
 
 ---
 
@@ -104,10 +106,12 @@ suporte, com `develop` resetada para espelhá-la.
   projeto, scripts multi-serviço) — repo volta a ser solução .NET simples
 - **A4 `cutube/docs-ci`**: README/CHANGELOG/roadmap refletem CLI-only; CI
   (`ci.yml`) sem jobs de web/node; install hooks preservados
-- **A5 `cutube/pr-merge-reset`**: PR do branch CLI-only → `main`; após merge,
-  resetar `develop` = `main`, limpar branches remotas obsoletas; fechar tarefas
-  beads abertas `Cutube-vxo.20` (smoke test) e `Cutube-vxo.22` (docs) como
-  obsoletas pela migração, e as já superadas `vxo.1`/`vxo.3`/`vxo.19`
+- **A5 `cutube/pr-merge`**: PR do branch CLI-only → `main`; após merge,
+  fechar tarefas beads abertas `Cutube-vxo.20` (smoke test) e `Cutube-vxo.22`
+  (docs) como obsoletas pela migração, e as já superadas `vxo.1`/`vxo.3`/
+  `vxo.19`; atualizar handoff. ⚠️ A `develop` **não** é resetada aqui — o
+  reset é o estágio final (Track C), com todo o sistema distribuído já
+  movido e validado no Orotube
 
 **Acceptance Criteria**:
 1. WHEN fresh clone do `main` THEN `dotnet run` SHALL iniciar a CLI standalone,
@@ -117,8 +121,9 @@ suporte, com `develop` resetada para espelhá-la.
    `Cutube.Domain.Tests`)
 3. WHEN busca por Api/Web/Worker/RabbitMQ/docker na árvore do repo THEN SHALL
    retornar apenas histórico git/CHANGELOG (nenhum arquivo ativo)
-4. WHEN PR mergeado THEN `develop` SHALL estar resetada para `main` e o
-   `git status` limpo
+4. WHEN PR mergeado THEN `main` SHALL conter exatamente a CLI + libs e a
+   `develop` SHALL permanecer intacta (fonte do sistema distribuído até a
+   Track C concluir)
 
 ---
 
@@ -175,14 +180,42 @@ desktop leve e CLI — todo o sistema distribuído atual funcionando lá.
 
 ---
 
+### Track C — Encerramento: reset do Cutube (último estágio) (P1)
+
+**Goal**: desativar o Cutube como casa do sistema distribuído **somente
+depois** de o Orotube estar completo e validado — o reset da `develop` é a
+última ação da migração (diretriz D3).
+
+**Features**:
+
+- **C1 `cutube/reset-develop`** (última ação da migração): confirmar que todas
+  as features das Tracks A e B estão concluídas e validadas nos dois repos;
+  então resetar `develop` = `main`, limpar branches remotas obsoletas,
+  executar `bd sync` final e atualizar o handoff nos dois repos
+
+**Acceptance Criteria**:
+1. WHEN qualquer feature de A ou B ainda não está validada THEN C1 SHALL NOT
+   ser executada (gate explícito de conclusão)
+2. WHEN C1 executa THEN `develop` SHALL ficar igual a `main` com `git status`
+   limpo e branches obsoletas removidas
+3. WHEN alguém precisa do sistema distribuído após o reset THEN o repo
+  Orotube SHALL ter tudo funcionando (`docker compose up` healthy, fluxo e2e
+   verde) — nada fica acessível apenas via histórico do Cutube
+
+---
+
 ## Ordering Constraints
 
-- **B1 antes de A5**: o histórico do `develop` deve estar pushado no Orotube
-  antes do reset da `develop` no Cutube
-- Dentro da Track A: A1 → A2 → A3 → A4 → A5 (sequencial)
+- **C1 é o último estágio de toda a migração**: depende de TODAS as features
+  de A (A1–A5) e B (B1–B10) concluídas e validadas — o reset da `develop`
+  só acontece com tudo já movido e funcionando no Orotube
+- **B1 antes de qualquer remoção/destruição**: o histórico do `develop` deve
+  estar pushado no Orotube antes mesmo das Tracks avançarem em remoções
+- Dentro da Track A: A1 → A2 → A3 → A4 → A5 (sequencial); A5 só faz merge do
+  PR CLI-only em `main` — não toca na `develop`
 - Dentro da Track B: B1 → B2 → B3; B4, B5, B6, B8 dependem de B3; B7 depende
-  de B4 e B6; B9 depende de B2; B10 por último
-- Entre tracks: A e B podem evoluir em paralelo (exceto B1 → A5)
+  de B4 e B6; B9 depende de B2; B10 por último (dentro da track)
+- Entre tracks: A e B podem evoluir em paralelo; C sempre por último
 
 ## Cross-cutting Edge Cases
 
