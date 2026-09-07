@@ -2,12 +2,14 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
-      - docs/**
+      - docs/index.html
+      - docs/installation.md
       - scripts/install.sh
       - scripts/install.ps1
       - .github/workflows/deploy-pages.yml
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -33,13 +35,14 @@ jobs:
 
       - name: Prepare Pages content
         run: |
-          cp scripts/install.sh docs/install.sh
-          cp scripts/install.ps1 docs/install.ps1
+          mkdir -p site
+          cp docs/index.html docs/installation.md site/
+          cp scripts/install.sh scripts/install.ps1 site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs
+          path: ./site
 
       - name: Deploy to GitHub Pages
         id: deployment
