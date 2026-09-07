@@ -4,6 +4,18 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Tag to build and release (e.g. v1.2.0)'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)build and release (e.g. v1.1.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -12,6 +24,7 @@ jobs:
   release-cli:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -38,6 +51,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -46,6 +61,8 @@ jobs:
 
       - name: Publish CLI
         shell: bash
+        env:
+          VERSION: ${{ inputs.tag || github.ref_name }}
         run: |
           dotnet publish ./src/Cutube.Cli/cutube.csproj \
             -c Release \
@@ -53,6 +70,7 @@ jobs:
             --self-contained true \
             -p:PublishSingleFile=true \
             -p:PublishTrimmed=true \
+            -p:Version="${VERSION#v}" \
             -o ./publish
 
       - name: Package (Unix)
@@ -85,11 +103,12 @@ jobs:
           path: ./artifacts
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: |
             artifacts/**/*.tar.gz
             artifacts/**/*.zip
           generate_release_notes: true
           draft: false
-          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}
+          prerelease: ${{ contains(inputs.tag || github.ref_name, '-rc') || contains(inputs.tag || github.ref_name, '-beta') }}

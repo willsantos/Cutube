@@ -37,7 +37,7 @@ public class ProcessingService : IVideoProcessor
         if (!File.Exists(request.InputPath))
             throw new FileNotFoundException("Arquivo de entrada não encontrado", request.InputPath);
 
-        if (request.TimeRange.StartSeconds >= request.TimeRange.EndSeconds)
+        if (request.TimeRange is { } timeRange && timeRange.StartSeconds >= timeRange.EndSeconds)
             throw new ArgumentException("Time range inválido");
 
         var result = await _processor.ProcessAsync(request, progress, ct);
