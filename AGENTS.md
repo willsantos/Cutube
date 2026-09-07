@@ -68,10 +68,8 @@ linear_create_issue
 This project uses **one branch per feature** with Conventional Commits.
 
 **Primary branch:** `main`. Cutube is a standalone CLI — feature branches are
-created from `main` and PRs target `main`. (Note: the `develop` branch still
-exists only as a temporary historical reference during the Orotube migration
-and will be deleted once the migration completes; do not base new work on it.
-The pre-split distributed history also lives in `legacy/cutube-develop`.)
+created from `main` and PRs target `main`. (The legacy `develop` branch is a
+historical reference only and will be deleted; do not base new work on it.)
 
 ### Workflow
 

@@ -140,9 +140,3 @@ Para instalacao automatica em Linux/macOS/Windows, use os scripts em `scripts/in
 
 O Cutube é **apenas uma CLI standalone**: baixa, corta e converte vídeos
 localmente, sem depender de servidor, fila ou Docker.
-
-A versão distribuída (API REST, interface web, worker com fila RabbitMQ e app
-desktop) migrou para o projeto **Orotube**
-(`git@ssh.dev.azure.com:v3/oroborus/oroborus-auto/orotube`). O histórico
-completo dessa fase fica preservado no histórico do git deste repositório e
-na branch `legacy/cutube-develop` do repo Orotube.
