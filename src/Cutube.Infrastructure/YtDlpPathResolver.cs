@@ -66,13 +66,32 @@ public static class YtDlpPathResolver
         try
         {
             Console.WriteLine("yt-dlp não encontrado. Baixando automaticamente...");
-            DownloadToFileAsync(new HttpClient(), GetDownloadUrl(), targetPath)
+            using var httpClient = new HttpClient();
+            DownloadToFileAsync(httpClient, GetDownloadUrl(), targetPath)
                 .GetAwaiter()
                 .GetResult();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"⚠ Aviso: falha ao baixar yt-dlp automaticamente: {ex.Message}");
+            TryDeletePartialFile(targetPath);
+        }
+    }
+
+    /// <summary>
+    /// Remove um download incompleto para que o próximo Resolve() não o
+    /// aceite como válido (só checa File.Exists)
+    /// </summary>
+    private static void TryDeletePartialFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+            // cleanup best-effort
         }
     }
 
@@ -92,16 +111,11 @@ public static class YtDlpPathResolver
 
         if (!OperatingSystem.IsWindows())
         {
-            var chmod = System.Diagnostics.Process.Start(
-                new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "chmod",
-                    Arguments = $"+x \"{targetPath}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                });
-            if (chmod != null)
-                await chmod.WaitForExitAsync();
+            // 755 (rwxr-xr-x) sem depender de binário chmod externo
+            File.SetUnixFileMode(targetPath,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
         }
     }
 
@@ -131,7 +145,7 @@ public static class YtDlpPathResolver
             {
                 System.Runtime.InteropServices.Architecture.X64 => "_linux",
                 System.Runtime.InteropServices.Architecture.Arm64 => "_linux_aarch64",
-                System.Runtime.InteropServices.Architecture.Armv6 => "_linux_armv7l",
+                System.Runtime.InteropServices.Architecture.Arm => "_linux_armv7l",
                 _ => "_linux"
             };
             return $"{LatestReleaseBaseUrl}yt-dlp{suffix}";
