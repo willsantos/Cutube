@@ -189,7 +189,9 @@ print_path_hint() {
 main() {
   printf "\nCutube CLI Installer\n\n"
 
-  local platform version asset_name asset_url temp_dir archive_path install_dir
+  # temp_dir stays global: the EXIT trap runs after main() returns,
+  # when locals are already out of scope
+  local platform version asset_name asset_url archive_path install_dir
   platform="$(detect_platform)"
   log_info "Detected platform: ${platform}"
 
