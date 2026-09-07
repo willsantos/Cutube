@@ -23,6 +23,9 @@ pode mudar livremente sem quebrar a CLI).
 - [ ] Orotube nasce como **repo novo** (monorepo **Nx**) com o histórico do
       `develop` preservado, abrigando: motor (engine), CLI, web app com fila
       RabbitMQ e app desktop leve
+- [ ] Desktop com **modo duplo**: standalone (motor local, sem fila/servidor —
+      para quem baixa esporadicamente) e ecossistema (fila RabbitMQ via
+      Engine Server — para o uso robusto), selecionável pelo usuário
 - [ ] **Zero perda de funcionalidade**: tudo que funciona hoje termina em um
       dos dois repos, com quality gates verdes (`dotnet build` sem warnings,
       `dotnet test` 100%)
@@ -31,7 +34,8 @@ pode mudar livremente sem quebrar a CLI).
 ## Out of Scope
 
 - Novas funcionalidades de produto (novos formatos, novos sites, novos
-  recursos de download) — esta migração apenas move/reorganiza
+  recursos de download) — esta migração apenas move/reorganiza. **Exceção**:
+  os dois modos do desktop (D10) fazem parte do escopo da migração
 - Publicação do motor como pacote NuGet público (consumo interno via
   referência de projeto no monorepo)
 - Migração de dados/usuários (não há dados persistentes de usuário)
@@ -45,7 +49,7 @@ pode mudar livremente sem quebrar a CLI).
 | #  | Decisão                                                      | Escolha                                                                 | Status              |
 |----|--------------------------------------------------------------|-------------------------------------------------------------------------|---------------------|
 | D1 | Tecnologia do app desktop                                    | **Tauri** (WebView nativo, binário ~5-15MB, reaproveita UI React do web) | ✅ decided (2026-09-07) |
-| D2 | Arquitetura do motor                                         | **Híbrido**: motor como library C# embutida na CLI (standalone) + **Engine Server** headless servindo web e desktop | ✅ decided (2026-09-07) |
+| D2 | Arquitetura do motor                                         | **Híbrido**: motor como library C# embutida na CLI (standalone) e hospedável localmente no desktop (modo standalone) + **Engine Server** headless servindo web e desktop em modo fila | ✅ decided (2026-09-07) |
 | D3 | Destino da `develop` do Cutube após o PR para `main`         | **Reset como ÚLTIMO estágio da migração**: só quando tudo estiver movido e validado no Orotube (Track C) | ✅ decided (2026-09-07) |
 | D4 | Estratégia de criação do repo Orotube                        | **Repo novo** com o histórico do `develop` atual pushado (sem vínculo de fork GitHub) | ✅ decided (2026-09-07) |
 | D5 | Namespaces `Cutube.*` → `Orotube.*` no novo repo             | **Sim**, em feature dedicada (migração mecânica ampla)                  | ⚠️ open (default provisório) |
@@ -53,6 +57,7 @@ pode mudar livremente sem quebrar a CLI).
 | D7 | CLI do Orotube                                               | **Embute o motor como library** (paridade standalone com Cutube CLI); fila/servidor ficam para web/desktop | ✅ decided (2026-09-07) |
 | D8 | Integração Nx ↔ .NET                                         | Preferir `@nx-dotnet/core`; fallback: targets `nx:run-commands`         | open (decidir no Design de B2) |
 | D9 | Versionar `.specs/` no git                                   | **Sim** — remover `.specs/` do `.gitignore` (executa intent da tarefa aberta Cutube-vxo.3) | ⚠️ open (default provisório) |
+| D10 | Modos do app desktop                                          | **Dois modos selecionáveis**: standalone por padrão (motor local embutido, sem RabbitMQ/servidor, funciona offline — para quem baixa esporadicamente) e **fila como opção habilitável** (conecta ao Engine Server + RabbitMQ — para o ecossistema robusto) | ✅ decided (2026-09-07) |
 
 > Decisões D1–D4 e D7 confirmadas pelo usuário em 2026-09-07. D3 inclui a
 > diretriz explícita: **o reset do repo atual é o último estágio**, executado
@@ -131,7 +136,8 @@ suporte, com `develop` resetada para espelhá-la.
 
 **Goal**: repo Orotube com histórico preservado, orquestrado por Nx,
 contendo motor compartilhado (library + Engine Server), web com RabbitMQ,
-desktop leve e CLI — todo o sistema distribuído atual funcionando lá.
+desktop leve de **modo duplo** (standalone com motor local / fila via Engine
+Server) e CLI — todo o sistema distribuído atual funcionando lá.
 
 **Features**:
 
@@ -146,14 +152,21 @@ desktop leve e CLI — todo o sistema distribuído atual funcionando lá.
   (`Orotube.Engine.*`) com namespaces migrados (D5); é a base que CLI, Engine
   Server e (via server) web/desktop consomem
 - **B4 `orotube/engine-server`** (P1): host headless do motor — evolução do
-  `Cutube.Api` atual: REST + SignalR + producer RabbitMQ; health checks
+  `Cutube.Api` atual: REST + SignalR + producer RabbitMQ; health checks. O
+  mesmo host em **modo local** (sem RabbitMQ, processamento em background
+  in-process — como o `DownloadQueue` pré-Épico 3) atende o desktop
+  standalone (D10); empacotamento (sidecar) define-se no Design
 - **B5 `orotube/worker`** (P1): port do `Cutube.Worker` (consumer RabbitMQ,
   retry, DLQ, status tracking)
 - **B6 `orotube/web`** (P1): port do `Cutube.Web` (Next.js) apontando para o
   Engine Server; e2e Playwright portados
 - **B7 `orotube/desktop-tauri`** (P2): app Tauri (D1) envolvendo a UI do web
-  app (componentes React compartilhados), conectando ao Engine Server; alvo de
-  levezura: instalador ≤ 20MB
+  app (componentes React compartilhados) com **dois modos** (D10):
+  **standalone** (padrão — hospeda o motor localmente, sem RabbitMQ/docker/
+  servidor externo, downloads processados em background local, funciona
+  offline; para quem baixa esporadicamente) e **fila habilitável** (conecta
+  ao Engine Server + RabbitMQ, downloads rastreados no ecossistema; para o
+  uso robusto). Mesma UI nos dois modos. Alvo de levezura: instalador ≤ 20MB
 - **B8 `orotube/cli`** (P2): CLI do Orotube embutindo o motor como library
   (D7), paridade de features com a Cutube CLI
 - **B9 `orotube/infra-cicd`** (P1): docker-compose (rabbitmq, engine-server,
@@ -172,10 +185,14 @@ desktop leve e CLI — todo o sistema distribuído atual funcionando lá.
    SignalR → arquivo baixado) SHALL completar
 4. WHEN build do desktop THEN o artefato SHALL ter ≤ 20MB e carregar a UI
    conectada ao Engine Server
-5. WHEN CLI do Orotube executa o checklist de paridade (download, corte, MP3,
+5. WHEN desktop em modo standalone THEN o app SHALL funcionar offline (sem
+   servidor externo, sem RabbitMQ/docker), processando downloads localmente
+   com progresso na UI; WHEN o usuário habilita a fila THEN o app SHALL
+   passar a enfileirar via Engine Server mantendo a mesma UI
+6. WHEN CLI do Orotube executa o checklist de paridade (download, corte, MP3,
    nome/dir custom, tempo flexível, validações, resume, CTRL+C) THEN todas
    SHALL passar igual à Cutube CLI
-6. WHEN quality gates THEN `dotnet build` SHALL ter zero warnings e `dotnet
+7. WHEN quality gates THEN `dotnet build` SHALL ter zero warnings e `dotnet
    test` SHALL passar 100% no monorepo
 
 ---
@@ -222,6 +239,11 @@ depois** de o Orotube estar completo e validado — o reset da `develop` é a
 - WHEN os dois repos rodam compose simultaneamente na mesma máquina THEN
   portas/nomes de container do Orotube SHALL ser distintos dos atuais do
   Cutube
+- WHEN desktop standalone THEN nada SHALL exigir docker/RabbitMQ/Engine
+  Server rodando (zero dependências externas além do próprio app)
+- WHEN troca de modo no desktop (standalone ↔ fila) com download em
+  andamento THEN o app SHALL lidar graciosamente (concluir localmente e/ou
+  avisar antes de alternar — comportamento exato define-se no Design de B7)
 - WHEN usuário existente da CLI atualiza o Cutube pós-split THEN dados em
   `~/.local/share/Cutube` SHALL ser preservados (apps Orotube usam
   `~/.local/share/Orotube`)
@@ -239,7 +261,8 @@ depois** de o Orotube estar completo e validado — o reset da `develop` é a
 - [ ] Cutube: clone limpo de `main` → `dotnet run` funciona offline; gates
       verdes; nenhuma referência ativa ao sistema distribuído
 - [ ] Orotube: Nx orquestra build/test; compose sobe o sistema completo;
-      fluxo de download e2e verde; desktop ≤ 20MB (quando B7 entrar)
+      fluxo de download e2e verde; desktop ≤ 20MB funcionando standalone
+      offline **e** em modo fila (quando B7 entrar)
 - [ ] Checklist de paridade da CLI 100% nos dois repos (Cutube `main` e,
       quando B8 entrar, Orotube CLI)
 - [ ] `develop` do Cutube == `main`; handoff atualizado nos dois repos; beads
