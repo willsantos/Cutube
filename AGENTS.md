@@ -188,11 +188,17 @@ linear_create_issue
 
 This project uses **one branch per feature** with Conventional Commits.
 
+**Primary branch:** `main`. Cutube is a standalone CLI — feature branches are
+created from `main` and PRs target `main`. (Note: the `develop` branch still
+exists only as a temporary historical reference during the Orotube migration
+and will be deleted once the migration completes; do not base new work on it.
+The pre-split distributed history also lives in `legacy/cutube-develop`.)
+
 ### Workflow
 
 1. **Create feature branch:**
    ```bash
-   git checkout -b feature/<name>
+   git checkout -b feature/<name> main
    ```
 
 2. **Implement feature:**
@@ -210,7 +216,7 @@ This project uses **one branch per feature** with Conventional Commits.
 4. **Push and create PR:**
    ```bash
    git push origin feature/<name>
-   # Create PR on GitHub
+   # Create PR on GitHub targeting main
    ```
 
 5. **Merge and cleanup:**

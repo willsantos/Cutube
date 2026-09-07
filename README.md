@@ -14,16 +14,16 @@ Explorar funcionalidades de processos com FFMpeg.
 
 ## Roadmap
 - [x] Implementar opção de cortar o vídeo por tempo
-- [ ] Tornar a digitação do tempo mais flexivel
+- [x] Tornar a digitação do tempo mais flexivel
 - [ ] Adicionar opção de escolher o formato do vídeo
 - [ ] Adicionar opção de escolher a qualidade do vídeo
-- [ ] Adicionar opção de escolher o nome do arquivo
-- [ ] Adicionar opção de escolher o diretório de destino
+- [x] Adicionar opção de escolher o nome do arquivo
+- [x] Adicionar opção de escolher o diretório de destino
 - [ ] Adicionar opção de escolher a legenda do vídeo
 - [ ] Implementar barra de progresso do download
 - [x] Implementar barra de progresso do corte
 - [ ] Baixar videos de outras plataformas (e.g. Instagram)
-- [ ] Baixar somente o áudio
+- [x] Baixar somente o áudio
 - [ ] Criar instalador para Windows
  - [ ] Testar em MacOS e Linux
 
@@ -126,20 +126,13 @@ Para instalacao automatica em Linux/macOS/Windows, use os scripts em `scripts/in
 - Pagina de instalacao: `https://willsantos.github.io/Cutube/`
 - Guia completo: `docs/installation.md`
 
-## RabbitMQ Setup
+## Cutube é uma CLI
 
-O Cutube usa RabbitMQ para processamento assíncrono de downloads. Veja a [documentação completa](docs/setup-rabbitmq.md) para instruções detalhadas.
+O Cutube voltou a ser **apenas uma CLI standalone**: baixa, corta e converte
+vídeos localmente, sem depender de servidor, fila ou Docker.
 
-### Início Rápido
-
-```bash
-# Iniciar RabbitMQ
-./scripts/docker-compose-up.sh
-
-# Acessar Management UI
-# http://localhost:15672 (User: cutube, Pass: cutube123)
-
-# Executar Worker
-cd src/Cutube.Worker
-dotnet run
-```
+A versão distribuída (API REST, interface web, worker com fila RabbitMQ e app
+desktop) migrou para o projeto **Orotube**
+(`git@ssh.dev.azure.com:v3/oroborus/oroborus-auto/orotube`). O histórico
+completo dessa fase fica preservado na branch `legacy/cutube-develop` deste
+repositório e no repo Orotube.
