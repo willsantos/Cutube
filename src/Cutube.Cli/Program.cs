@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Threading;
 using Cutube.Cli.Configuration;
 using Cutube.Domain.Interfaces;
@@ -25,6 +26,15 @@ public static class Program
             cts.Cancel();
             Console.WriteLine("\n⚠️  Cancelando operação...");
         };
+
+        // Handle --version
+        if (args.Length == 1 && args[0] == "--version")
+        {
+            var version = typeof(Program).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            Console.WriteLine($"cutube {version ?? "unknown"}");
+            return;
+        }
 
         // Parse command line arguments
         var parsedArgs = ParseArgs(args);
@@ -109,6 +119,7 @@ public static class Program
         Console.WriteLine("  cutube config show        Show configuration");
         Console.WriteLine("  cutube config reset       Reset configuration");
         Console.WriteLine("  cutube --resume           Resume interrupted downloads");
+        Console.WriteLine("  cutube --version          Show version");
         Console.WriteLine();
         Console.WriteLine("Download options:");
         Console.WriteLine("  --output, -o <path>       Output path");
