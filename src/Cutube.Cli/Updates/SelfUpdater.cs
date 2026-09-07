@@ -257,20 +257,17 @@ public class SelfUpdater : ISelfUpdater
         }
         else
         {
-            MakeExecutable(stagedPath);
+            if (!OperatingSystem.IsWindows())
+            {
+                // 755 (rwxr-xr-x) sem depender de binário chmod externo
+                File.SetUnixFileMode(stagedPath,
+                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+            }
+
             File.Move(stagedPath, targetPath, overwrite: true);
         }
-    }
-
-    private void MakeExecutable(string path)
-    {
-        _processService.Start(new ProcessStartInfo
-        {
-            FileName = "chmod",
-            Arguments = $"+x \"{path}\"",
-            UseShellExecute = false,
-            CreateNoWindow = true
-        });
     }
 
     private SelfUpdateResult FailWithManualHint(string reason)
