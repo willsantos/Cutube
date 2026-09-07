@@ -30,30 +30,12 @@ Explorar funcionalidades de processos com FFMpeg.
 
 ## Gerenciamento de Tarefas
 
-Este projeto utiliza dois sistemas complementares para gerenciamento de trabalho:
+Este repositório **não** usa beads (bd) nem taskmaster local. O rastreamento
+é feito com:
 
-- **TASKS (Beads/bd):** Gerencia tarefas de desenvolvimento e features planejadas
-- **ISSUES (Linear):** Gerencia bugs reportados por usuários
-
-### Para desenvolvedores
-
-O projeto usa o **bd (Beads)** para rastreamento de tarefas de desenvolvimento:
-
-```bash
-# Ver tarefas disponíveis
-bd list
-
-# Ver detalhes de uma tarefa
-bd show <id>
-
-# Atualizar status da tarefa
-bd update <id> --status in_progress
-
-# Marcar como concluída
-bd close <id>
-```
-
-As tarefas ficam no repositório e sincronizam automaticamente com o git.
+- **ISSUES (Linear):** bugs reportados por usuários e trabalho solicitado
+  explicitamente (workspace "Oroborus", projeto "Cutube")
+- **Specs e planos versionados:** planejamento de features fica no repositório
 
 
 # Tecnologias

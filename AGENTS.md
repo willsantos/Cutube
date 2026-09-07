@@ -1,137 +1,16 @@
 # Agent Instructions
 
-This project uses **bd** (beads) for **task tracking**. Run `bd onboard` to get started.
+This project does **not** use beads (bd) or any local task-tracker. Task/issue
+management:
 
-## Quick Reference
-
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
-```
-
-## Task Sync Workflow
-
-This project uses dedicated branch `beads-sync` to synchronize task state from bd (beads) with git.
-
-### Task vs Issue Tracking
-
-**⚠️ IMPORTANT DISTINCTION:**
-
-- **TASKS (bd/Beads):** Development tasks and features
-  - Tracked locally in `.beads/issues.jsonl`
-  - Managed via `bd` CLI commands
-  - Auto-synced with git
-  - Format: `Cutube-XXX` (e.g., Cutube-1yx)
-
-- **ISSUES (Linear):** User-reported bugs and problems
-  - Tracked in Linear workspace "Oroborus"
-  - Managed via Linear API/MCP
-  - Associated with "Cutube" project
-  - Format: `ORO-XXX` (e.g., ORO-5, ORO-6)
-
-**Workflow:**
-- Use BEADS for planned development work
-- Create Linear issues only when user explicitly requests
-- DO NOT automatically create Linear issues for minor bugs found during development
-
-**Beads Task Details:**
-- Created via `bd ready`, `bd create`
-- Have IDs like Cutube-abc, Cutube-123
-- Status: open, in_progress, closed
-
-**Linear Issue Details:**
-- User-reported bugs or problems
-- **DO NOT** automatically create task
-- Evaluate if it needs to become a bd task
-- Document in code comments if obvious
-- Create task manually only if: user asks OR it's future work
-
-### Beads Sync Branch
-
-**Dedicated branch:** `beads-sync`
-- Contains only task metadata (`.beads/`)
-- **NOT** project code
-- Auto-sync when switching branches (hook `post-checkout`)
-
-### Sync Commands
-
-```bash
-# After modifying tasks (close, update, create)
-bd sync                                             # Auto-commit in beads-sync
-git push origin beads-sync                          # Push sync
-
-# When switching branches (automatic via hook)
-git checkout feature/xyz                            # Hook runs: bd sync --import
-```
-
-### Hook post-checkout
-
-**Location:** `.githooks/post-checkout` and `.git/hooks/post-checkout`
-
-**Functionality:**
-```bash
-#!/bin/bash
-# Auto-import beads state when switching branches
-if [ "$3" -eq 1 ]; then
-    bd sync --import 2>/dev/null || true
-fi
-```
-
-**When it runs:**
-- On branch checkout
-- **NOT** on file checkout
-- Imports task state for current branch
-
-### Correct Workflow
-
-1. **Modify tasks:**
-   ```bash
-   bd close Cutube-abc                              # Close task
-   bd update Cutube-xyz --status in_progress        # Update status
-   ```
-
-2. **Sync with git:**
-   ```bash
-   bd sync                                          # Commit in beads-sync
-   git push origin beads-sync                       # Push
-   ```
-
-3. **Switch branches:**
-   ```bash
-   git checkout feature/nova-feature               # Hook auto-imports
-   ```
-
-### Configuration
-
-**Check config:**
-```bash
-bd config get sync.branch                           # Should be "beads-sync"
-```
-
-**If not configured:**
-```bash
-bd config set sync.branch beads-sync
-# Edit .beads/config.yaml, uncomment sync-branch
-```
-
-### Best Practices
-
-✅ **Always run `bd sync` after modifying tasks**
-✅ **Push beads-sync after closing/updating tasks**
-✅ **Do NOT create task branches (ex: chore/close-xyz)**
-✅ **Use only beads-sync for task metadata**
-✅ **Documentation and code go in normal branches**
-
-❌ **Do NOT commit `.beads/` in feature branches**
-❌ **Do NOT force push to beads-sync**
-❌ **Do NOT manually modify `.beads/`**
+- **Issues (Linear):** user-reported bugs and explicitly requested work —
+  see "Linear Issue Management" below
+- **Planning:** feature specs and plans live in the repository
+  (`.specs/`, `plans/`) and follow the `spec-driven-dev` workflow when used
 
 ## Linear Issue Management
 
-**⚠️ IMPORTANT:** Issues are tracked in **Linear**, NOT in bd (beads).
+**⚠️ IMPORTANT:** Issues are tracked in **Linear**.
 
 ### Creating Issues
 
@@ -235,18 +114,6 @@ The pre-split distributed history also lives in `legacy/cutube-develop`.)
 - `docs:` - Documentation
 - `chore:` - Build/deps
 
-### Examples
-
-```bash
-feat: add flexible time input parsing (1h30m, 90s, etc)
-feat: add custom filename option
-feat: add audio-only download with MP3 support
-feat: add CTRL+C cancellation support
-feat: add input validations
-docs: update README with new features
-test: add unit tests for TimeHelper
-```
-
 ## Quality Gates (Mandatory)
 
 **Before marking a task as complete, ALL quality gates MUST pass:**
@@ -275,8 +142,8 @@ test: add unit tests for TimeHelper
 ### Quality Gate Examples
 
 ```bash
-# ❌ WRONG - Don't close issue without running tests
-bd close Cutube-gcb
+# ❌ WRONG - Don't call work done without running tests
+git commit -m "feat: done" && git push
 
 # ✅ CORRECT - Run quality gates first
 dotnet test                    # ALL tests must pass
@@ -284,7 +151,6 @@ dotnet build                   # NO warnings allowed
 git add .
 git commit -m "feat: add flexible time parsing"
 git push
-bd close Cutube-gcb            # NOW you can close
 ```
 
 ## Landing the Plane (Session Completion)
@@ -297,21 +163,18 @@ bd close Cutube-gcb            # NOW you can close
 2. **Run quality gates** (if code changed) - Tests, linters, builds ⚠️ **REQUIRED**
    - `dotnet test` - ALL tests MUST pass (100%)
    - `dotnet build` - NO warnings allowed
-3. **Update issue status** - Close finished work, update in-progress items ⚠️ **ONLY after tests pass**
-4. **PUSH TO REMOTE** - This is MANDATORY:
+3. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
    git push
    git status  # MUST show "up to date with origin"
    ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
+4. **Clean up** - Clear stashes, prune remote branches
+5. **Verify** - All changes committed AND pushed
+6. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
-
