@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release-cli:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            artifact_name: cutube
+            asset_name: cutube-linux-amd64
+          - os: ubuntu-latest
+            target: linux-arm64
+            artifact_name: cutube
+            asset_name: cutube-linux-arm64
+          - os: macos-latest
+            target: osx-x64
+            artifact_name: cutube
+            asset_name: cutube-macos-amd64
+          - os: macos-latest
+            target: osx-arm64
+            artifact_name: cutube
+            asset_name: cutube-macos-arm64
+          - os: windows-latest
+            target: win-x64
+            artifact_name: cutube.exe
+            asset_name: cutube-windows-amd64.exe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish CLI
+        run: |
+          dotnet publish ./src/Cutube.Cli/cutube.csproj \
+            -c Release \
+            -r ${{ matrix.target }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:PublishTrimmed=true \
+            -o ./publish
+
+      - name: Package (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd publish
+          tar -czf ../${{ matrix.asset_name }}.tar.gz ${{ matrix.artifact_name }}
+
+      - name: Package (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd publish
+          Compress-Archive -Path ${{ matrix.artifact_name }} -DestinationPath ../${{ matrix.asset_name }}.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: |
+            ${{ matrix.asset_name }}.*
+
+  create-release:
+    needs: release-cli
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/**/*.tar.gz
+            artifacts/**/*.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') }}

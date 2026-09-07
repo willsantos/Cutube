@@ -478,4 +478,23 @@ $RECYCLE.BIN/
 .idea
 
 # Media Files
-*.mp4
+*.mp4Downloads/
+Downloads
+downloads
+
+#IA
+.opencode
+.agents
+
+# Environment files
+.env
+.env.local
+
+# Specs (project documentation and analysis)
+.specs/
+
+# Environment
+.env*.local
+
+# IDE
+.idea/

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# ============================================
+# Pre-commit Hook: Branch Protection (main/develop)
+# ============================================
+
+# Branch protection
+protected_branches=("main" "develop")
+
+# Get current branch
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Check if current branch is protected
+if [[ " ${protected_branches[@]} " =~ " ${current_branch} " ]]; then
+    echo "❌ ERRO: Commit direto na branch '${current_branch}' não é permitido!"
+    echo ""
+    echo "Para fazer alterações em '${current_branch}':"
+    echo "1. Crie uma nova branch: git checkout -b feature/nome-da-feature"
+    echo "2. Faça commit das suas alterações"
+    echo "3. Push para a branch de feature"
+    echo "4. Abra um Pull Request"
+    echo "5. Aprove e mergelie via interface web"
+    echo ""
+    exit 1
+fi

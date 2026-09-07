@@ -14,31 +14,81 @@ Explorar funcionalidades de processos com FFMpeg.
 
 ## Roadmap
 - [x] Implementar opção de cortar o vídeo por tempo
-- [ ] Tornar a digitação do tempo mais flexivel
+- [x] Tornar a digitação do tempo mais flexivel
 - [ ] Adicionar opção de escolher o formato do vídeo
 - [ ] Adicionar opção de escolher a qualidade do vídeo
-- [ ] Adicionar opção de escolher o nome do arquivo
-- [ ] Adicionar opção de escolher o diretório de destino
-- [ ] Adicionar opção de escolher o idioma do vídeo
+- [x] Adicionar opção de escolher o nome do arquivo
+- [x] Adicionar opção de escolher o diretório de destino
 - [ ] Adicionar opção de escolher a legenda do vídeo
-- [ ] Adicionar opção de escolher o idioma da legenda
 - [ ] Implementar barra de progresso do download
 - [x] Implementar barra de progresso do corte
 - [ ] Baixar videos de outras plataformas (e.g. Instagram)
-- [ ] Baixar somente o áudio
+- [x] Baixar somente o áudio
 - [ ] Criar instalador para Windows
-- [ ] Testar em MacOS e Linux
+ - [ ] Testar em MacOS e Linux
+
+
+## Gerenciamento de Tarefas
+
+Este repositório **não** usa beads (bd) nem taskmaster local. O rastreamento
+é feito com:
+
+- **ISSUES (Linear):** bugs reportados por usuários e trabalho solicitado
+  explicitamente (workspace "Oroborus", projeto "Cutube")
+- **Specs e planos versionados:** planejamento de features fica no repositório
 
 
 # Tecnologias
-- Dotnet 7.0
-- YoutubeExplode 6
-- FFMpeg 6
+- Dotnet 10.0 LTS (suporte até Nov 2028)
+- yt-dlp (YouTube downloader com PO token support) - **incluído**
+- YoutubeDLSharp 1.2.0 (.NET wrapper)
+- FFmpeg.AutoGen 8.0.0
 
 
 # Requisitos para rodar
-- Dotnet 7.0 runtime
-- FFMpeg 6
+- .NET 10.0 runtime ou superior
+- FFmpeg 6+ (opcional para versões bundle)
+
+**Nota:** O yt-dlp é **incluso automaticamente** com o Cutube e se atualiza sozinho! 🎉
+
+
+## Desenvolvimento
+
+### yt-dlp Bundling
+O Cutube vem com o yt-dlp bundleado e implementa auto-update inteligente:
+
+- ✅ **Zero configuração**: yt-dlp já vem no pacote
+- ✅ **Auto-update**: Verifica atualizações ao iniciar
+- ✅ **Fallback**: Usa yt-dlp do sistema se bundle falhar
+- ✅ **Gerenciado**: Atualizações são baixadas para `~/.local/share/Cutube/`
+
+### Desenvolvedores
+
+Este projeto usa ASDF para gerenciar versões do .NET.
+
+```bash
+# Instalar ASDF
+git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+
+# Instalar .NET 10.0
+asdf plugin add dotnet-core
+asdf install
+```
+
+O arquivo .tool-versions configura automaticamente o .NET 10.0 ao entrar no projeto.
+
+Se você quer usar sua própria versão do yt-dlp:
+
+```bash
+# Instalar yt-dlp globalmente (opcional)
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+chmod +x /usr/local/bin/yt-dlp
+
+# Ou via pip
+pip install yt-dlp
+```
+
+O Cutube detectará automaticamente e usará sua versão se for mais recente que o bundle.
 
 
 
@@ -50,3 +100,21 @@ Explorar funcionalidades de processos com FFMpeg.
 5. O vídeo será salvo na mesma pasta
 6. Enjoy!
 7. (Opcional) Se quiser, pode adicionar o executável do programa no PATH do seu sistema operacional para poder executar o programa de qualquer lugar
+
+## Instalacao do CLI
+
+Para instalacao automatica em Linux/macOS/Windows, use os scripts em `scripts/install.sh` e `scripts/install.ps1`.
+
+- Pagina de instalacao: `https://willsantos.github.io/Cutube/`
+- Guia completo: `docs/installation.md`
+
+## Cutube é uma CLI
+
+O Cutube voltou a ser **apenas uma CLI standalone**: baixa, corta e converte
+vídeos localmente, sem depender de servidor, fila ou Docker.
+
+A versão distribuída (API REST, interface web, worker com fila RabbitMQ e app
+desktop) migrou para o projeto **Orotube**
+(`git@ssh.dev.azure.com:v3/oroborus/oroborus-auto/orotube`). O histórico
+completo dessa fase fica preservado na branch `legacy/cutube-develop` deste
+repositório e no repo Orotube.
