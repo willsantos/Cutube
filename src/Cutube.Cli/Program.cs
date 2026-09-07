@@ -9,6 +9,7 @@ using Cutube.Infrastructure;
 using Cutube.Cli.Logging;
 using Cutube.Cli.ErrorHandling;
 using Cutube.Cli.Recovery;
+using Cutube.Cli.Updates;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cutube.Cli;
@@ -34,6 +35,27 @@ public static class Program
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
             Console.WriteLine($"cutube {version ?? "unknown"}");
             return;
+        }
+
+        // Handle update command (own cycle: ignores the daily cache)
+        if (args.Length > 0 && args[0] == "update")
+        {
+            var updateExitCode = await new UpdateManager().RunForcedAsync(args, cts.Token);
+            Environment.Exit(updateExitCode);
+            return;
+        }
+
+        // Automatic update check before dispatch (skips --version/--help/update;
+        // any failure is swallowed by UpdateManager)
+        if (!UpdateManager.ShouldSkip(args))
+        {
+            var checkForUpdates = await TryGetCheckForUpdatesAsync(cts.Token);
+            var restartExitCode = await new UpdateManager().RunAsync(args, checkForUpdates, cts.Token);
+            if (restartExitCode.HasValue)
+            {
+                Environment.Exit(restartExitCode.Value);
+                return;
+            }
         }
 
         // Parse command line arguments
@@ -70,6 +92,22 @@ public static class Program
 
         // Show help for unknown commands
         ShowHelp();
+    }
+
+    /// <summary>
+    /// Lê a flag CheckForUpdates da config; problemas de config nunca desativam o comportamento padrão
+    /// </summary>
+    private static async Task<bool> TryGetCheckForUpdatesAsync(CancellationToken ct)
+    {
+        try
+        {
+            var config = await new ConfigService().LoadAsync(ct);
+            return config.CheckForUpdates;
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     private static Dictionary<string, string?> ParseArgs(string[] args)
@@ -116,6 +154,7 @@ public static class Program
         Console.WriteLine("Usage:");
         Console.WriteLine("  cutube                    Interactive mode");
         Console.WriteLine("  cutube download <url>     Download a video");
+        Console.WriteLine("  cutube update             Check and install updates");
         Console.WriteLine("  cutube config show        Show configuration");
         Console.WriteLine("  cutube config reset       Reset configuration");
         Console.WriteLine("  cutube --resume           Resume interrupted downloads");
@@ -223,6 +262,7 @@ public static class Program
             Console.WriteLine($"Max Concurrent: {config.MaxConcurrentDownloads}");
             Console.WriteLine($"Timeout: {config.TimeoutSeconds}s");
             Console.WriteLine($"Verbose Logging: {config.VerboseLogging}");
+            Console.WriteLine($"Check For Updates: {config.CheckForUpdates}");
         }
         else if (args.Length > 1 && args[1] == "reset")
         {

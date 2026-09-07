@@ -26,6 +26,11 @@ public static class ConfigDefaults
     public const bool DefaultVerboseLogging = false;
 
     /// <summary>
+    /// Default automatic update check setting
+    /// </summary>
+    public const bool DefaultCheckForUpdates = true;
+
+    /// <summary>
     /// Creates a new AppConfig with default values
     /// </summary>
     public static AppConfig CreateDefault() => new()
@@ -33,6 +38,7 @@ public static class ConfigDefaults
         DefaultOutputPath = DefaultOutputPath,
         MaxConcurrentDownloads = DefaultMaxConcurrentDownloads,
         TimeoutSeconds = DefaultTimeoutSeconds,
-        VerboseLogging = DefaultVerboseLogging
+        VerboseLogging = DefaultVerboseLogging,
+        CheckForUpdates = DefaultCheckForUpdates
     };
 }

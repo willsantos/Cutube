@@ -51,6 +51,48 @@ public class ConfigServiceTests
         loadedConfig.MaxConcurrentDownloads.Should().Be(originalConfig.MaxConcurrentDownloads);
         loadedConfig.TimeoutSeconds.Should().Be(originalConfig.TimeoutSeconds);
         loadedConfig.VerboseLogging.Should().Be(originalConfig.VerboseLogging);
+        loadedConfig.CheckForUpdates.Should().Be(originalConfig.CheckForUpdates);
+
+        // Cleanup
+        if (Directory.Exists(tempPath))
+            Directory.Delete(tempPath, true);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenConfigWithoutCheckForUpdates_ReturnsTrue()
+    {
+        // Arrange: config legada escrita antes da flag existir
+        var tempPath = Path.Combine(Path.GetTempPath(), $"cutube-test-{Guid.NewGuid()}");
+        Directory.CreateDirectory(tempPath);
+        var configPath = Path.Combine(tempPath, "config.json");
+        await File.WriteAllTextAsync(configPath, """{ "defaultOutputPath": "~/Videos" }""");
+        var configService = new ConfigService(tempPath);
+
+        // Act
+        var config = await configService.LoadAsync();
+
+        // Assert
+        config.CheckForUpdates.Should().BeTrue();
+
+        // Cleanup
+        if (Directory.Exists(tempPath))
+            Directory.Delete(tempPath, true);
+    }
+
+    [Fact]
+    public async Task SaveAsync_And_LoadAsync_WhenCheckForUpdatesDisabled_PersistsFalse()
+    {
+        // Arrange
+        var tempPath = Path.Combine(Path.GetTempPath(), $"cutube-test-{Guid.NewGuid()}");
+        var configService = new ConfigService(tempPath);
+        var config = new AppConfig { CheckForUpdates = false };
+
+        // Act
+        await configService.SaveAsync(config);
+        var loaded = await configService.LoadAsync();
+
+        // Assert
+        loaded.CheckForUpdates.Should().BeFalse();
 
         // Cleanup
         if (Directory.Exists(tempPath))
