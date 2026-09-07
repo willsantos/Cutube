@@ -7,14 +7,39 @@ namespace Cutube.Cli.Tests.Unit;
 public class YtDlpPathResolverTests
 {
     [Fact]
-    public void GetDownloadUrl_ReturnsGithubLatestReleaseUrl()
+    public void GetDownloadUrl_ReturnsRealOfficialAssetName()
     {
         var url = YtDlpPathResolver.GetDownloadUrl();
 
+        if (url is null)
+        {
+            // null só é permitido onde não existe asset de binário único
+            (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                .Should().BeTrue("null é válido apenas para ARM32 em Windows/Linux");
+            System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture
+                .Should().Be(System.Runtime.InteropServices.Architecture.Arm);
+            return;
+        }
+
         url.Should().StartWith("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp");
 
+        // Nomes que não existem na release oficial (causa do bug do 404)
+        url.Should().NotContain("_x64.exe");
+        url.Should().NotContain("_macos_arm64");
+
         if (OperatingSystem.IsWindows())
-            url.Should().EndWith(".exe");
+            url.Should().BeOneOf(
+                "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe",
+                "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_x86.exe",
+                "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_arm64.exe");
+
+        if (OperatingSystem.IsLinux())
+            url.Should().BeOneOf(
+                "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux",
+                "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux_aarch64");
+
+        if (OperatingSystem.IsMacOS())
+            url.Should().Be("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos");
     }
 
     [Fact]

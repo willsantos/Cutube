@@ -353,14 +353,15 @@ public class YtDlpHelperTests
     }
 
     [Theory]
-    [InlineData("Windows", "X64", "_x64.exe")]
+    [InlineData("Windows", "X64", ".exe")]
     [InlineData("Windows", "X86", "_x86.exe")]
     [InlineData("Windows", "Arm64", "_arm64.exe")]
+    [InlineData("Windows", "Arm", "")] // ARM32 não roda os binários x64/arm64; zipimport oficial
     [InlineData("Linux", "X64", "_linux")]
     [InlineData("Linux", "Arm64", "_linux_aarch64")]
-    [InlineData("Linux", "Arm", "_linux_armv7l")]
+    [InlineData("Linux", "Arm", "")] // ARM32 não tem binário único; zipimport oficial
     [InlineData("MacOS", "X64", "_macos")]
-    [InlineData("MacOS", "Arm64", "_macos_arm64")]
+    [InlineData("MacOS", "Arm64", "_macos")] // asset único universal (Intel + Apple Silicon)
     public void GetPlatformIdentifier_ReturnsCorrectSuffix(string os, string arch, string expected)
     {
         _mockEnv.Setup(x => x.IsWindows()).Returns(os == "Windows");
@@ -383,7 +384,7 @@ public class YtDlpHelperTests
 
         var helper = CreateTestableHelper();
 
-        helper.CallGetPlatformIdentifier().Should().Be("_x64.exe");
+        helper.CallGetPlatformIdentifier().Should().Be(".exe");
     }
 
     [Fact]

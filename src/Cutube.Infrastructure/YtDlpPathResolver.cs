@@ -52,7 +52,9 @@ public static class YtDlpPathResolver
             return systemPath;
 
         // 4. Automatic download to the user location
-        TryDownloadTo(userPath);
+        var downloadUrl = GetDownloadUrl();
+        if (downloadUrl != null)
+            TryDownloadTo(downloadUrl, userPath);
 
         if (File.Exists(userPath))
             return userPath;
@@ -61,13 +63,13 @@ public static class YtDlpPathResolver
             $"yt-dlp não encontrado. Verifique a instalação ou baixe em: https://github.com/yt-dlp/yt-dlp/releases");
     }
 
-    private static void TryDownloadTo(string targetPath)
+    private static void TryDownloadTo(string downloadUrl, string targetPath)
     {
         try
         {
             Console.WriteLine("yt-dlp não encontrado. Baixando automaticamente...");
             using var httpClient = new HttpClient();
-            DownloadToFileAsync(httpClient, GetDownloadUrl(), targetPath)
+            DownloadToFileAsync(httpClient, downloadUrl, targetPath)
                 .GetAwaiter()
                 .GetResult();
         }
@@ -121,46 +123,39 @@ public static class YtDlpPathResolver
 
     /// <summary>
     /// Builds the download URL for the latest yt-dlp release matching the
-    /// current OS and architecture
+    /// current OS and architecture. Asset names follow the official release
+    /// ("yt-dlp.exe" is the x64 Windows binary; macOS ships a single universal
+    /// binary). Returns null when there is no single-binary asset for the
+    /// platform (Linux ARM32 is only published as a onedir .zip; on Windows
+    /// ARM32 neither the arm64 nor the x64 binary runs natively)
     /// </summary>
-    public static string GetDownloadUrl()
+    public static string? GetDownloadUrl()
     {
         var arch = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture;
 
         if (OperatingSystem.IsWindows())
         {
-            var suffix = arch switch
+            return arch switch
             {
-                System.Runtime.InteropServices.Architecture.X64 => "_x64.exe",
-                System.Runtime.InteropServices.Architecture.X86 => "_x86.exe",
-                System.Runtime.InteropServices.Architecture.Arm64 => "_arm64.exe",
-                _ => "_x64.exe"
+                System.Runtime.InteropServices.Architecture.X86 => $"{LatestReleaseBaseUrl}yt-dlp_x86.exe",
+                System.Runtime.InteropServices.Architecture.Arm64 => $"{LatestReleaseBaseUrl}yt-dlp_arm64.exe",
+                System.Runtime.InteropServices.Architecture.Arm => null,
+                _ => $"{LatestReleaseBaseUrl}yt-dlp.exe"
             };
-            return $"{LatestReleaseBaseUrl}yt-dlp{suffix}";
         }
 
         if (OperatingSystem.IsLinux())
         {
-            var suffix = arch switch
+            return arch switch
             {
-                System.Runtime.InteropServices.Architecture.X64 => "_linux",
-                System.Runtime.InteropServices.Architecture.Arm64 => "_linux_aarch64",
-                System.Runtime.InteropServices.Architecture.Arm => "_linux_armv7l",
-                _ => "_linux"
+                System.Runtime.InteropServices.Architecture.Arm64 => $"{LatestReleaseBaseUrl}yt-dlp_linux_aarch64",
+                System.Runtime.InteropServices.Architecture.Arm => null,
+                _ => $"{LatestReleaseBaseUrl}yt-dlp_linux"
             };
-            return $"{LatestReleaseBaseUrl}yt-dlp{suffix}";
         }
 
         if (OperatingSystem.IsMacOS())
-        {
-            var suffix = arch switch
-            {
-                System.Runtime.InteropServices.Architecture.X64 => "_macos",
-                System.Runtime.InteropServices.Architecture.Arm64 => "_macos_arm64",
-                _ => "_macos"
-            };
-            return $"{LatestReleaseBaseUrl}yt-dlp{suffix}";
-        }
+            return $"{LatestReleaseBaseUrl}yt-dlp_macos";
 
         return $"{LatestReleaseBaseUrl}yt-dlp";
     }

@@ -312,34 +312,29 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         {
             return arch switch
             {
-                Architecture.X64 => "_x64.exe",
                 Architecture.X86 => "_x86.exe",
                 Architecture.Arm64 => "_arm64.exe",
-                _ => "_x64.exe"
+                Architecture.Arm => "", // ARM32 não roda os binários arm64/x64; usa o zipimport (requer Python)
+                _ => ".exe" // x64: o binário oficial é "yt-dlp.exe" (não existe "_x64.exe")
             };
         }
-        
+
         if (_environmentService.IsLinux())
         {
             return arch switch
             {
-                Architecture.X64 => "_linux",
                 Architecture.Arm64 => "_linux_aarch64",
-                Architecture.Arm => "_linux_armv7l",
+                Architecture.Arm => "", // ARM32 não tem binário único; usa o zipimport (requer Python)
                 _ => "_linux"
             };
         }
-        
+
         if (_environmentService.IsMacOS())
         {
-            return arch switch
-            {
-                Architecture.X64 => "_macos",
-                Architecture.Arm64 => "_macos_arm64",
-                _ => "_macos"
-            };
+            // "yt-dlp_macos" é universal (Intel + Apple Silicon); não existe "_macos_arm64"
+            return "_macos";
         }
-        
+
         return "";
     }
 
