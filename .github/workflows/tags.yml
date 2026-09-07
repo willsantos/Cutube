@@ -3,14 +3,28 @@ name: versionamento
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'plans/**'
+      - '.specs/**'
+      - '**/*.md'
+      - 'README.md'
+      - 'docs/**'
+      - '.github/**/*.md'
+      - 'AGENTS.md'
+      - 'PLAN*.md'
+  workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
-  build:
+  tag:
     runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.tag_version.outputs.new_tag }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Bump version and push tag
         id: tag_version
@@ -21,9 +35,9 @@ jobs:
           default_bump: minor
           release_branches: main
 
-      - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-          name: Release ${{ steps.tag_version.outputs.new_tag }}
-          body: ${{ steps.tag_version.outputs.changelog }}
+  release:
+    needs: tag
+    if: needs.tag.outputs.new_tag != ''
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.new_tag }}
