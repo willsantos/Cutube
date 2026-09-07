@@ -490,9 +490,6 @@ downloads
 .env
 .env.local
 
-# Specs (project documentation and analysis)
-.specs/
-
 # Turborepo
 .turbo/
 

@@ -4,6 +4,13 @@
 
 ## Process
 
+### 0. Branch Setup
+
+Per AGENTS.md: one branch per feature (`git checkout -b feat/<task-slug>` off
+`develop`), conventional commits (`feat:`, `fix:`, `refactor:`, `test:`,
+`docs:`, `chore:`), PR + merge when done. Never commit `.beads/` in feature
+branches.
+
 ### 1. Pick Task
 
 Either user specifies ("implement T3") or you suggest next available.

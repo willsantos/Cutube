@@ -114,3 +114,78 @@ How we know the feature is successful:
 - **WHEN/THEN is code** - If you can't write it as a test, rewrite it
 - **Edge cases matter** - What breaks? What's empty? What's huge?
 - **Confirm before Design** - User must approve spec before moving on
+
+---
+
+## Epic/Macro Specs
+
+**When to use**: migrations, repo splits, multi-app initiatives — anything too
+big for one feature spec, where the deliverable of planning is a list of
+**features** (each later becoming its own spec/design/tasks), not tasks.
+
+**Key differences from feature specs**:
+
+| Aspect | Feature spec | Epic/macro spec |
+|--------|--------------|-----------------|
+| Stories | Independently testable user stories | Tracks/product increments containing features |
+| Acceptance criteria | WHEN/THEN per story | WHEN/THEN per track; features listed with one-line scope |
+| Output | `spec.md` → design → tasks | `spec.md` only; each feature spawns `.specs/[epic]/[feature]/` later |
+| Decisions | Tech decisions go to design.md | Product/architecture decisions MUST be recorded here (status: decided/open) |
+
+**Process**:
+1. Clarify scope: what exists today, what moves where, what is new.
+2. Ask the user about genuine product/architecture decisions (tech choices,
+   repo strategy, fate of branches). Record every decision and its status —
+   never bury a provisional default inside a story.
+3. Define tracks (parallel workstreams) and the features inside each.
+4. Define ordering constraints between tracks (e.g. "preserve history before
+   deleting branches").
+5. User must approve the macro spec before any child feature spec starts.
+
+**Template**: `.specs/[epic-slug]/spec.md`
+
+```markdown
+# [Epic Name] Macro Specification
+
+## Problem Statement
+[2-3 sentences: the pain, why now]
+
+## Goals
+- [ ] [Measurable outcome]
+
+## Out of Scope
+- [Explicitly NOT doing: X]
+
+## Decisions
+| # | Decision | Choice | Status |
+|---|----------|--------|--------|
+| D1 | [e.g. desktop tech] | [e.g. Tauri] | decided | open |
+> Status: `decided` (user confirmed) or `open` (provisional default — review
+> before Design phase).
+
+## Current State
+[What exists today — projects, branches, working functionality that must survive]
+
+## Tracks
+
+### Track A: [Name]
+**Goal**: [one sentence]
+**Features**:
+- A1 `slug`: [one-line scope]
+- A2 `slug`: [one-line scope]
+
+**Acceptance Criteria**:
+1. WHEN [event] THEN [track] SHALL [outcome]
+
+### Track B: [Name]
+[same structure]
+
+## Ordering Constraints
+- [e.g. B1 before A4: history must be preserved before branch reset]
+
+## Cross-cutting Edge Cases
+- WHEN [scenario] THEN [repos] SHALL [handling]
+
+## Success Criteria
+- [ ] [Measurable, verifiable per repo]
+```

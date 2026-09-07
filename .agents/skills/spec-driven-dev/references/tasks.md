@@ -59,6 +59,23 @@ Group tasks into phases. Identify what can run in parallel.
 > **Available MCPs**: [list from project or user]
 > **Available Skills**: [list from project or user]
 
+### 6. Sync with Beads (bd)
+
+This repo tracks work in **beads** (`bd`). After the user approves tasks.md:
+
+1. Create one bd task per task (or per cohesive phase, for small tasks):
+   ```bash
+   bd create "T1: [title]" --priority 1
+   ```
+2. Record the returned IDs back into tasks.md (`**bd**: Cutube-xyz` on each task).
+3. Status flows through bd: `bd update <id> --status in_progress` when starting,
+   `bd close <id>` ONLY after quality gates pass.
+4. After any bd change: `bd sync` and push `beads-sync`.
+
+For epic/macro specs, mirror the **features** as bd tasks with phase-level
+children (see `.beads/` conventions in AGENTS.md) — do not create bd tasks for
+macro tracks that are pure containers.
+
 ---
 
 ## Template: `.specs/[feature]/tasks.md`

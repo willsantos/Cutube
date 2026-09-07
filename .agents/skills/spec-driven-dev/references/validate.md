@@ -40,7 +40,24 @@ From spec.md edge cases:
 npm test  # or project test command
 ```
 
-### 5. Report
+### 5. Project Quality Gates (MANDATORY)
+
+Per AGENTS.md, no task/story is complete until:
+
+```bash
+dotnet build   # MUST succeed with ZERO warnings
+dotnet test    # 100% of tests MUST pass
+```
+
+- A story cannot be reported PASS if either gate fails.
+- Skipped tests require explicit justification in the validation report.
+- Work must be committed (conventional commits) and pushed before closing the
+  corresponding bd task.
+
+### 6. Report
+
+(Quality gates from section 5 above are part of every report — include build
+warning count and test pass rate.)
 
 ---
 
