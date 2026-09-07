@@ -92,14 +92,42 @@ O Cutube detectará automaticamente e usará sua versão se for mais recente que
 
 
 
+## Estrutura do projeto
+
+```
+src/
+  Cutube.Cli/            # aplicação CLI (entry point)
+  Cutube.Domain/         # models, interfaces e serviços de domínio
+  Cutube.Core/           # primitivas compartilhadas
+  Cutube.Application/    # casos de uso / orquestração
+  Cutube.Infrastructure/ # yt-dlp, FFmpeg, filesystem
+tests/
+  Cutube.Cli.Tests/      # testes unitários/integração da CLI
+  Cutube.Domain.Tests/   # testes de domínio
+```
+
+Build e testes: `dotnet build` e `dotnet test` na raiz (solução `cutube.sln`).
+
 ## Como usar
 1. Baixe o projeto
 2. Abra o terminal na pasta do projeto
-3. Execute o comando `dotnet run`
+3. Execute `dotnet run --project src/Cutube.Cli`
 4. Siga as instruções do programa
-5. O vídeo será salvo na mesma pasta
-6. Enjoy!
-7. (Opcional) Se quiser, pode adicionar o executável do programa no PATH do seu sistema operacional para poder executar o programa de qualquer lugar
+5. Enjoy!
+6. (Opcional) Instale o binário no PATH para executar de qualquer lugar
+
+### Comandos
+
+```bash
+cutube                                  # modo interativo
+cutube download <url>                   # download direto
+cutube download <url> --audio           # somente áudio (MP3)
+cutube download <url> -s 00:01:00 -e 00:05:30   # corte por tempo
+cutube download <url> -o ~/Videos       # diretório de destino
+cutube --resume                         # retomar downloads interrompidos
+cutube config show                      # ver configuração
+cutube config reset                     # restaurar padrões
+```
 
 ## Instalacao do CLI
 
@@ -110,11 +138,11 @@ Para instalacao automatica em Linux/macOS/Windows, use os scripts em `scripts/in
 
 ## Cutube é uma CLI
 
-O Cutube voltou a ser **apenas uma CLI standalone**: baixa, corta e converte
-vídeos localmente, sem depender de servidor, fila ou Docker.
+O Cutube é **apenas uma CLI standalone**: baixa, corta e converte vídeos
+localmente, sem depender de servidor, fila ou Docker.
 
 A versão distribuída (API REST, interface web, worker com fila RabbitMQ e app
 desktop) migrou para o projeto **Orotube**
 (`git@ssh.dev.azure.com:v3/oroborus/oroborus-auto/orotube`). O histórico
-completo dessa fase fica preservado na branch `legacy/cutube-develop` deste
-repositório e no repo Orotube.
+completo dessa fase fica preservado no histórico do git deste repositório e
+na branch `legacy/cutube-develop` do repo Orotube.
