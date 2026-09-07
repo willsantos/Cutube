@@ -8,7 +8,6 @@ using Cutube.Infrastructure;
 using Cutube.Cli.Logging;
 using Cutube.Cli.ErrorHandling;
 using Cutube.Cli.Recovery;
-using Cutube.Cli.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cutube.Cli;
@@ -112,8 +111,6 @@ public static class Program
         Console.WriteLine("  cutube --resume           Resume interrupted downloads");
         Console.WriteLine();
         Console.WriteLine("Download options:");
-        Console.WriteLine("  --api-url, -a <url>       Remote API URL");
-        Console.WriteLine("  --local, -l               Force local mode");
         Console.WriteLine("  --output, -o <path>       Output path");
         Console.WriteLine("  --start, -s <time>        Start time (HH:MM:SS)");
         Console.WriteLine("  --end, -e <time>          End time (HH:MM:SS)");
@@ -191,21 +188,13 @@ public static class Program
         }
 
         // Get options
-        var apiUrl = parsedArgs.GetValueOrDefault("api-url") ?? parsedArgs.GetValueOrDefault("a");
-        var forceLocal = parsedArgs.ContainsKey("local") || parsedArgs.ContainsKey("l");
         var verbose = parsedArgs.ContainsKey("verbose") || parsedArgs.ContainsKey("v");
         var output = parsedArgs.GetValueOrDefault("output") ?? parsedArgs.GetValueOrDefault("o");
         var start = parsedArgs.GetValueOrDefault("start") ?? parsedArgs.GetValueOrDefault("s");
         var end = parsedArgs.GetValueOrDefault("end") ?? parsedArgs.GetValueOrDefault("e");
-        var audio = parsedArgs.ContainsKey("audio") || parsedArgs.ContainsKey("a"); // Note: -a conflicts with api-url
+        var audio = parsedArgs.ContainsKey("audio") || parsedArgs.ContainsKey("a");
 
-        // Fix for -a ambiguity: if "audio" is explicitly set or if audio is the only -a
-        if (args.Contains("--audio"))
-        {
-            audio = true;
-        }
-
-        return await HandleDownloadAsync(url, output, start, end, audio, apiUrl, forceLocal, verbose, ct);
+        return await HandleDownloadAsync(url, output, start, end, audio, verbose, ct);
     }
 
     private static async Task RunConfigCommandAsync(string[] args)
@@ -219,7 +208,6 @@ public static class Program
             Console.WriteLine($"Config File: {configService.GetConfigPath()}");
             Console.WriteLine($"Exists: {configService.ConfigExists()}");
             Console.WriteLine();
-            Console.WriteLine($"API URL: {config.ApiUrl ?? "(not set - local mode)"}");
             Console.WriteLine($"Default Output: {config.DefaultOutputPath}");
             Console.WriteLine($"Max Concurrent: {config.MaxConcurrentDownloads}");
             Console.WriteLine($"Timeout: {config.TimeoutSeconds}s");
@@ -245,8 +233,6 @@ public static class Program
         string? start,
         string? end,
         bool audio,
-        string? apiUrlFlag,
-        bool forceLocal,
         bool verbose,
         CancellationToken ct)
     {
@@ -254,28 +240,15 @@ public static class Program
         var configService = new ConfigService();
         var config = await configService.LoadAsync();
 
-        // 2. Determine operation mode
-        var useApi = DetermineMode(apiUrlFlag, forceLocal, config);
-
-        // 3. Create services
-        var serviceProvider = BuildServiceProvider(useApi ? apiUrlFlag ?? config.ApiUrl! : null, config, verbose);
+        // 2. Create services (standalone local mode)
+        var serviceProvider = ConfigureServices();
 
         var downloadService = serviceProvider.GetRequiredService<IDownloadService>();
 
-        // 4. Log the mode
-        if (useApi)
-        {
-            Console.WriteLine($"Mode: API Remote ({apiUrlFlag ?? config.ApiUrl})");
-        }
-        else
-        {
-            Console.WriteLine("Mode: Local (Standalone)");
-        }
-
-        // 5. Create request
+        // 3. Create request
         var request = CreateDownloadRequest(url, output, start, end, audio, config);
 
-        // 6. Execute download
+        // 4. Execute download
         var progress = new Progress<DownloadProgress>(p =>
         {
             Console.Write($"\rProgress: {p.Percentage:F1}% | " +
@@ -301,57 +274,6 @@ public static class Program
             Console.WriteLine($"\n❌ Unexpected error: {ex.Message}");
             return 1;
         }
-    }
-
-    private static bool DetermineMode(string? apiUrlFlag, bool forceLocal, AppConfig config)
-    {
-        // Flag --local takes precedence
-        if (forceLocal)
-        {
-            return false;
-        }
-
-        // Flag --api-url overrides config file
-        if (!string.IsNullOrWhiteSpace(apiUrlFlag))
-        {
-            return true;
-        }
-
-        // Use config file
-        return config.UseApi;
-    }
-
-    private static ServiceProvider BuildServiceProvider(string? apiUrl, AppConfig config, bool verbose)
-    {
-        var services = new ServiceCollection();
-
-        // Services
-        if (apiUrl is not null)
-        {
-            // API mode
-            var apiConfig = new AppConfig { ApiUrl = apiUrl };
-            var environmentService = new EnvironmentService();
-            var loggerService = new FileLoggerService(environmentService);
-
-            services.AddSingleton<IDownloadService>(sp =>
-            {
-                return new ApiClient(apiConfig, loggerService);
-            });
-        }
-        else
-        {
-            // Local mode
-            services.AddSingleton<IFileSystem, FileSystem>();
-            services.AddSingleton<IVideoMetadataProvider, YtDlpMetadataProvider>();
-            services.AddSingleton<IVideoDownloader, YtDlpDownloader>();
-            services.AddSingleton<IVideoProcessor, FfmpegProcessor>();
-            services.AddSingleton<IValidationService, FluentValidationService>();
-            services.AddSingleton<IMetadataService, FluentMetadataService>();
-            services.AddSingleton<IDownloadService, FluentDownloadService>();
-            services.AddSingleton<IProcessingService, FluentProcessingService>();
-        }
-
-        return services.BuildServiceProvider();
     }
 
     private static DownloadRequest CreateDownloadRequest(

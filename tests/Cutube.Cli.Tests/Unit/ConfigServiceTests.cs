@@ -17,12 +17,10 @@ public class ConfigServiceTests
         var config = await configService.LoadAsync();
 
         // Assert
-        config.ApiUrl.Should().BeNull();
         config.DefaultOutputPath.Should().Be("~/Downloads");
         config.MaxConcurrentDownloads.Should().Be(3);
         config.TimeoutSeconds.Should().Be(300);
         config.VerboseLogging.Should().BeFalse();
-        config.UseApi.Should().BeFalse();
 
         // Cleanup
         if (Directory.Exists(tempPath))
@@ -38,7 +36,6 @@ public class ConfigServiceTests
 
         var originalConfig = new AppConfig
         {
-            ApiUrl = "http://localhost:5000",
             DefaultOutputPath = "~/Videos",
             MaxConcurrentDownloads = 5,
             TimeoutSeconds = 600,
@@ -50,12 +47,10 @@ public class ConfigServiceTests
         var loadedConfig = await configService.LoadAsync();
 
         // Assert
-        loadedConfig.ApiUrl.Should().Be(originalConfig.ApiUrl);
         loadedConfig.DefaultOutputPath.Should().Be(originalConfig.DefaultOutputPath);
         loadedConfig.MaxConcurrentDownloads.Should().Be(originalConfig.MaxConcurrentDownloads);
         loadedConfig.TimeoutSeconds.Should().Be(originalConfig.TimeoutSeconds);
         loadedConfig.VerboseLogging.Should().Be(originalConfig.VerboseLogging);
-        loadedConfig.UseApi.Should().BeTrue();
 
         // Cleanup
         if (Directory.Exists(tempPath))

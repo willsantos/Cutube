@@ -89,7 +89,6 @@ public class ConfigService
     {
         return new AppConfig
         {
-            ApiUrl = null,
             DefaultOutputPath = "~/Downloads",
             MaxConcurrentDownloads = 3,
             TimeoutSeconds = 300,

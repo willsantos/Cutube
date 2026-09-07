@@ -6,11 +6,6 @@ namespace Cutube.Cli.Configuration;
 public static class ConfigDefaults
 {
     /// <summary>
-    /// Default API URL (null means local mode)
-    /// </summary>
-    public const string? DefaultApiUrl = null;
-
-    /// <summary>
     /// Default output path for downloads
     /// </summary>
     public const string DefaultOutputPath = "~/Downloads";
@@ -21,7 +16,7 @@ public static class ConfigDefaults
     public const int DefaultMaxConcurrentDownloads = 3;
 
     /// <summary>
-    /// Default timeout in seconds for API operations
+    /// Default timeout in seconds for download operations
     /// </summary>
     public const int DefaultTimeoutSeconds = 300;
 
@@ -35,7 +30,6 @@ public static class ConfigDefaults
     /// </summary>
     public static AppConfig CreateDefault() => new()
     {
-        ApiUrl = DefaultApiUrl,
         DefaultOutputPath = DefaultOutputPath,
         MaxConcurrentDownloads = DefaultMaxConcurrentDownloads,
         TimeoutSeconds = DefaultTimeoutSeconds,

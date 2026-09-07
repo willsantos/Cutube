@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Cutube.Domain\Cutube.Domain.csproj" />
-    <ProjectReference Include="..\Cutube.Contracts\Cutube.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

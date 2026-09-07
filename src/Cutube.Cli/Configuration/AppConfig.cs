@@ -8,19 +8,6 @@ using System.Text.Json.Serialization;
 public class AppConfig
 {
     /// <summary>
-    /// Remote API URL (ex: http://localhost:5000)
-    /// If null or empty, uses local mode (standalone)
-    /// </summary>
-    [JsonPropertyName("apiUrl")]
-    public string? ApiUrl { get; set; }
-
-    /// <summary>
-    /// Indicates whether to use remote API
-    /// </summary>
-    [JsonIgnore]
-    public bool UseApi => !string.IsNullOrWhiteSpace(ApiUrl);
-
-    /// <summary>
     /// Default path for saving downloads
     /// Default: ~/Downloads
     /// </summary>
@@ -28,14 +15,14 @@ public class AppConfig
     public string DefaultOutputPath { get; set; } = "~/Downloads";
 
     /// <summary>
-    /// Maximum number of concurrent downloads (API mode only)
+    /// Maximum number of concurrent downloads
     /// Default: 3
     /// </summary>
     [JsonPropertyName("maxConcurrentDownloads")]
     public int MaxConcurrentDownloads { get; set; } = 3;
 
     /// <summary>
-    /// Timeout in seconds for API operations
+    /// Timeout in seconds for download operations
     /// Default: 300 (5 minutes)
     /// </summary>
     [JsonPropertyName("timeoutSeconds")]

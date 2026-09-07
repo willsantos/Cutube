@@ -1,8 +1,0 @@
-{
-  "name": "Cutube.Worker.Tests",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "test": "dotnet test Cutube.Worker.Tests.csproj"
-  }
-}
