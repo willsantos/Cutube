@@ -126,7 +126,8 @@ public static class YtDlpPathResolver
     /// current OS and architecture. Asset names follow the official release
     /// ("yt-dlp.exe" is the x64 Windows binary; macOS ships a single universal
     /// binary). Returns null when there is no single-binary asset for the
-    /// platform (Linux ARM32 is only published as a onedir .zip)
+    /// platform (Linux ARM32 is only published as a onedir .zip; on Windows
+    /// ARM32 neither the arm64 nor the x64 binary runs natively)
     /// </summary>
     public static string? GetDownloadUrl()
     {
@@ -134,13 +135,13 @@ public static class YtDlpPathResolver
 
         if (OperatingSystem.IsWindows())
         {
-            var suffix = arch switch
+            return arch switch
             {
-                System.Runtime.InteropServices.Architecture.X86 => "_x86.exe",
-                System.Runtime.InteropServices.Architecture.Arm64 => "_arm64.exe",
-                _ => ".exe"
+                System.Runtime.InteropServices.Architecture.X86 => $"{LatestReleaseBaseUrl}yt-dlp_x86.exe",
+                System.Runtime.InteropServices.Architecture.Arm64 => $"{LatestReleaseBaseUrl}yt-dlp_arm64.exe",
+                System.Runtime.InteropServices.Architecture.Arm => null,
+                _ => $"{LatestReleaseBaseUrl}yt-dlp.exe"
             };
-            return $"{LatestReleaseBaseUrl}yt-dlp{suffix}";
         }
 
         if (OperatingSystem.IsLinux())

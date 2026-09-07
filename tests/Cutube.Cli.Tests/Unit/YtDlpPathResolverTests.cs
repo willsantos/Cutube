@@ -11,7 +11,16 @@ public class YtDlpPathResolverTests
     {
         var url = YtDlpPathResolver.GetDownloadUrl();
 
-        url.Should().NotBeNull();
+        if (url is null)
+        {
+            // null só é permitido onde não existe asset de binário único
+            (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                .Should().BeTrue("null é válido apenas para ARM32 em Windows/Linux");
+            System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture
+                .Should().Be(System.Runtime.InteropServices.Architecture.Arm);
+            return;
+        }
+
         url.Should().StartWith("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp");
 
         // Nomes que não existem na release oficial (causa do bug do 404)

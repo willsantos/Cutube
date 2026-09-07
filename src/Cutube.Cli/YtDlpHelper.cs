@@ -314,6 +314,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             {
                 Architecture.X86 => "_x86.exe",
                 Architecture.Arm64 => "_arm64.exe",
+                Architecture.Arm => "", // ARM32 não roda os binários arm64/x64; usa o zipimport (requer Python)
                 _ => ".exe" // x64: o binário oficial é "yt-dlp.exe" (não existe "_x64.exe")
             };
         }

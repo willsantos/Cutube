@@ -356,6 +356,7 @@ public class YtDlpHelperTests
     [InlineData("Windows", "X64", ".exe")]
     [InlineData("Windows", "X86", "_x86.exe")]
     [InlineData("Windows", "Arm64", "_arm64.exe")]
+    [InlineData("Windows", "Arm", "")] // ARM32 não roda os binários x64/arm64; zipimport oficial
     [InlineData("Linux", "X64", "_linux")]
     [InlineData("Linux", "Arm64", "_linux_aarch64")]
     [InlineData("Linux", "Arm", "")] // ARM32 não tem binário único; zipimport oficial
