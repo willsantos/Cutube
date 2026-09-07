@@ -58,6 +58,7 @@ pode mudar livremente sem quebrar a CLI).
 | D8 | Integração Nx ↔ .NET                                         | Preferir `@nx-dotnet/core`; fallback: targets `nx:run-commands`         | open (decidir no Design de B2) |
 | D9 | Versionar `.specs/` no git                                   | **Sim** — remover `.specs/` do `.gitignore` (executa intent da tarefa aberta Cutube-vxo.3) | ⚠️ open (default provisório) |
 | D10 | Modos do app desktop                                          | **Dois modos selecionáveis**: standalone por padrão (motor local embutido, sem RabbitMQ/servidor, funciona offline — para quem baixa esporadicamente) e **fila como opção habilitável** (conecta ao Engine Server + RabbitMQ — para o ecossistema robusto) | ✅ decided (2026-09-07) |
+| D11 | Task tracking no Orotube                                      | **Sem bd (beads) e sem taskmaster**: nada de `.beads/`, branch `beads-sync` ou hooks de sync no repo novo. Substituto sugerido: Azure Boards (nativo do Azure DevOps) + specs versionadas em `.specs/` | ✅ decided (2026-09-07) — substituto exato confirmar no B1 |
 
 > Decisões D1–D4 e D7 confirmadas pelo usuário em 2026-09-07. D3 inclui a
 > diretriz explícita: **o reset do repo atual é o último estágio**, executado
@@ -81,7 +82,7 @@ O que existe e funciona hoje em `develop` (e precisa sobreviver ao split):
 | Web Next.js (dashboard, downloads, dark mode)| `src/Cutube.Web`                           | **Orotube/web** (B6) |
 | Modo API da CLI (`--api-url`, `UseApi`, `ApiClient`) | `src/Cutube.Cli/Program.cs`          | **Só Orotube** — remover do Cutube (A2) |
 | Docker compose (rabbitmq/api/worker/web), CI, turborepo/pnpm | raiz                                  | Cutube: remover (A1/A3); Orotube: recriar em Nx (B2/B9) |
-| Task tracking                                | beads (`.beads/`, branch `beads-sync`)     | Fica no **Cutube**; Orotube inicia `.beads` novo |
+| Task tracking                                | bd/beads (`.beads/`, branch `beads-sync`)  | Fica no **Cutube**; Orotube **sem bd e sem taskmaster** (D11) |
 
 Dependências verificadas: a CLI referencia Domain, Application, Core,
 Infrastructure e Contracts — a referência a Contracts cai junto com o modo API (A2).
@@ -177,9 +178,11 @@ Server) e CLI — todo o sistema distribuído atual funcionando lá.
   CI/CD do Azure DevOps, não GitHub Actions)
 - **B10 `orotube/docs-handoff`** (P1): README de arquitetura do monorepo,
   setup local, handoff; **AGENTS.md próprio adaptado ao Azure DevOps**
-  (Azure Pipelines em vez de GitHub Actions, fluxo de PR do Azure Repos);
-  README do Cutube ganha ponteiro para Orotube (sistema distribuído mudou
-  de casa)
+  (Azure Pipelines em vez de GitHub Actions, fluxo de PR do Azure Repos,
+  **sem bd/taskmaster** — D11) documentando as **skills ativas** do repo:
+  `spec-driven-dev` copiada de Cutube e adaptada (sem a seção de integração
+  com beads); README do Cutube ganha ponteiro para Orotube (sistema
+  distribuído mudou de casa)
 
 **Acceptance Criteria**:
 1. WHEN `git log` no Orotube THEN o histórico do `develop` do Cutube SHALL
@@ -256,9 +259,10 @@ depois** de o Orotube estar completo e validado — o reset da `develop` é a
 - WHEN usuário existente da CLI atualiza o Cutube pós-split THEN dados em
   `~/.local/share/Cutube` SHALL ser preservados (apps Orotube usam
   `~/.local/share/Orotube`)
-- WHEN beads THEN o histórico de tarefas fica no Cutube; Orotube inicia
-  `.beads` novo e as features desta spec viram tarefas lá via
-  `spec-driven-dev`
+- WHEN task tracking THEN bd/beads fica só no Cutube; Orotube **não**
+  inicializa `.beads/` nem usa taskmaster (D11) — as features desta spec
+  viram itens no tracker escolhido (Azure Boards ou `.specs/` versionadas) e
+  specs filhas seguem o fluxo da skill `spec-driven-dev`
 - WHEN paths relativos de bundling do yt-dlp após os moves THEN SHALL ser
   validados em B3/B4 (regressão conhecida de reestruturações anteriores)
 - WHEN issues Linear (ORO-XXX) THEN permanecem associadas ao projeto Cutube;
