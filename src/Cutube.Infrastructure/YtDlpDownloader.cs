@@ -102,7 +102,8 @@ public class YtDlpDownloader : IVideoDownloader
             throw new InvalidOperationException(
                 $"yt-dlp finalizou com sucesso mas o arquivo final não foi criado ('{filePath}'). " +
                 "Causa mais comum: FFmpeg ausente, necessário para mesclar vídeo+áudio. " +
-                "Instale o FFmpeg (Windows: winget install Gyan.FFmpeg) e tente novamente.");
+                "Instale e tente novamente (Windows: winget install Gyan.FFmpeg; " +
+                "macOS: brew install ffmpeg; Linux: sudo apt install ffmpeg).");
         }
 
         // Get file info

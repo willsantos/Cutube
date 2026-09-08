@@ -38,8 +38,17 @@ public class FfmpegProcessorTests
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 });
-            process?.WaitForExit(5000);
-            return process?.ExitCode == 0;
+
+            if (process == null)
+                return false;
+
+            if (!process.WaitForExit(5000))
+            {
+                try { process.Kill(entireProcessTree: true); } catch { /* já saiu */ }
+                return false;
+            }
+
+            return process.ExitCode == 0;
         }
         catch
         {

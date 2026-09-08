@@ -35,8 +35,18 @@ public class FfmpegProcessor : IVideoProcessor
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             });
-            process?.WaitForExit(5000);
-            return process?.ExitCode == 0;
+
+            if (process == null)
+                return false;
+
+            if (!process.WaitForExit(5000))
+            {
+                // Timeout: mata o processo para não deixá-lo órfão
+                try { process.Kill(entireProcessTree: true); } catch { /* já saiu */ }
+                return false;
+            }
+
+            return process.ExitCode == 0;
         }
         catch
         {
