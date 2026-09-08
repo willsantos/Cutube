@@ -50,6 +50,7 @@ Este repositório **não** usa beads (bd) nem taskmaster local. O rastreamento
 - FFmpeg 6+ (opcional para versões bundle)
 
 **Nota:** O yt-dlp é **incluso automaticamente** com o Cutube e se atualiza sozinho! 🎉
+No Windows, o **FFmpeg também é baixado automaticamente** no primeiro uso (build estático oficial, salvo em `%LOCALAPPDATA%\Cutube`). Em Linux/macOS, instale via gerenciador de pacotes (`brew install ffmpeg` / `sudo apt install ffmpeg`).
 
 
 ## Desenvolvimento

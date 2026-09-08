@@ -44,6 +44,11 @@ sudo install -m 755 cutube /usr/local/bin/cutube
 - `yt-dlp` (ou `youtube-dl`) para metadados e fluxos adicionais
 - `ffmpeg` para processamento multimidia
 
+**Nota:** se nao estiverem instalados, o Cutube baixa sozinho no primeiro uso:
+`yt-dlp` em todas as plataformas e, no Windows, tambem o `ffmpeg` (build
+estatico oficial de BtbN/FFmpeg-Builds, ~120 MB, salvo em
+`%LOCALAPPDATA%\Cutube`). Em Linux/macOS, prefira o gerenciador de pacotes.
+
 Exemplos:
 
 ```bash
