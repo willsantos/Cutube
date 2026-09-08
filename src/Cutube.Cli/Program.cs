@@ -19,6 +19,10 @@ public static class Program
 {
     public static async Task Main(string[] args)
     {
+        // O console do Windows usa um codepage sem símbolos como ❌/⚠️/✅,
+        // que aparecem como "?"/"??"; UTF-8 permite renderizá-los
+        TryEnableUtf8Console();
+
         using var cts = new CancellationTokenSource();
 
         Console.CancelKeyPress += (sender, e) =>
@@ -92,6 +96,26 @@ public static class Program
 
         // Show help for unknown commands
         ShowHelp();
+    }
+
+    /// <summary>
+    /// Ativa UTF-8 na saída/entrada do console (best-effort: em output
+    /// redirecionado ou consoles sem suporte, mantém o encoding padrão)
+    /// </summary>
+    private static void TryEnableUtf8Console()
+    {
+        try
+        {
+            if (!Console.IsOutputRedirected)
+                Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+            if (!Console.IsInputRedirected)
+                Console.InputEncoding = System.Text.Encoding.UTF8;
+        }
+        catch
+        {
+            // Sem UTF-8, os símbolos aparecem como "?" — apenas cosmético
+        }
     }
 
     /// <summary>
