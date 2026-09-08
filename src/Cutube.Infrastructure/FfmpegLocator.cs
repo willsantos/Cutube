@@ -98,6 +98,8 @@ public static class FfmpegLocator
         {
             System.Runtime.InteropServices.Architecture.Arm64 =>
                 $"{BtbNLatestBaseUrl}ffmpeg-master-latest-winarm64-gpl.zip",
+            // BtbN não publica x86 nem ARM32; o asset x64 não roda nesses processos
+            System.Runtime.InteropServices.Architecture.X86 => null,
             System.Runtime.InteropServices.Architecture.Arm => null,
             _ => $"{BtbNLatestBaseUrl}ffmpeg-master-latest-win64-gpl.zip"
         };
@@ -126,6 +128,7 @@ public static class FfmpegLocator
             }
 
             using var archive = ZipFile.OpenRead(tempZip);
+            var extracted = 0;
             foreach (var entry in archive.Entries)
             {
                 var name = Path.GetFileName(entry.FullName);
@@ -137,7 +140,12 @@ public static class FfmpegLocator
                 using var entryStream = entry.Open();
                 await using var targetStream = File.Create(targetPath);
                 await entryStream.CopyToAsync(targetStream);
+                extracted++;
             }
+
+            if (extracted == 0)
+                throw new InvalidOperationException(
+                    "o zip do FFmpeg não contém ffmpeg.exe/ffprobe.exe (estrutura do build mudou?)");
         }
         finally
         {
