@@ -22,6 +22,29 @@ public class FfmpegProcessor : IVideoProcessor
     }
 
     /// <inheritdoc/>
+    public bool IsAvailable()
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = _ffmpegPath,
+                Arguments = "-version",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            });
+            process?.WaitForExit(5000);
+            return process?.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<ProcessingResult> ProcessAsync(
         ProcessingRequest request,
         IProgress<ProcessingProgress>? progress = null,

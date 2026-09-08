@@ -37,20 +37,33 @@ public class FluentDownloadService : IDownloadService
         if (urlValidation.IsFailed)
             return Result.Fail(urlValidation.Errors);
 
-        // 2. Garantir diretório de output existe
+        // 2. ffmpeg é necessário em todos os fluxos: mesclar vídeo+áudio
+        //    (downloads de vídeo), extrair/ converter áudio e recortar. Sem ele,
+        //    o yt-dlp pode reportar sucesso sem gerar o arquivo final —
+        //    falhar antes de baixar.
+        if (!_processor.IsAvailable())
+        {
+            return Result.Fail(
+                "FFmpeg não encontrado. Ele é necessário para mesclar vídeo+áudio, " +
+                "extrair áudio e recortar downloads. Instale e tente novamente " +
+                "(Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg; " +
+                "Linux: sudo apt install ffmpeg).");
+        }
+
+        // 3. Garantir diretório de output existe
         var outputDir = Path.GetDirectoryName(request.OutputPath) ?? Directory.GetCurrentDirectory();
         if (!Directory.Exists(outputDir))
         {
             Directory.CreateDirectory(outputDir);
         }
 
-        // 3. Se não tem timerange nem audio-only, download direto
+        // 4. Se não tem timerange nem audio-only, download direto
         if (request.TimeRange == null && !request.AudioOnly)
         {
             return await DownloadDirectAsync(request, progress, ct);
         }
 
-        // 4. Caso contrário, download + processamento
+        // 5. Caso contrário, download + processamento
         return await DownloadWithProcessingAsync(request, progress, ct);
     }
 
