@@ -44,10 +44,9 @@ public class FluentDownloadService : IDownloadService
         if (!_processor.IsAvailable())
         {
             return Result.Fail(
-                "FFmpeg não encontrado. Ele é necessário para mesclar vídeo+áudio, " +
-                "extrair áudio e recortar downloads. Instale e tente novamente " +
-                "(Windows: winget install Gyan.FFmpeg; macOS: brew install ffmpeg; " +
-                "Linux: sudo apt install ffmpeg).");
+                "FFmpeg não encontrado (o download automático falhou). " +
+                "Instale e tente novamente (Windows: winget install Gyan.FFmpeg; " +
+                "macOS: brew install ffmpeg; Linux: sudo apt install ffmpeg).");
         }
 
         // 3. Garantir diretório de output existe

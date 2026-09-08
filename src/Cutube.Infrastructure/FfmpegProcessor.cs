@@ -13,22 +13,67 @@ public class FfmpegProcessor : IVideoProcessor
     private readonly string _ffmpegPath;
 
     /// <summary>
+    /// Quando o chamador não impõe um caminho explícito, IsAvailable() pode
+    /// baixar o build estático do FFmpeg automaticamente (Windows)
+    /// </summary>
+    private readonly bool _autoDownloadAllowed;
+
+    private string? _autoResolvedPath;
+
+    /// <summary>
     /// Initializes a new instance of FfmpegProcessor
     /// </summary>
-    /// <param name="ffmpegPath">Path to ffmpeg executable (null to use system PATH)</param>
+    /// <param name="ffmpegPath">Path to ffmpeg executable (null to locate/ download automatically)</param>
     public FfmpegProcessor(string? ffmpegPath = null)
     {
         _ffmpegPath = ffmpegPath ?? "ffmpeg";
+        _autoDownloadAllowed = ffmpegPath == null;
     }
+
+    /// <summary>
+    /// Caminho efetivo do ffmpeg: com caminho explícito no construtor, ele é
+    /// autoritativo; senão, usa a localização resolvida (que pode ter sido
+    /// baixada) e cai para o valor padrão
+    /// </summary>
+    private string FfmpegPath => _autoDownloadAllowed
+        ? _autoResolvedPath ?? FfmpegLocator.Locate() ?? _ffmpegPath
+        : _ffmpegPath;
 
     /// <inheritdoc/>
     public bool IsAvailable()
+    {
+        // Caminho explícito (teste/config): só ele vale, sem auto-download
+        if (!_autoDownloadAllowed)
+            return Probe(_ffmpegPath);
+
+        var located = FfmpegLocator.Locate();
+        if (located != null && Probe(located))
+        {
+            _autoResolvedPath = located;
+            return true;
+        }
+
+        if (Probe(_ffmpegPath))
+            return true;
+
+        // Último recurso: baixar o build estático (Windows)
+        var downloaded = FfmpegLocator.EnsureDownloaded();
+        if (downloaded != null && Probe(downloaded))
+        {
+            _autoResolvedPath = downloaded;
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool Probe(string ffmpegPath)
     {
         try
         {
             using var process = Process.Start(new ProcessStartInfo
             {
-                FileName = _ffmpegPath,
+                FileName = ffmpegPath,
                 Arguments = "-version",
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -71,7 +116,7 @@ public class FfmpegProcessor : IVideoProcessor
 
         var processInfo = new ProcessStartInfo
         {
-            FileName = _ffmpegPath,
+            FileName = FfmpegPath,
             Arguments = arguments,
             UseShellExecute = false,
             CreateNoWindow = true,

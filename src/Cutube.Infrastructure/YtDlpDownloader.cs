@@ -74,6 +74,12 @@ public class YtDlpDownloader : IVideoDownloader
             MergeOutputFormat = DownloadMergeFormat.Mp4
         };
 
+        // Se o ffmpeg não está no PATH do sistema (ex.: baixado pelo Cutube),
+        // aponta o yt-dlp para ele — sem isso a mesclagem vídeo+áudio falha
+        var ffmpegPath = FfmpegLocator.Locate();
+        if (ffmpegPath != null)
+            options.FfmpegLocation = Path.GetDirectoryName(ffmpegPath);
+
         // Add time range if specified
         if (request.TimeRange != null)
         {
