@@ -64,12 +64,15 @@ jobs:
         env:
           VERSION: ${{ inputs.tag || github.ref_name }}
         run: |
+          # PublishTrimmed quebra o YoutubeDLSharp em runtime: ele usa
+          # System.Text.Json por reflexão para parsear metadados e o trimming
+          # desliga essa serialização ("Reflection-based serialization has been
+          # disabled"). Não reativar sem migrar o parse para source generator.
           dotnet publish ./src/Cutube.Cli/cutube.csproj \
             -c Release \
             -r ${{ matrix.target }} \
             --self-contained true \
             -p:PublishSingleFile=true \
-            -p:PublishTrimmed=true \
             -p:Version="${VERSION#v}" \
             -o ./publish
 
