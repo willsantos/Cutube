@@ -19,6 +19,8 @@ public class FluentDownloadServiceTests
         _downloaderMock = new Mock<IVideoDownloader>();
         _processorMock = new Mock<IVideoProcessor>();
         _validatorMock = new Mock<IValidationService>();
+        // Padrão: ffmpeg disponível (a maioria dos testes não exercita o guard)
+        _processorMock.Setup(p => p.IsAvailable()).Returns(true);
         _service = new FluentDownloadService(
             _downloaderMock.Object,
             _processorMock.Object,
@@ -31,6 +33,79 @@ public class FluentDownloadServiceTests
         _validatorMock
             .Setup(v => v.ValidateUrl(It.IsAny<string>()))
             .Returns(Result.Ok("https://www.youtube.com/watch?v=test"));
+    }
+
+    public class FfmpegRequirement : FluentDownloadServiceTests
+    {
+        [Fact]
+        public async Task WhenFfmpegMissing_AndVideoRequested_FailsFastWithoutDownloading()
+        {
+            SetupValidUrl();
+            _processorMock.Setup(p => p.IsAvailable()).Returns(false);
+
+            var request = new DownloadRequest
+            {
+                Url = "https://www.youtube.com/watch?v=test",
+                OutputPath = "/tmp/video.mp4",
+                AudioOnly = false
+            };
+
+            var result = await _service.DownloadAsync(request);
+
+            result.IsFailed.Should().BeTrue();
+            result.Errors.First().Message.Should().Contain("FFmpeg");
+            // Não deve gastar o download para depois falhar
+            _downloaderMock.Verify(
+                d => d.DownloadAsync(It.IsAny<DownloadRequest>(), It.IsAny<IProgress<DownloadProgress>>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task WhenFfmpegMissing_AndAudioCutRequested_FailsFast()
+        {
+            SetupValidUrl();
+            _processorMock.Setup(p => p.IsAvailable()).Returns(false);
+
+            var request = new DownloadRequest
+            {
+                Url = "https://www.youtube.com/watch?v=test",
+                OutputPath = "/tmp/audio.mp3",
+                TimeRange = new TimeRange { StartSeconds = 60, EndSeconds = 90 },
+                AudioOnly = true
+            };
+
+            var result = await _service.DownloadAsync(request);
+
+            result.IsFailed.Should().BeTrue();
+            result.Errors.First().Message.Should().Contain("FFmpeg");
+            _downloaderMock.Verify(
+                d => d.DownloadAsync(It.IsAny<DownloadRequest>(), It.IsAny<IProgress<DownloadProgress>>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task WhenFfmpegMissing_AndPlainAudioRequested_FailsFast()
+        {
+            SetupValidUrl();
+            _processorMock.Setup(p => p.IsAvailable()).Returns(false);
+
+            var request = new DownloadRequest
+            {
+                Url = "https://www.youtube.com/watch?v=test",
+                OutputPath = "/tmp/audio.mp3",
+                TimeRange = null,
+                AudioOnly = true
+            };
+
+            var result = await _service.DownloadAsync(request);
+
+            // Extração de áudio também passa pelo ffmpeg
+            result.IsFailed.Should().BeTrue();
+            result.Errors.First().Message.Should().Contain("FFmpeg");
+            _downloaderMock.Verify(
+                d => d.DownloadAsync(It.IsAny<DownloadRequest>(), It.IsAny<IProgress<DownloadProgress>>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
     }
 
     public class DirectDownload : FluentDownloadServiceTests

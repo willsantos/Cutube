@@ -8,6 +8,11 @@ namespace Cutube.Domain.Interfaces;
 public interface IVideoProcessor
 {
     /// <summary>
+    /// Verifica se o processador está utilizável (ex.: ffmpeg presente e executável)
+    /// </summary>
+    bool IsAvailable();
+
+    /// <summary>
     /// Processes a video file according to the request parameters
     /// </summary>
     /// <param name="request">Processing request with input/output paths and time range</param>

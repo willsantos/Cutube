@@ -93,8 +93,20 @@ public class YtDlpDownloader : IVideoDownloader
             throw new InvalidOperationException($"Download failed: {result.ErrorOutput}");
         }
 
-        // Get file info
+        // yt-dlp pode sair com código 0 e imprimir o caminho final mesmo quando
+        // a mesclagem falha (ex.: ffmpeg ausente) — validar que o arquivo existe
+        // para dar um erro acionável em vez de "Could not find file"
         var filePath = result.Data;
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            throw new InvalidOperationException(
+                $"yt-dlp finalizou com sucesso mas o arquivo final não foi criado ('{filePath}'). " +
+                "Causa mais comum: FFmpeg ausente, necessário para mesclar vídeo+áudio. " +
+                "Instale e tente novamente (Windows: winget install Gyan.FFmpeg; " +
+                "macOS: brew install ffmpeg; Linux: sudo apt install ffmpeg).");
+        }
+
+        // Get file info
         var fileInfo = new FileInfo(filePath);
 
         return new DownloadResult

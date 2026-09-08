@@ -22,6 +22,39 @@ public class FfmpegProcessor : IVideoProcessor
     }
 
     /// <inheritdoc/>
+    public bool IsAvailable()
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = _ffmpegPath,
+                Arguments = "-version",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            });
+
+            if (process == null)
+                return false;
+
+            if (!process.WaitForExit(5000))
+            {
+                // Timeout: mata o processo para não deixá-lo órfão
+                try { process.Kill(entireProcessTree: true); } catch { /* já saiu */ }
+                return false;
+            }
+
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<ProcessingResult> ProcessAsync(
         ProcessingRequest request,
         IProgress<ProcessingProgress>? progress = null,

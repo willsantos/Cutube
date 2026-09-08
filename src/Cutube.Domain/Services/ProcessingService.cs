@@ -19,6 +19,9 @@ public class ProcessingService : IVideoProcessor
         _processor = processor;
     }
 
+    /// <inheritdoc/>
+    public bool IsAvailable() => _processor.IsAvailable();
+
     /// <summary>
     /// Processes a video file according to the request parameters
     /// </summary>
