@@ -14,15 +14,25 @@ namespace Cutube.Tests.Unit.Theming;
 public class ConsoleThemeTests : IDisposable
 {
     private readonly string? _originalNoColor;
+    private readonly string? _originalCi;
+    private readonly string? _originalTerm;
 
     public ConsoleThemeTests()
     {
         _originalNoColor = Environment.GetEnvironmentVariable("NO_COLOR");
+        _originalCi = Environment.GetEnvironmentVariable("CI");
+        _originalTerm = Environment.GetEnvironmentVariable("TERM");
         Environment.SetEnvironmentVariable("NO_COLOR", null);
+        Environment.SetEnvironmentVariable("CI", null);
+        Environment.SetEnvironmentVariable("TERM", "xterm-256color");
     }
 
     public void Dispose()
-        => Environment.SetEnvironmentVariable("NO_COLOR", _originalNoColor);
+    {
+        Environment.SetEnvironmentVariable("NO_COLOR", _originalNoColor);
+        Environment.SetEnvironmentVariable("CI", _originalCi);
+        Environment.SetEnvironmentVariable("TERM", _originalTerm);
+    }
 
     [Fact]
     public void IsColorEnabled_OutputRedirected_ReturnsFalse()
@@ -44,6 +54,39 @@ public class ConsoleThemeTests : IDisposable
     public void IsColorEnabled_NoColorSet_ReturnsFalse()
     {
         Environment.SetEnvironmentVariable("NO_COLOR", "1");
+        var console = new FakeConsoleService { IsOutputRedirected = false };
+
+        ConsoleTheme.IsColorEnabled(console).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsColorEnabled_CiEnvironment_ReturnsFalse()
+    {
+        Environment.SetEnvironmentVariable("CI", "true");
+        var console = new FakeConsoleService { IsOutputRedirected = false };
+
+        ConsoleTheme.IsColorEnabled(console).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsColorEnabled_DumbTerminal_ReturnsFalse()
+    {
+        if (OperatingSystem.IsWindows())
+            return; // no Windows o TERM não participa da decisão
+
+        Environment.SetEnvironmentVariable("TERM", "dumb");
+        var console = new FakeConsoleService { IsOutputRedirected = false };
+
+        ConsoleTheme.IsColorEnabled(console).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsColorEnabled_MissingTerm_ReturnsFalse()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        Environment.SetEnvironmentVariable("TERM", null);
         var console = new FakeConsoleService { IsOutputRedirected = false };
 
         ConsoleTheme.IsColorEnabled(console).Should().BeFalse();

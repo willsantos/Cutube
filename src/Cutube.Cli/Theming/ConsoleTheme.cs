@@ -18,13 +18,33 @@ public static class ConsoleTheme
 
     static ConsoleTheme()
     {
+        WindowsVtReady = !OperatingSystem.IsWindows();
         if (OperatingSystem.IsWindows())
-            WindowsVirtualTerminal.Enable();
+            WindowsVtReady = WindowsVirtualTerminal.Enable();
     }
 
+    /// <summary>Resultado do best-effort de ativação de VT no Windows; fora dele, sempre pronto</summary>
+    private static readonly bool WindowsVtReady;
+
     public static bool IsColorEnabled(IConsoleService console)
-        => !console.IsOutputRedirected
-           && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR"));
+    {
+        if (console.IsOutputRedirected)
+            return false;
+
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("NO_COLOR")))
+            return false;
+
+        // FR-16: CI e terminais sem suporte recebem saída plana
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
+            return false;
+
+        if (OperatingSystem.IsWindows())
+            return WindowsVtReady;
+
+        // Unix: terminal de verdade sempre define TERM; ausência ou "dumb" = sem cor
+        var term = Environment.GetEnvironmentVariable("TERM");
+        return !string.IsNullOrEmpty(term) && !term.Equals("dumb", StringComparison.OrdinalIgnoreCase);
+    }
 
     public static string Colorize(IConsoleService console, string ansiColor, string text)
         => IsColorEnabled(console) ? ansiColor + text + Reset : text;
@@ -38,24 +58,25 @@ public static class ConsoleTheme
 
         /// <summary>
         /// Ativa VT no conhost clássico do Windows (best-effort); terminais
-        /// modernos já suportam ANSI e qualquer falha é ignorada
+        /// modernos já suportam ANSI. Retorna se o VT ficou disponível
         /// </summary>
-        internal static void Enable()
+        internal static bool Enable()
         {
             try
             {
                 var handle = GetStdHandle(StdOutputHandle);
                 if (handle == InvalidHandleValue || !GetConsoleMode(handle, out var mode))
-                    return;
+                    return false;
 
                 if ((mode & EnableVirtualTerminalProcessing) != 0)
-                    return;
+                    return true;
 
-                SetConsoleMode(handle, mode | EnableVirtualTerminalProcessing);
+                return SetConsoleMode(handle, mode | EnableVirtualTerminalProcessing);
             }
             catch
             {
                 // Sem VT os códigos apareceriam como texto — cosmético, nunca bloqueia
+                return false;
             }
         }
 

@@ -7,8 +7,30 @@ using Xunit;
 namespace Cutube.Tests.Integration;
 
 [Collection("Sequential")]
-public class ProgressBarTests
+public class ProgressBarTests : IDisposable
 {
+    private readonly string? _originalNoColor;
+    private readonly string? _originalCi;
+    private readonly string? _originalTerm;
+
+    public ProgressBarTests()
+    {
+        // testes de cor precisam de ambiente de terminal determinístico
+        _originalNoColor = Environment.GetEnvironmentVariable("NO_COLOR");
+        _originalCi = Environment.GetEnvironmentVariable("CI");
+        _originalTerm = Environment.GetEnvironmentVariable("TERM");
+        Environment.SetEnvironmentVariable("NO_COLOR", null);
+        Environment.SetEnvironmentVariable("CI", null);
+        Environment.SetEnvironmentVariable("TERM", "xterm-256color");
+    }
+
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("NO_COLOR", _originalNoColor);
+        Environment.SetEnvironmentVariable("CI", _originalCi);
+        Environment.SetEnvironmentVariable("TERM", _originalTerm);
+    }
+
     [Fact]
     public void Constructor_OutputNotRedirected_StartsTimer()
     {

@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f \".agents/skills/impeccable/scripts/impeccable\" ] || \".agents/skills/impeccable/scripts/impeccable\" hook",
-            "commandWindows": "if exist \".agents/skills/impeccable/scripts/impeccable.cmd\" (\".agents/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
+            "command": "[ ! -f \".github/skills/impeccable/scripts/impeccable\" ] || \".github/skills/impeccable/scripts/impeccable\" hook",
+            "commandWindows": "if exist \".github/skills/impeccable/scripts/impeccable.cmd\" (\".github/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
             "timeout": 5,
             "statusMessage": "Checking UI changes"
           }
@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f \".agents/skills/impeccable/scripts/impeccable\" ] || \".agents/skills/impeccable/scripts/impeccable\" hook",
-            "commandWindows": "if exist \".agents/skills/impeccable/scripts/impeccable.cmd\" (\".agents/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
+            "command": "[ ! -f \".github/skills/impeccable/scripts/impeccable\" ] || \".github/skills/impeccable/scripts/impeccable\" hook",
+            "commandWindows": "if exist \".github/skills/impeccable/scripts/impeccable.cmd\" (\".github/skills/impeccable/scripts/impeccable.cmd\" hook & exit /b)",
             "timeout": 30,
             "statusMessage": "Design deep pass"
           }

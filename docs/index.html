@@ -85,6 +85,18 @@
       padding: 0 24px;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     /* ---- topbar ---- */
 
     .topbar {
@@ -124,8 +136,10 @@
 
     .topnav {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 26px;
+      justify-content: flex-end;
+      gap: 12px 22px;
     }
 
     .topnav a {
@@ -525,8 +539,9 @@
     @media (max-width: 640px) {
       body { font-size: 1rem; }
       .wrap { padding: 0 18px; }
-      .topnav { gap: 16px; }
-      .topnav a .nav-text { display: none; }
+      .topbar .wrap { padding-top: 14px; padding-bottom: 14px; }
+      .topnav { gap: 8px 16px; }
+      .topnav a { font-size: 0.88rem; }
       .hero h1 { font-size: clamp(2.1rem, 9vw, 2.6rem); }
       .hero .lede { font-size: 1.05rem; }
       section { padding: 48px 0; }
@@ -717,8 +732,11 @@
     </div>
   </footer>
 
+  <div id="copy-status" class="sr-only" role="status" aria-live="polite"></div>
+
   <script>
     (function () {
+      var status = document.getElementById('copy-status');
       var buttons = document.querySelectorAll('.copy-btn');
       buttons.forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -731,11 +749,13 @@
             label.textContent = 'copiado';
             icCopy.style.display = 'none';
             icCheck.style.display = '';
+            status.textContent = 'Comando copiado para a área de transferência.';
             setTimeout(function () {
               btn.classList.remove('copied');
               label.textContent = 'copiar';
               icCopy.style.display = '';
               icCheck.style.display = 'none';
+              status.textContent = '';
             }, 2000);
           }
           if (navigator.clipboard && navigator.clipboard.writeText) {
