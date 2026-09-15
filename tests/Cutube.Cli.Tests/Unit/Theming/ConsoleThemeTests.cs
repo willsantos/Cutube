@@ -137,7 +137,7 @@ public class ConsoleThemeTests : IDisposable
         { nameof(ConsoleThemeExtensions.WriteWarning), ConsoleTheme.Warning },
         { nameof(ConsoleThemeExtensions.WriteError), ConsoleTheme.Error },
         { nameof(ConsoleThemeExtensions.WriteProgress), ConsoleTheme.Primary },
-        { nameof(ConsoleThemeExtensions.WriteInfo), ConsoleTheme.Secondary },
+        { nameof(ConsoleThemeExtensions.WriteInfo), ConsoleTheme.Muted },
     };
 
     [Theory]

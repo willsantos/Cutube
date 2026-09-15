@@ -340,6 +340,7 @@ The same hierarchy in truecolor SGR, defined in
 | Element | Color | SGR |
 | --- | --- | --- |
 | Titles, sections, progress | Primary #b3a1ff | `\x1b[38;2;179;161;255m` |
+| Support text, sections, metadata | Muted #acaab1 | `\x1b[38;2;172;170;177m` |
 | Success | #4ade80 | `\x1b[38;2;74;222;128m` |
 | Warning | #fbbf24 | `\x1b[38;2;251;191;36m` |
 | Error | #ff6e84 | `\x1b[38;2;255;110;132m` |

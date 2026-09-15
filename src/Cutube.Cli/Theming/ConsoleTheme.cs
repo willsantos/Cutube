@@ -12,7 +12,7 @@ public static class ConsoleTheme
 {
     public const string Reset = "\x1b[0m";
     public const string Primary = "\x1b[38;2;179;161;255m"; // #b3a1ff
-    public const string Secondary = "\x1b[38;2;172;170;177m"; // #acaab1
+    public const string Muted = "\x1b[38;2;172;170;177m";   // #acaab1
     public const string Success = "\x1b[38;2;74;222;128m";  // #4ade80
     public const string Warning = "\x1b[38;2;251;191;36m";  // #fbbf24
     public const string Error = "\x1b[38;2;255;110;132m";   // #ff6e84
@@ -123,7 +123,7 @@ public static class ConsoleThemeExtensions
     public static void WriteProgress(this IConsoleService console, string message)
         => console.WriteLine(ConsoleTheme.Colorize(console, ConsoleTheme.Primary, message));
 
-    /// <summary>Texto de apoio, seções e metadados — conteúdo secundário (neutro 400).</summary>
+    /// <summary>Texto de apoio, seções e metadados — muted (neutro 400).</summary>
     public static void WriteInfo(this IConsoleService console, string message)
-        => console.WriteLine(ConsoleTheme.Colorize(console, ConsoleTheme.Secondary, message));
+        => console.WriteLine(ConsoleTheme.Colorize(console, ConsoleTheme.Muted, message));
 }

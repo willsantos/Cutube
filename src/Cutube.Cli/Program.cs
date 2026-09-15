@@ -287,20 +287,20 @@ public static class Program
         {
             var config = await configService.LoadAsync();
             CliConsole.WriteTitle("=== Cutube Configuration ===");
-            Console.WriteLine($"Config File: {configService.GetConfigPath()}");
-            Console.WriteLine($"Exists: {configService.ConfigExists()}");
+            CliConsole.WriteInfo($"Config File: {configService.GetConfigPath()}");
+            CliConsole.WriteInfo($"Exists: {configService.ConfigExists()}");
             Console.WriteLine();
-            Console.WriteLine($"Default Output: {config.DefaultOutputPath}");
-            Console.WriteLine($"Max Concurrent: {config.MaxConcurrentDownloads}");
-            Console.WriteLine($"Timeout: {config.TimeoutSeconds}s");
-            Console.WriteLine($"Verbose Logging: {config.VerboseLogging}");
-            Console.WriteLine($"Check For Updates: {config.CheckForUpdates}");
+            CliConsole.WriteInfo($"Default Output: {config.DefaultOutputPath}");
+            CliConsole.WriteInfo($"Max Concurrent: {config.MaxConcurrentDownloads}");
+            CliConsole.WriteInfo($"Timeout: {config.TimeoutSeconds}s");
+            CliConsole.WriteInfo($"Verbose Logging: {config.VerboseLogging}");
+            CliConsole.WriteInfo($"Check For Updates: {config.CheckForUpdates}");
         }
         else if (args.Length > 1 && args[1] == "reset")
         {
             await configService.SaveAsync(ConfigDefaults.CreateDefault());
             CliConsole.WriteSuccess("Configuration reset to defaults.");
-            Console.WriteLine($"Location: {configService.GetConfigPath()}");
+            CliConsole.WriteInfo($"Location: {configService.GetConfigPath()}");
         }
         else
         {
