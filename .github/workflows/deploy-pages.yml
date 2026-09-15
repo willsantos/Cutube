@@ -7,6 +7,7 @@ on:
       - docs/index.html
       - docs/documentation.html
       - docs/installation.md
+      - docs/assets/**
       - scripts/install.sh
       - scripts/install.ps1
       - .github/workflows/deploy-pages.yml
@@ -39,6 +40,8 @@ jobs:
           mkdir -p site
           cp docs/index.html docs/documentation.html docs/installation.md site/
           cp scripts/install.sh scripts/install.ps1 site/
+          mkdir -p site/assets
+          cp docs/assets/*.png site/assets/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
