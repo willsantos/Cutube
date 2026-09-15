@@ -584,17 +584,17 @@
           </div>
         </div>
 
-        <div class="terminal" role="group" aria-label="Comando de instalação para Linux e macOS">
+        <div class="terminal" role="group" aria-label="Comando de instalação para o seu sistema">
           <div class="terminal-bar" aria-hidden="true">
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
             <span class="label">terminal</span>
           </div>
           <div class="terminal-body">
             <div class="cmd-line">
-              <span class="prompt" aria-hidden="true">$</span>
-              <code class="cmd" id="cmd-unix">curl -fsSL <span class="hl">https://willsantos.github.io/Cutube/install.sh</span> | bash</code>
+              <span class="prompt" id="hero-prompt" aria-hidden="true">$</span>
+              <code class="cmd" id="hero-cmd">curl -fsSL <span class="hl">https://willsantos.github.io/Cutube/install.sh</span> | bash</code>
               <span class="caret" aria-hidden="true"></span>
-              <button class="copy-btn" type="button" data-copy="curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash" aria-label="Copiar comando de instalação para Linux e macOS">
+              <button class="copy-btn" id="hero-copy" type="button" data-copy="curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash" aria-label="Copiar comando de instalação para Linux e macOS">
                 <svg class="ic-copy" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 <svg class="ic-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M20 6 9 17l-5-5"/></svg>
                 <span class="copy-label">copiar</span>
@@ -774,6 +774,32 @@
           }
         });
       });
+
+      // O hero mostra o comando do sistema do visitante (sem JS, fica o de Unix)
+      function applyInstallCommand(isWindows) {
+        var prompt = document.getElementById('hero-prompt');
+        var code = document.getElementById('hero-cmd');
+        var btn = document.getElementById('hero-copy');
+        if (!prompt || !code || !btn) return;
+        if (isWindows) {
+          prompt.textContent = 'PS>';
+          code.innerHTML = 'iwr -useb <span class="hl">https://willsantos.github.io/Cutube/install.ps1</span> | iex';
+          btn.setAttribute('data-copy', 'iwr -useb https://willsantos.github.io/Cutube/install.ps1 | iex');
+          btn.setAttribute('aria-label', 'Copiar comando de instalação para Windows PowerShell');
+          var grid = document.querySelector('.install-grid');
+          if (grid && grid.firstElementChild) grid.appendChild(grid.firstElementChild);
+        } else {
+          prompt.textContent = '$';
+          code.innerHTML = 'curl -fsSL <span class="hl">https://willsantos.github.io/Cutube/install.sh</span> | bash';
+          btn.setAttribute('data-copy', 'curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash');
+          btn.setAttribute('aria-label', 'Copiar comando de instalação para Linux e macOS');
+        }
+      }
+
+      var uaPlatform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+      var isWindows = /windows/i.test(uaPlatform) || /windows/i.test(navigator.userAgent || '');
+      window.applyInstallCommand = applyInstallCommand;
+      applyInstallCommand(isWindows);
     })();
   </script>
 </body>
