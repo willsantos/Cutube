@@ -1,6 +1,7 @@
 using System.Threading;
 using YoutubeDLSharp;
 using Cutube.Cli.Logging;
+using Cutube.Cli.Theming;
 using Cutube.Cli.ErrorHandling;
 
 namespace Cutube.Cli;
@@ -46,7 +47,7 @@ public class ProgramWorkflow : IDisposable
             var videoStart = _menu.Start;
             var videoEnd = _menu.End;
 
-            _console.WriteLine("Obtendo informações do vídeo...");
+            _console.WriteTitle("Obtendo informações do vídeo...");
 
             var titleResult = await GetVideoTitleAsync(videoUrl);
             if (titleResult.IsFailure)
@@ -68,7 +69,7 @@ public class ProgramWorkflow : IDisposable
         }
         catch (OperationCanceledException)
         {
-            _console.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
+            _console.WriteWarning("\n⚠️  Operação cancelada pelo usuário.");
             return Result.Success();
         }
         catch (Exception ex)
@@ -76,12 +77,12 @@ public class ProgramWorkflow : IDisposable
             if (_errorHandler != null)
             {
                 var errorMessage = _errorHandler.GetUserFriendlyMessage(ex);
-                _console.WriteLine($"Erro: {errorMessage}");
+                _console.WriteError($"Erro: {errorMessage}");
                 return Result.Failure(ErrorType.Critical, errorMessage, ex);
             }
             else
             {
-                _console.WriteLine($"Erro: {ex.Message}");
+                _console.WriteError($"Erro: {ex.Message}");
                 return Result.Failure(ErrorType.Critical, ex.Message, ex);
             }
         }
@@ -114,17 +115,17 @@ public class ProgramWorkflow : IDisposable
 
             if (!_fileService.DirectoryExists(outputDir))
             {
-                _console.WriteLine($"⚠️  Diretório '{outputDir}' não existe.");
+                _console.WriteWarning($"⚠️  Diretório '{outputDir}' não existe.");
                 _console.Write("Deseja criá-lo? (s/n): ");
                 var response = _console.ReadLine()?.ToLower();
                 if (response == "s")
                 {
                     _fileService.CreateDirectory(outputDir);
-                    _console.WriteLine($"✓ Diretório criado: {outputDir}");
+                    _console.WriteSuccess($"✓ Diretório criado: {outputDir}");
                 }
                 else
                 {
-                    _console.WriteLine("❌ Operação cancelada.");
+                    _console.WriteError("❌ Operação cancelada.");
                     return Result<string>.Failure(ErrorType.Validation, "Operação cancelada pelo usuário");
                 }
             }
@@ -148,7 +149,7 @@ public class ProgramWorkflow : IDisposable
         try
         {
             var typeLabelInicio = _menu.AudioOnly ? "áudio" : "vídeo";
-            _console.WriteLine($"Iniciando o download e corte do {typeLabelInicio}...");
+            _console.WriteTitle($"Iniciando o download e corte do {typeLabelInicio}...");
             _console.WriteLine("Esse processo pode demorar, aguarde...");
 
             var progress = new Progress<DownloadProgress>(p =>
@@ -156,7 +157,7 @@ public class ProgramWorkflow : IDisposable
                 if (p.Progress > 0)
                 {
                     var percentage = p.Progress * 100;
-                    _console.WriteLine($"Progresso: {percentage:F0}%");
+                    _console.WriteProgress($"Progresso: {percentage:F0}%");
                 }
 
                 if (p.State != DownloadState.None)
@@ -189,7 +190,7 @@ public class ProgramWorkflow : IDisposable
             }
 
             var typeLabel = _menu.AudioOnly ? "Áudio" : "Vídeo";
-            _console.WriteLine(
+            _console.WriteSuccess(
                 $"✓ {typeLabel} salvo em: {Path.GetFullPath(output)}"
             );
 

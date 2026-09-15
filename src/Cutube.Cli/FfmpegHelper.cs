@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Cutube.Cli.Logging;
 using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Theming;
 
 namespace Cutube.Cli;
 
@@ -185,7 +186,7 @@ public class FfmpegHelper : IFfmpegHelper
         }
         catch (OperationCanceledException)
         {
-            _consoleService.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
+            _consoleService.WriteWarning("\n⚠️  Operação cancelada pelo usuário.");
             throw;
         }
         catch (Exception e)
@@ -196,7 +197,7 @@ public class FfmpegHelper : IFfmpegHelper
                 ? _errorHandler.GetUserFriendlyMessage(e)
                 : "Erro ao processar vídeo com FFmpeg.";
             
-            _consoleService.WriteLine($"Erro: {errorMessage}");
+            _consoleService.WriteError($"Erro: {errorMessage}");
             throw;
         }
     }
