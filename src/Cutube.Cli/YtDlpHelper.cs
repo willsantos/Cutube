@@ -147,26 +147,26 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         // 1. Versão do usuário (se existe e é recente)
         if (_fileService.Exists(_userPath) && IsRecentVersion(_userPath))
         {
-            _consoleService.WriteLine($"Usando yt-dlp do usuário: {_userPath}");
+            _consoleService.WriteInfo($"Usando yt-dlp do usuário: {_userPath}");
             return _userPath;
         }
         
         // 2. Bundle do app
         if (_fileService.Exists(_bundledPath))
         {
-            _consoleService.WriteLine($"Usando yt-dlp bundleado: {_bundledPath}");
+            _consoleService.WriteInfo($"Usando yt-dlp bundleado: {_bundledPath}");
             return _bundledPath;
         }
         
         // 3. PATH do sistema
         if (!string.IsNullOrEmpty(_systemPath))
         {
-            _consoleService.WriteLine($"Usando yt-dlp do sistema: {_systemPath}");
+            _consoleService.WriteInfo($"Usando yt-dlp do sistema: {_systemPath}");
             return _systemPath;
         }
         
         // 4. Download automático
-        _consoleService.WriteLine("yt-dlp não encontrado. Baixando automaticamente...");
+        _consoleService.WriteInfo("yt-dlp não encontrado. Baixando automaticamente...");
         Task.Run(async () => await DownloadLatestVersion(_userPath)).Wait();
         
         if (_fileService.Exists(_userPath))
@@ -572,7 +572,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
                 throw new Exception($"Falha no download: arquivo temporário não criado (esperado: {tempFile})");
             }
             
-            _consoleService.WriteLine($"Arquivo temporário criado: {actualTempFile}");
+            _consoleService.WriteInfo($"Arquivo temporário criado: {actualTempFile}");
             
             // Converter para MP3 e cortar com FFmpeg
             var timeStart = TimeHelper.GetStartSeconds(startTime);

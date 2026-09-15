@@ -49,7 +49,7 @@ public static class Menu
         }
         catch (InvalidOperationException ex)
         {
-            console.WriteLine(ex.Message);
+            console.WriteError(ex.Message);
             return Result.Failure(Cutube.Cli.ErrorHandling.ErrorType.Validation, ex.Message, ex);
         }
     }

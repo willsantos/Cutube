@@ -150,7 +150,7 @@ public class ProgramWorkflow : IDisposable
         {
             var typeLabelInicio = _menu.AudioOnly ? "áudio" : "vídeo";
             _console.WriteTitle($"Iniciando o download e corte do {typeLabelInicio}...");
-            _console.WriteLine("Esse processo pode demorar, aguarde...");
+            _console.WriteInfo("Esse processo pode demorar, aguarde...");
 
             var progress = new Progress<DownloadProgress>(p =>
             {
@@ -162,7 +162,7 @@ public class ProgramWorkflow : IDisposable
 
                 if (p.State != DownloadState.None)
                 {
-                    _console.WriteLine($"Estado: {p.State}");
+                    _console.WriteInfo($"Estado: {p.State}");
                 }
             });
 

@@ -162,7 +162,7 @@ public class DomainWorkflow : IDisposable
         {
             var typeLabelInicio = request.AudioOnly ? "áudio" : "vídeo";
             _console.WriteTitle($"Iniciando o download e corte do {typeLabelInicio}...");
-            _console.WriteLine("Esse processo pode demorar, aguarde...");
+            _console.WriteInfo("Esse processo pode demorar, aguarde...");
 
             // Create progress reporter
             var progress = new Progress<DownloadProgress>(p =>
@@ -175,7 +175,7 @@ public class DomainWorkflow : IDisposable
 
                 if (!string.IsNullOrEmpty(p.State) && p.State != "downloading")
                 {
-                    _console.WriteLine($"Estado: {p.State}");
+                    _console.WriteInfo($"Estado: {p.State}");
                 }
             });
 

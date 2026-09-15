@@ -93,7 +93,7 @@ public class UpdateManager
 
             if (!IsConfirmed(_console.ReadLine()))
             {
-                _console.WriteLine("Atualização ignorada. Continuando na versão atual.");
+                _console.WriteInfo("Atualização ignorada. Continuando na versão atual.");
                 return null;
             }
 
@@ -120,7 +120,7 @@ public class UpdateManager
             if (!VersionInfo.IsPublishedBuild(current))
             {
                 _console.WriteWarning("⚠ Esta é uma build de desenvolvimento; o auto-update está indisponível.");
-                _console.WriteLine($"  Instale a versão mais recente: {_updater.ManualInstallCommand}");
+                _console.WriteInfo($"  Instale a versão mais recente: {_updater.ManualInstallCommand}");
                 return 1;
             }
 
@@ -143,7 +143,7 @@ public class UpdateManager
 
                 if (!IsConfirmed(_console.ReadLine()))
                 {
-                    _console.WriteLine("Atualização cancelada.");
+                    _console.WriteInfo("Atualização cancelada.");
                     return 0;
                 }
             }

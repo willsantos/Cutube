@@ -18,6 +18,8 @@ namespace Cutube.Cli;
 [ExcludeFromCodeCoverage]
 public static class Program
 {
+    private static readonly ConsoleService CliConsole = new();
+
     public static async Task Main(string[] args)
     {
         // O console do Windows usa um codepage sem símbolos como ❌/⚠️/✅,
@@ -30,7 +32,7 @@ public static class Program
         {
             e.Cancel = true;
             cts.Cancel();
-            Console.WriteLine(ConsoleTheme.Colorize(new ConsoleService(), ConsoleTheme.Warning, "\n⚠️  Cancelando operação..."));
+            Console.WriteLine(ConsoleTheme.Colorize(CliConsole, ConsoleTheme.Warning, "\n⚠️  Cancelando operação..."));
         };
 
         // Handle --version
@@ -174,9 +176,9 @@ public static class Program
 
     private static void ShowHelp()
     {
-        Console.WriteLine("Cutube - YouTube video downloader");
+        CliConsole.WriteTitle("Cutube - YouTube video downloader");
         Console.WriteLine();
-        Console.WriteLine("Usage:");
+        CliConsole.WriteInfo("Usage:");
         Console.WriteLine("  cutube                    Interactive mode");
         Console.WriteLine("  cutube download <url>     Download a video");
         Console.WriteLine("  cutube update             Check and install updates");
@@ -185,7 +187,7 @@ public static class Program
         Console.WriteLine("  cutube --resume           Resume interrupted downloads");
         Console.WriteLine("  cutube --version          Show version");
         Console.WriteLine();
-        Console.WriteLine("Download options:");
+        CliConsole.WriteInfo("Download options:");
         Console.WriteLine("  --output, -o <path>       Output path");
         Console.WriteLine("  --start, -s <time>        Start time (HH:MM:SS)");
         Console.WriteLine("  --end, -e <time>          End time (HH:MM:SS)");
@@ -263,7 +265,7 @@ public static class Program
         var url = args.Skip(1).FirstOrDefault(a => !a.StartsWith("-"));
         if (string.IsNullOrEmpty(url))
         {
-            Console.WriteLine("❌ Error: URL is required");
+            CliConsole.WriteError("❌ Error: URL is required");
             return 1;
         }
 
@@ -284,7 +286,7 @@ public static class Program
         if (args.Length > 1 && args[1] == "show")
         {
             var config = await configService.LoadAsync();
-            Console.WriteLine("=== Cutube Configuration ===");
+            CliConsole.WriteTitle("=== Cutube Configuration ===");
             Console.WriteLine($"Config File: {configService.GetConfigPath()}");
             Console.WriteLine($"Exists: {configService.ConfigExists()}");
             Console.WriteLine();
@@ -297,12 +299,12 @@ public static class Program
         else if (args.Length > 1 && args[1] == "reset")
         {
             await configService.SaveAsync(ConfigDefaults.CreateDefault());
-            Console.WriteLine("Configuration reset to defaults.");
+            CliConsole.WriteSuccess("Configuration reset to defaults.");
             Console.WriteLine($"Location: {configService.GetConfigPath()}");
         }
         else
         {
-            Console.WriteLine("Usage:");
+            CliConsole.WriteInfo("Usage:");
             Console.WriteLine("  cutube config show    Show configuration");
             Console.WriteLine("  cutube config reset   Reset configuration");
         }
