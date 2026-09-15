@@ -1,6 +1,6 @@
 # Feature: oroborus-design-system — identidade Oroborus no Cutube
 
-> Status: planning
+> Status: implementada (PR #73)
 > Branch: `feature/cutube-oroborus-design-system`
 > Origem: design system compartilhado em `oroborus/design-system`
 

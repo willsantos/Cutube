@@ -16,15 +16,19 @@ public static class ConsoleTheme
     public const string Warning = "\x1b[38;2;251;191;36m";  // #fbbf24
     public const string Error = "\x1b[38;2;255;110;132m";   // #ff6e84
 
+    /// <summary>
+    /// Resultado do best-effort de ativação de VT no Windows; fora dele, sempre
+    /// pronto. Interno para os testes controlarem a capability sem depender do
+    /// stdout real do processo de teste
+    /// </summary>
+    internal static bool WindowsVtReady;
+
     static ConsoleTheme()
     {
         WindowsVtReady = !OperatingSystem.IsWindows();
         if (OperatingSystem.IsWindows())
             WindowsVtReady = WindowsVirtualTerminal.Enable();
     }
-
-    /// <summary>Resultado do best-effort de ativação de VT no Windows; fora dele, sempre pronto</summary>
-    private static readonly bool WindowsVtReady;
 
     public static bool IsColorEnabled(IConsoleService console)
     {

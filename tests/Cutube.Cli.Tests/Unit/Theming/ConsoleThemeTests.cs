@@ -16,6 +16,7 @@ public class ConsoleThemeTests : IDisposable
     private readonly string? _originalNoColor;
     private readonly string? _originalCi;
     private readonly string? _originalTerm;
+    private readonly bool _originalWindowsVtReady;
 
     public ConsoleThemeTests()
     {
@@ -25,6 +26,11 @@ public class ConsoleThemeTests : IDisposable
         Environment.SetEnvironmentVariable("NO_COLOR", null);
         Environment.SetEnvironmentVariable("CI", null);
         Environment.SetEnvironmentVariable("TERM", "xterm-256color");
+
+        // capability de plataforma sob controle do teste: o valor real depende
+        // do stdout do processo dotnet test, não do fake console
+        _originalWindowsVtReady = ConsoleTheme.WindowsVtReady;
+        ConsoleTheme.WindowsVtReady = true;
     }
 
     public void Dispose()
@@ -32,6 +38,7 @@ public class ConsoleThemeTests : IDisposable
         Environment.SetEnvironmentVariable("NO_COLOR", _originalNoColor);
         Environment.SetEnvironmentVariable("CI", _originalCi);
         Environment.SetEnvironmentVariable("TERM", _originalTerm);
+        ConsoleTheme.WindowsVtReady = _originalWindowsVtReady;
     }
 
     [Fact]

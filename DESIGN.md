@@ -246,8 +246,9 @@ hairlines (`color-mix` of `--border` at 45%).
 Spacing rhythm: 16px micro gaps, 24px grid gaps and container padding, 32px
 block spacing after ledes. Breakpoints: **900px** collapses the hero and
 install grids to one column (40px hero gap); **640px** steps body type down,
-stacks buttons full-width, hides nav text labels (leaving the GitHub glyph),
-and shrinks terminal type. Prose measures: ledes 46–62ch, status list capped at
+stacks buttons full-width, tightens the topbar (nav labels stay visible with
+reduced gap/font size, wrapping to a second row when needed), and shrinks
+terminal type. Prose measures: ledes 46–62ch, status list capped at
 720px. No horizontal overflow at any viewport (FR-14).
 
 ## Elevation & Depth
