@@ -1,12 +1,40 @@
 using FluentAssertions;
 using Cutube.Cli;
+using Cutube.Cli.Theming;
 using Cutube.Tests.Helpers;
 using Xunit;
 
 namespace Cutube.Tests.Integration;
 
-public class ProgressBarTests
+[Collection("Sequential")]
+public class ProgressBarTests : IDisposable
 {
+    private readonly string? _originalNoColor;
+    private readonly string? _originalCi;
+    private readonly string? _originalTerm;
+    private readonly bool _originalWindowsVtReady;
+
+    public ProgressBarTests()
+    {
+        // testes de cor precisam de ambiente de terminal determinístico
+        _originalNoColor = Environment.GetEnvironmentVariable("NO_COLOR");
+        _originalCi = Environment.GetEnvironmentVariable("CI");
+        _originalTerm = Environment.GetEnvironmentVariable("TERM");
+        Environment.SetEnvironmentVariable("NO_COLOR", null);
+        Environment.SetEnvironmentVariable("CI", null);
+        Environment.SetEnvironmentVariable("TERM", "xterm-256color");
+        _originalWindowsVtReady = ConsoleTheme.WindowsVtReady;
+        ConsoleTheme.WindowsVtReady = true;
+    }
+
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("NO_COLOR", _originalNoColor);
+        Environment.SetEnvironmentVariable("CI", _originalCi);
+        Environment.SetEnvironmentVariable("TERM", _originalTerm);
+        ConsoleTheme.WindowsVtReady = _originalWindowsVtReady;
+    }
+
     [Fact]
     public void Constructor_OutputNotRedirected_StartsTimer()
     {
@@ -58,9 +86,38 @@ public class ProgressBarTests
     }
 
     [Fact]
-    public void Animation_CyclesThroughCharacters()
+    public void TimerHandler_ColorSupported_WritesBarInPrimaryColor()
     {
         var console = new FakeConsoleService { IsOutputRedirected = false };
+        var timerFactory = new FakeTimerFactory();
+        var bar = new ProgressBar(console, timerFactory);
+
+        bar.Report(40);
+        timerFactory.LastTimer!.Trigger();
+
+        console.GetOutput().Should().StartWith(ConsoleTheme.Primary);
+        console.GetOutput().Should().Contain("40%");
+        console.GetOutput().Should().EndWith(ConsoleTheme.Reset);
+    }
+
+    [Fact]
+    public void TimerHandler_OutputRedirected_WritesBarWithoutEscapeCodes()
+    {
+        var console = new FakeConsoleService { IsOutputRedirected = true };
+        var timerFactory = new FakeTimerFactory();
+        var bar = new ProgressBar(console, timerFactory);
+
+        bar.Report(40);
+        timerFactory.LastTimer!.Trigger();
+
+        console.GetOutput().Should().Contain("40%");
+        console.GetOutput().Should().NotContain("\x1b");
+    }
+
+    [Fact]
+    public void Animation_CyclesThroughCharacters()
+    {
+        var console = new FakeConsoleService { IsOutputRedirected = true };
         var timerFactory = new FakeTimerFactory();
         var bar = new ProgressBar(console, timerFactory);
 

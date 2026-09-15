@@ -1,4 +1,5 @@
 using Cutube.Cli.Configuration;
+using Cutube.Cli.Theming;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Cutube.Cli.Updates;
@@ -87,7 +88,7 @@ public class UpdateManager
             if (!check.HasUpdate)
                 return null;
 
-            _console.WriteLine($"\nNova versão disponível: {check.LatestVersion} (atual: {check.CurrentVersion})");
+            _console.WriteWarning($"\nNova versão disponível: {check.LatestVersion} (atual: {check.CurrentVersion})");
             _console.Write("Deseja atualizar agora? [S/n]: ");
 
             if (!IsConfirmed(_console.ReadLine()))
@@ -118,7 +119,7 @@ public class UpdateManager
             var current = _currentVersion();
             if (!VersionInfo.IsPublishedBuild(current))
             {
-                _console.WriteLine("⚠ Esta é uma build de desenvolvimento; o auto-update está indisponível.");
+                _console.WriteWarning("⚠ Esta é uma build de desenvolvimento; o auto-update está indisponível.");
                 _console.WriteLine($"  Instale a versão mais recente: {_updater.ManualInstallCommand}");
                 return 1;
             }
@@ -127,16 +128,17 @@ public class UpdateManager
 
             if (!check.HasUpdate)
             {
-                _console.WriteLine(check.LatestVersion == null
-                    ? "⚠ Não foi possível verificar atualizações agora. Verifique sua conexão."
-                    : $"✓ Você já está na versão mais recente ({current}).");
+                if (check.LatestVersion == null)
+                    _console.WriteWarning("⚠ Não foi possível verificar atualizações agora. Verifique sua conexão.");
+                else
+                    _console.WriteSuccess($"✓ Você já está na versão mais recente ({current}).");
                 return check.LatestVersion == null ? 1 : 0;
             }
 
             var interactive = !_isInputRedirected();
             if (interactive)
             {
-                _console.WriteLine($"\nNova versão disponível: {check.LatestVersion} (atual: {check.CurrentVersion})");
+                _console.WriteWarning($"\nNova versão disponível: {check.LatestVersion} (atual: {check.CurrentVersion})");
                 _console.Write("Deseja atualizar agora? [S/n]: ");
 
                 if (!IsConfirmed(_console.ReadLine()))
@@ -149,11 +151,11 @@ public class UpdateManager
             var update = await _updater.UpdateAsync(check.LatestVersion!, ct);
             if (!update.Success)
             {
-                _console.WriteLine($"⚠ Falha ao atualizar: {update.ErrorMessage}");
+                _console.WriteWarning($"⚠ Falha ao atualizar: {update.ErrorMessage}");
                 return 1;
             }
 
-            _console.WriteLine($"✅ Atualizado para {check.LatestVersion}.");
+            _console.WriteSuccess($"✅ Atualizado para {check.LatestVersion}.");
 
             var remainingArgs = args.Skip(1).ToArray();
             return remainingArgs.Length == 0
@@ -162,12 +164,12 @@ public class UpdateManager
         }
         catch (OperationCanceledException)
         {
-            _console.WriteLine("\n⚠️  Verificação de atualização cancelada.");
+            _console.WriteWarning("\n⚠️  Verificação de atualização cancelada.");
             return 1;
         }
         catch (Exception ex)
         {
-            _console.WriteLine($"⚠ Não foi possível concluir a atualização: {ex.Message}");
+            _console.WriteWarning($"⚠ Não foi possível concluir a atualização: {ex.Message}");
             return 1;
         }
     }
@@ -178,11 +180,11 @@ public class UpdateManager
 
         if (!update.Success)
         {
-            _console.WriteLine($"⚠ Não foi possível atualizar automaticamente: {update.ErrorMessage}");
+            _console.WriteWarning($"⚠ Não foi possível atualizar automaticamente: {update.ErrorMessage}");
             return null;
         }
 
-        _console.WriteLine($"✅ Atualizado para {latestTag}. Reiniciando comando...");
+        _console.WriteSuccess($"✅ Atualizado para {latestTag}. Reiniciando comando...");
         return await _updater.RestartWithArgs(args);
     }
 

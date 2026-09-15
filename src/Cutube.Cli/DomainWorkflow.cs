@@ -1,4 +1,5 @@
 using System.Threading;
+using Cutube.Cli.Theming;
 using Cutube.Domain.Models;
 using Cutube.Domain.Services;
 using Cutube.Cli.ErrorHandling;
@@ -54,13 +55,13 @@ public class DomainWorkflow : IDisposable
 
             var videoUrl = _menu.Url;
 
-            _console.WriteLine("Obtendo informações do vídeo...");
+            _console.WriteTitle("Obtendo informações do vídeo...");
 
             // Get metadata using Domain service
             var metadataResult = await _metadataService.GetMetadataAsync(videoUrl, _ct);
             if (metadataResult.IsFailed)
             {
-                _console.WriteLine($"❌ Erro ao obter metadados: {metadataResult.Errors.First().Message}");
+                _console.WriteError($"❌ Erro ao obter metadados: {metadataResult.Errors.First().Message}");
                 return CliResult.Failure(ErrorType.Network, metadataResult.Errors.First().Message);
             }
 
@@ -94,12 +95,12 @@ public class DomainWorkflow : IDisposable
         }
         catch (OperationCanceledException)
         {
-            _console.WriteLine("\n⚠️  Operação cancelada pelo usuário.");
+            _console.WriteWarning("\n⚠️  Operação cancelada pelo usuário.");
             return CliResult.Success();
         }
         catch (Exception ex)
         {
-            _console.WriteLine($"Erro: {ex.Message}");
+            _console.WriteError($"Erro: {ex.Message}");
             return CliResult.Failure(ErrorType.Critical, ex.Message, ex);
         }
     }
@@ -117,17 +118,17 @@ public class DomainWorkflow : IDisposable
 
             if (!_fileService.DirectoryExists(outputDir))
             {
-                _console.WriteLine($"⚠️  Diretório '{outputDir}' não existe.");
+                _console.WriteWarning($"⚠️  Diretório '{outputDir}' não existe.");
                 _console.Write("Deseja criá-lo? (s/n): ");
                 var response = _console.ReadLine()?.ToLower();
                 if (response == "s")
                 {
                     _fileService.CreateDirectory(outputDir);
-                    _console.WriteLine($"✓ Diretório criado: {outputDir}");
+                    _console.WriteSuccess($"✓ Diretório criado: {outputDir}");
                 }
                 else
                 {
-                    _console.WriteLine("❌ Operação cancelada.");
+                    _console.WriteError("❌ Operação cancelada.");
                     return CliResultT.Failure(ErrorType.Validation, "Operação cancelada pelo usuário");
                 }
             }
@@ -160,7 +161,7 @@ public class DomainWorkflow : IDisposable
         try
         {
             var typeLabelInicio = request.AudioOnly ? "áudio" : "vídeo";
-            _console.WriteLine($"Iniciando o download e corte do {typeLabelInicio}...");
+            _console.WriteTitle($"Iniciando o download e corte do {typeLabelInicio}...");
             _console.WriteLine("Esse processo pode demorar, aguarde...");
 
             // Create progress reporter
@@ -169,7 +170,7 @@ public class DomainWorkflow : IDisposable
                 if (p.Percentage > 0)
                 {
                     var percentage = p.Percentage * 100;
-                    _console.WriteLine($"Progresso: {percentage:F0}%");
+                    _console.WriteProgress($"Progresso: {percentage:F0}%");
                 }
 
                 if (!string.IsNullOrEmpty(p.State) && p.State != "downloading")
@@ -184,13 +185,13 @@ public class DomainWorkflow : IDisposable
             if (result.IsFailed)
             {
                 var errorMsg = result.Errors.First().Message;
-                _console.WriteLine($"❌ Erro no download: {errorMsg}");
+                _console.WriteError($"❌ Erro no download: {errorMsg}");
                 return CliResult.Failure(ErrorType.Network, errorMsg);
             }
 
             var downloadResult = result.Value;
             var typeLabel = request.AudioOnly ? "Áudio" : "Vídeo";
-            _console.WriteLine($"✓ {typeLabel} salvo em: {Path.GetFullPath(downloadResult.FilePath)}");
+            _console.WriteSuccess($"✓ {typeLabel} salvo em: {Path.GetFullPath(downloadResult.FilePath)}");
 
             return CliResult.Success();
         }

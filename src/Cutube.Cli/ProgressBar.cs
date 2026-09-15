@@ -1,3 +1,5 @@
+using Cutube.Cli.Theming;
+
 namespace Cutube.Cli;
 
 public class ProgressBar : IDisposable, IProgress<int>
@@ -45,13 +47,22 @@ public class ProgressBar : IDisposable, IProgress<int>
             var percent = (int)_currentProgress;
             var text =
                 $"[{new string('#', progressBlockCount)}{new string('-', BlockCount - progressBlockCount)}] {percent,3}% {Animation[_animationIndex++ % Animation.Length]}";
-            UpdateText(text);
+            UpdateText(Colorize(text), text);
 
             ResetTimer();
         }
     }
-    
-    private void UpdateText(string text)
+
+    /// <summary>
+    /// Aplica a primária Oroborus à barra quando o terminal suporta cor;
+    /// em saída redirecionada o texto permanece plano (spec FR-16/FR-19)
+    /// </summary>
+    private string Colorize(string text)
+        => text.Length == 0
+            ? text
+            : ConsoleTheme.Colorize(_consoleService, ConsoleTheme.Primary, text);
+
+    private void UpdateText(string styledText, string plainText)
     {
         // Obtém a posição atual do cursor
         var left = _consoleService.CursorLeft;
@@ -59,10 +70,11 @@ public class ProgressBar : IDisposable, IProgress<int>
 
         // Move o cursor para a esquerda e escreve o texto
         _consoleService.CursorLeft = 0;
-        _consoleService.Write(text);
+        _consoleService.Write(styledText);
 
         // Preenche com espaços se o texto for menor que o anterior
-        var length = _currentText.Length - text.Length;
+        // (comprimento comparado no texto puro: códigos ANSI não contam)
+        var length = _currentText.Length - plainText.Length;
         if (length > 0)
         {
             _consoleService.Write(new string(' ', length));
@@ -73,7 +85,7 @@ public class ProgressBar : IDisposable, IProgress<int>
         _consoleService.CursorTop = top;
 
         // Atualiza o texto atual
-        _currentText = text;
+        _currentText = plainText;
     }
 
     public void Report(int value)
@@ -95,7 +107,7 @@ public class ProgressBar : IDisposable, IProgress<int>
         lock (_sync)
         {
             _disposed = true;
-            UpdateText(string.Empty);
+            UpdateText(Colorize(string.Empty), string.Empty);
             _timer.Dispose();
         }
     }

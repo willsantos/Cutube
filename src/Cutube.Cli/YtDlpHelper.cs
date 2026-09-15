@@ -6,6 +6,7 @@ using YoutubeDLSharp.Options;
 using Cutube.Cli.Logging;
 using Cutube.Cli.ErrorHandling;
 using Cutube.Cli.Recovery;
+using Cutube.Cli.Theming;
 using YtdlDownloadState = YoutubeDLSharp.DownloadState;
 
 namespace Cutube.Cli;
@@ -199,7 +200,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         {
             if (_httpClientService == null)
             {
-                _consoleService.WriteLine("⚠ Aviso: HttpClient não configurado, pulando auto-update");
+                _consoleService.WriteWarning("⚠ Aviso: HttpClient não configurado, pulando auto-update");
                 return;
             }
 
@@ -219,7 +220,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         catch (Exception ex)
         {
             // Não falhar se update falhar (usar bundle)
-            _consoleService.WriteLine($"⚠ Aviso: Não foi possível atualizar yt-dlp: {ex.Message}");
+            _consoleService.WriteWarning($"⚠ Aviso: Não foi possível atualizar yt-dlp: {ex.Message}");
         }
     }
 
@@ -471,7 +472,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
 
         try
         {
-            _consoleService.WriteLine("Baixando vídeo completo...");
+            _consoleService.WriteTitle("Baixando vídeo completo...");
             await DownloadAsyncInternal(url, tempFile, progress, ct);
             
             // Usar FFmpeg para corte
@@ -479,7 +480,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             var timeEnd = TimeHelper.GetEndSeconds(endTime);
             var duration = timeEnd - timeStart;
             
-            _consoleService.WriteLine($"Cortando vídeo ({startTime} - {endTime})...");
+            _consoleService.WriteTitle($"Cortando vídeo ({startTime} - {endTime})...");
             
             var arguments =
                 $"-i \"{tempFile}\" " +
@@ -545,7 +546,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         
         try
         {
-            _consoleService.WriteLine("Baixando áudio completo...");
+            _consoleService.WriteTitle("Baixando áudio completo...");
             await DownloadAudioFullAsync(url, tempFile, progress, ct);
             
             // Verificar se arquivo temporário existe
@@ -578,7 +579,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
             var timeEnd = TimeHelper.GetEndSeconds(endTime);
             var duration = timeEnd - timeStart;
             
-            _consoleService.WriteLine($"Convertendo para MP3 e cortando ({startTime} - {endTime})...");
+            _consoleService.WriteTitle($"Convertendo para MP3 e cortando ({startTime} - {endTime})...");
             
             var arguments =
                 $"-i \"{actualTempFile}\" " +
@@ -745,7 +746,7 @@ public class YtDlpHelper : IYtDlpService, IDisposable
         {
             // CTRL+C
             await MarkDownloadCancelledAsync(stateId);
-            _consoleService?.WriteLine("\n⚠️  Download cancelado pelo usuário.");
+            _consoleService?.WriteWarning("\n⚠️  Download cancelado pelo usuário.");
             throw;
         }
         catch (Exception ex)

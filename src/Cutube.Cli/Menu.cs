@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Theming;
 using Cutube.Cli.Validation;
 
 namespace Cutube.Cli;
@@ -29,7 +30,7 @@ public static class Menu
     {
         try
         {
-            console.WriteLine("\n=== Download de Cortes do YouTube ===\n");
+            console.WriteTitle("\n=== Download de Cortes do YouTube ===\n");
 
             Url = InteractiveValidator.GetValidUrl(console, errorHandler);
 

@@ -8,6 +8,7 @@ using Cutube.Domain.Services;
 using Cutube.Infrastructure;
 using Cutube.Cli.Logging;
 using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Theming;
 using Cutube.Cli.Recovery;
 using Cutube.Cli.Updates;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,7 +30,7 @@ public static class Program
         {
             e.Cancel = true;
             cts.Cancel();
-            Console.WriteLine("\n⚠️  Cancelando operação...");
+            Console.WriteLine(ConsoleTheme.Colorize(new ConsoleService(), ConsoleTheme.Warning, "\n⚠️  Cancelando operação..."));
         };
 
         // Handle --version
@@ -195,11 +196,11 @@ public static class Program
     private static async Task RunInteractiveModeAsync(CancellationToken ct)
     {
         var serviceProvider = ConfigureServices();
+        var consoleService = new ConsoleService();
 
         try
         {
             var environmentService = new EnvironmentService();
-            var consoleService = new ConsoleService();
             var fileService = new FileService();
             using var loggerService = new FileLoggerService(environmentService);
             var errorHandler = new ErrorHandler(loggerService);
@@ -228,18 +229,18 @@ public static class Program
 
             if (result.IsFailure)
             {
-                Console.WriteLine($"\n❌ {result.ErrorMessage}");
+                consoleService.WriteError($"\n❌ {result.ErrorMessage}");
                 Environment.Exit(1);
             }
         }
         catch (FileNotFoundException ex)
         {
-            Console.WriteLine($"\n❌ {ex.Message}");
+            consoleService.WriteError($"\n❌ {ex.Message}");
             Environment.Exit(1);
         }
         catch (OperationCanceledException)
         {
-            Console.WriteLine("\n✓ Operação cancelada com sucesso.");
+            consoleService.WriteSuccess("\n✓ Operação cancelada com sucesso.");
             Environment.Exit(1);
         }
     }
@@ -328,12 +329,15 @@ public static class Program
         // 3. Create request
         var request = CreateDownloadRequest(url, output, start, end, audio, config);
 
+        var console = new ConsoleService();
+
         // 4. Execute download
         var progress = new Progress<DownloadProgress>(p =>
         {
-            Console.Write($"\rProgress: {p.Percentage:F1}% | " +
+            console.Write(ConsoleTheme.Colorize(console, ConsoleTheme.Primary,
+                         $"\rProgress: {p.Percentage:F1}% | " +
                          $"Speed: {FormatSpeed(p.Speed)} | " +
-                         $"State: {p.State}");
+                         $"State: {p.State}"));
         });
 
         try
@@ -342,16 +346,16 @@ public static class Program
 
             if (result.IsFailed)
             {
-                Console.WriteLine($"\n❌ Error: {result.Errors.First().Message}");
+                console.WriteError($"\n❌ Error: {result.Errors.First().Message}");
                 return 1;
             }
 
-            Console.WriteLine($"\n✅ Download completed: {result.Value.FilePath}");
+            console.WriteSuccess($"\n✅ Download completed: {result.Value.FilePath}");
             return 0;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"\n❌ Unexpected error: {ex.Message}");
+            console.WriteError($"\n❌ Unexpected error: {ex.Message}");
             return 1;
         }
     }
@@ -429,11 +433,11 @@ public static class Program
 
         if (activeStates.Count == 0)
         {
-            consoleService.WriteLine("✓ Nenhum download para resumir.");
+            consoleService.WriteSuccess("✓ Nenhum download para resumir.");
             return;
         }
 
-        consoleService.WriteLine($"\n📋 Downloads interrompidos ({activeStates.Count}):");
+        consoleService.WriteTitle($"\n📋 Downloads interrompidos ({activeStates.Count}):");
 
         for (int i = 0; i < activeStates.Count; i++)
         {
@@ -445,7 +449,7 @@ public static class Program
 
             if (!string.IsNullOrEmpty(state.ErrorMessage))
             {
-                consoleService.WriteLine($"      Erro: {state.ErrorMessage}");
+                consoleService.WriteError($"      Erro: {state.ErrorMessage}");
             }
 
             consoleService.WriteLine($"      Atualizado: {state.UpdatedAt:yyyy-MM-dd HH:mm}");
@@ -456,16 +460,16 @@ public static class Program
 
         if (!int.TryParse(input, out var selection) || selection < 1 || selection > activeStates.Count)
         {
-            consoleService.WriteLine("✓ Nenhum download selecionado.");
+            consoleService.WriteSuccess("✓ Nenhum download selecionado.");
             return;
         }
 
         var selectedState = activeStates[selection - 1];
-        consoleService.WriteLine($"\n▶ Retomando download: {selectedState.Url}");
+        consoleService.WriteTitle($"\n▶ Retomando download: {selectedState.Url}");
 
         // TODO: Implementar retomada real do download
         // Por enquanto, apenas marcar como retomado
-        consoleService.WriteLine("⚠️  Funcionalidade de retomada será implementada na próxima fase.");
+        consoleService.WriteWarning("⚠️  Funcionalidade de retomada será implementada na próxima fase.");
         consoleService.WriteLine("   O estado foi identificado, mas o download ainda reinicia do zero.");
     }
 
