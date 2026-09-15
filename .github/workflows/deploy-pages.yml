@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - docs/index.html
+      - docs/documentation.html
       - docs/installation.md
       - scripts/install.sh
       - scripts/install.ps1
@@ -36,7 +37,7 @@ jobs:
       - name: Prepare Pages content
         run: |
           mkdir -p site
-          cp docs/index.html docs/installation.md site/
+          cp docs/index.html docs/documentation.html docs/installation.md site/
           cp scripts/install.sh scripts/install.ps1 site/
 
       - name: Upload artifact
