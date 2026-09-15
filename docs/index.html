@@ -3,151 +3,758 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cutube CLI Installer</title>
+  <title>Cutube — Baixe e corte vídeos do YouTube no terminal</title>
+  <meta name="description" content="Cutube é a CLI da Oroborus que baixa vídeos e áudio do YouTube e corta no tempo exato. Instale com um comando em Linux, macOS ou Windows.">
+  <meta name="theme-color" content="#0e0e13">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f5f8ff;
-      --surface: #ffffff;
-      --ink: #142033;
-      --muted: #49607a;
-      --accent: #0d6efd;
-      --accent-soft: #eaf2ff;
-      --border: #d9e3f1;
-      --code-bg: #0f1a2b;
-      --code-ink: #e7eef9;
-      --ok: #0a7d33;
+      --bg: #0e0e13;
+      --surface-low: #131318;
+      --surface: #19191f;
+      --card: #1f1f26;
+      --card-raised: #25252c;
+      --ink: #f8f5fd;
+      --muted: #acaab1;
+      --border: #48474d;
+      --border-strong: #76747b;
+      --primary: #b3a1ff;
+      --primary-intense: #7a53ff;
+      --primary-container: #a690ff;
+      --secondary: #ff6a9d;
+      --secondary-deep: #ba005d;
+      --grad-a: #5b2eff;
+      --grad-b: #ff2e88;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --err: #ff6e84;
+      --font-display: "Space Grotesk", "Manrope", sans-serif;
+      --font-body: "Manrope", "Segoe UI", sans-serif;
+      --font-mono: "Geist Mono", "Cascadia Code", ui-monospace, monospace;
     }
 
     * { box-sizing: border-box; }
 
+    html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
-      font-family: "Segoe UI", "SF Pro Text", "Helvetica Neue", sans-serif;
-      background: radial-gradient(circle at top right, #e8f0ff 0%, var(--bg) 45%, #f8fbff 100%);
+      background: var(--bg);
       color: var(--ink);
-      line-height: 1.6;
+      font-family: var(--font-body);
+      font-size: 1.0625rem;
+      line-height: 1.65;
       min-height: 100vh;
-      padding: 24px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    main {
-      max-width: 860px;
-      margin: 0 auto;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 14px 44px rgba(20, 32, 51, 0.08);
-      overflow: hidden;
-    }
-
-    header {
-      padding: 30px 24px 22px;
-      background: linear-gradient(140deg, #f9fbff 0%, #eef4ff 100%);
-      border-bottom: 1px solid var(--border);
-    }
-
-    h1 {
-      margin: 0 0 10px;
-      font-size: clamp(1.7rem, 2.3vw, 2.2rem);
-      line-height: 1.2;
-    }
-
-    p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    section {
-      padding: 24px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    section:last-child { border-bottom: 0; }
-
-    h2 {
-      margin: 0 0 12px;
-      font-size: 1.15rem;
-    }
-
-    pre {
-      margin: 0;
-      background: var(--code-bg);
-      color: var(--code-ink);
-      padding: 14px;
-      border-radius: 10px;
-      overflow-x: auto;
-      font-size: 0.92rem;
-    }
-
-    code {
-      font-family: "Cascadia Code", "Fira Code", monospace;
-    }
-
-    .badge {
-      display: inline-block;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--ok);
-      background: #e8faef;
-      padding: 5px 10px;
-      border-radius: 999px;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    ul {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--muted);
+    ::selection {
+      background: var(--primary);
+      color: var(--bg);
     }
 
     a {
-      color: var(--accent);
-      text-decoration: none;
+      color: var(--primary);
+      text-decoration: underline;
+      text-decoration-color: color-mix(in srgb, var(--primary) 40%, transparent);
+      text-underline-offset: 3px;
       font-weight: 600;
     }
 
-    a:hover { text-decoration: underline; }
+    a:hover {
+      color: var(--secondary);
+      text-decoration-color: var(--secondary);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ---- topbar ---- */
+
+    .topbar {
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+    }
+
+    .topbar .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 18px;
+      padding-bottom: 18px;
+    }
+
+    .wordmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    .wordmark:hover { color: var(--ink); }
+
+    .wordmark .orb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+      flex: none;
+    }
+
+    .topnav {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+    }
+
+    .topnav a {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topnav a:hover {
+      color: var(--primary);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+
+    /* ---- hero ---- */
+
+    .hero {
+      padding: 84px 0 72px;
+      position: relative;
+    }
+
+    .hero .wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: 56px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2.5rem, 5.4vw, 4rem);
+      line-height: 1.04;
+      letter-spacing: -0.03em;
+      margin: 0 0 20px;
+    }
+
+    .hero h1 .grad {
+      background: linear-gradient(100deg, var(--grad-a) 10%, var(--grad-b) 90%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero .lede {
+      color: var(--muted);
+      font-size: 1.14rem;
+      max-width: 46ch;
+      margin: 0 0 32px;
+    }
+
+    .hero .lede strong { color: var(--ink); font-weight: 600; }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 13px 24px;
+      border-radius: 10px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+                  background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #0b0b10;
+      border: 1px solid var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-container);
+      border-color: var(--primary-container);
+      color: #0b0b10;
+    }
+
+    .btn-primary svg { color: #0b0b10; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn:active { transform: translateY(1px); }
+
+    /* terminal panel */
+
+    .terminal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 16px;
+      background: var(--surface-low);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    }
+
+    .terminal-bar .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--card-raised);
+      border: 1px solid var(--border);
+    }
+
+    .terminal-bar .label {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .terminal-body {
+      padding: 20px 18px;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .terminal-body .cmd-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .terminal-body .prompt { color: var(--secondary); flex: none; }
+
+    .terminal-body .cmd {
+      color: var(--ink);
+      overflow-wrap: anywhere;
+      min-width: 0;
+    }
+    .terminal-body .cmd .hl { color: var(--primary); }
+
+    .caret {
+      display: inline-block;
+      width: 9px;
+      height: 1.15em;
+      background: var(--primary);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+    }
+
+    .copy-btn {
+      margin-left: auto;
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 11px;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .copy-btn:hover { color: var(--primary); border-color: var(--primary); }
+
+    .copy-btn.copied { color: var(--ok); border-color: var(--ok); }
+
+    /* brand hairline */
+
+    .brandline {
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--grad-a) 30%, var(--grad-b) 70%, transparent 100%);
+      opacity: 0.75;
+    }
+
+    /* ---- sections ---- */
+
+    section {
+      padding: 64px 0;
+    }
+
+    section + section { border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent); }
+
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.5rem, 2.6vw, 2rem);
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+
+    .section-lede {
+      color: var(--muted);
+      margin: 0 0 32px;
+      max-width: 62ch;
+    }
+
+    .install-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .install-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .install-card .terminal-body { padding: 16px; }
+
+    .os-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      background: var(--surface-low);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    .os-label svg { color: var(--primary); flex: none; }
+
+    details.fallback {
+      margin-top: 24px;
+      background: var(--surface-low);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    details.fallback summary {
+      cursor: pointer;
+      padding: 16px 20px;
+      font-weight: 600;
+      color: var(--muted);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    details.fallback summary::-webkit-details-marker { display: none; }
+
+    details.fallback summary:hover { color: var(--primary); }
+
+    details.fallback summary svg { transition: transform 0.18s ease; flex: none; }
+
+    details.fallback[open] summary svg { transform: rotate(90deg); }
+
+    details.fallback .terminal-body { border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+
+    .cmd-row + .cmd-row { margin-top: 12px; }
+
+    /* requirements / status */
+
+    .status-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 14px;
+      max-width: 720px;
+    }
+
+    .status-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 15px 18px;
+    }
+
+    .status-list svg { flex: none; margin-top: 3px; }
+    .status-list .s-ok svg { color: var(--ok); }
+    .status-list .s-warn svg { color: var(--warn); }
+
+    .status-list strong { font-weight: 800; }
+
+    .status-list .hint { color: var(--muted); }
+
+    /* next steps */
+
+    .steps-list { margin: 0; padding: 0 0 0 22px; color: var(--muted); max-width: 62ch; }
+
+    .steps-list li { margin-bottom: 12px; }
+    .steps-list li::marker { color: var(--primary); }
+
+    .steps-list code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: var(--card);
+      border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+      border-radius: 6px;
+      padding: 2px 7px;
+      color: var(--primary);
+    }
+
+    /* footer */
+
+    footer {
+      border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+      padding: 30px 0 40px;
+    }
+
+    footer .wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    footer nav { display: flex; gap: 22px; }
+
+    footer a { font-weight: 600; }
+
+    footer .grad-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
+      margin-right: 8px;
+    }
+
+    /* ---- motion (one authored moment, visible by default) ---- */
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero .intro > * {
+        animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      }
+      .hero .intro > *:nth-child(2) { animation-delay: 0.07s; }
+      .hero .intro > *:nth-child(3) { animation-delay: 0.14s; }
+      .hero .terminal {
+        animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.12s backwards;
+      }
+      .caret { animation: blink 1.1s steps(1) infinite; }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .btn, .copy-btn, details.fallback summary svg { transition: none; }
+      .caret { animation: none; }
+    }
+
+    /* ---- responsive ---- */
+
+    @media (max-width: 900px) {
+      .hero { padding: 56px 0 52px; }
+      .hero .wrap {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .install-grid { grid-template-columns: 1fr; }
+    }
 
     @media (max-width: 640px) {
-      body { padding: 12px; }
-      section, header { padding: 18px 16px; }
-      pre { font-size: 0.84rem; }
+      body { font-size: 1rem; }
+      .wrap { padding: 0 18px; }
+      .topnav { gap: 16px; }
+      .topnav a .nav-text { display: none; }
+      .hero h1 { font-size: clamp(2.1rem, 9vw, 2.6rem); }
+      .hero .lede { font-size: 1.05rem; }
+      section { padding: 48px 0; }
+      .terminal-body { font-size: 0.85rem; }
+      .btn { width: 100%; justify-content: center; }
+      .cta-row { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
 <body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="wordmark" href="#"><span class="orb" aria-hidden="true"></span>cutube</a>
+      <nav class="topnav" aria-label="Navegação principal">
+        <a href="#instalar"><span class="nav-text">Instalar</span></a>
+        <a href="https://github.com/willsantos/Cutube/blob/main/docs/installation.md"><span class="nav-text">Documentação</span></a>
+        <a href="https://github.com/willsantos/Cutube/releases"><span class="nav-text">Releases</span></a>
+        <a href="https://github.com/willsantos/Cutube" aria-label="Repositório no GitHub">
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        </a>
+      </nav>
+    </div>
+  </header>
+
   <main>
-    <header>
-      <span class="badge">Cutube CLI</span>
-      <h1>Instalador oficial</h1>
-      <p>Instale o Cutube com um comando em Linux, macOS ou Windows.</p>
-    </header>
+    <div class="hero">
+      <div class="wrap">
+        <div class="intro">
+          <h1>Baixe. <span class="grad">Corte.</span><br>Direto do terminal.</h1>
+          <p class="lede">Cutube é a CLI da Oroborus que <strong>baixa vídeos e áudio do YouTube</strong> e <strong>corta no tempo exato</strong> — direto do terminal, sem servidor e sem configuração.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#instalar">
+              Instalar agora
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/willsantos/Cutube">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+              Ver no GitHub
+            </a>
+          </div>
+        </div>
 
-    <section>
-      <h2>Linux e macOS</h2>
-      <pre><code>curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash</code></pre>
+        <div class="terminal" role="group" aria-label="Comando de instalação para Linux e macOS">
+          <div class="terminal-bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="label">terminal</span>
+          </div>
+          <div class="terminal-body">
+            <div class="cmd-line">
+              <span class="prompt" aria-hidden="true">$</span>
+              <code class="cmd" id="cmd-unix">curl -fsSL <span class="hl">https://willsantos.github.io/Cutube/install.sh</span> | bash</code>
+              <span class="caret" aria-hidden="true"></span>
+              <button class="copy-btn" type="button" data-copy="curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash" aria-label="Copiar comando de instalação para Linux e macOS">
+                <svg class="ic-copy" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <svg class="ic-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M20 6 9 17l-5-5"/></svg>
+                <span class="copy-label">copiar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brandline" aria-hidden="true"></div>
+
+    <section id="instalar">
+      <div class="wrap">
+        <h2>Instale com um comando</h2>
+        <p class="section-lede">Cole a linha correspondente ao seu sistema no terminal. O script detecta a plataforma, instala o binário no PATH e mantém tudo atualizado.</p>
+
+        <div class="install-grid">
+          <div class="install-card">
+            <div class="os-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+              Linux e macOS
+            </div>
+            <div class="terminal-body">
+              <div class="cmd-row">
+                <div class="cmd-line">
+                  <span class="prompt" aria-hidden="true">$</span>
+                  <code class="cmd">curl -fsSL <span class="hl">https://willsantos.github.io/Cutube/install.sh</span> | bash</code>
+                  <button class="copy-btn" type="button" data-copy="curl -fsSL https://willsantos.github.io/Cutube/install.sh | bash" aria-label="Copiar comando de instalação para Linux e macOS">
+                    <svg class="ic-copy" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <svg class="ic-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span class="copy-label">copiar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="install-card">
+            <div class="os-label">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3V5.5Zm0 13L10.5 19.6v-7H3v5.9ZM11.6 4.2 21 3v8.5h-9.4V4.2Zm0 15.6L21 21v-8.4h-9.4v7.2Z"/></svg>
+              Windows (PowerShell)
+            </div>
+            <div class="terminal-body">
+              <div class="cmd-row">
+                <div class="cmd-line">
+                  <span class="prompt" aria-hidden="true">PS&gt;</span>
+                  <code class="cmd">iwr -useb <span class="hl">https://willsantos.github.io/Cutube/install.ps1</span> | iex</code>
+                  <button class="copy-btn" type="button" data-copy="iwr -useb https://willsantos.github.io/Cutube/install.ps1 | iex" aria-label="Copiar comando de instalação para Windows PowerShell">
+                    <svg class="ic-copy" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <svg class="ic-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span class="copy-label">copiar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <details class="fallback">
+          <summary>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+            Fallback (Raw GitHub)
+          </summary>
+          <div class="terminal-body">
+            <div class="cmd-row">
+              <div class="cmd-line">
+                <span class="prompt" aria-hidden="true">$</span>
+                <code class="cmd">curl -fsSL <span class="hl">https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.sh</span> | bash</code>
+                <button class="copy-btn" type="button" data-copy="curl -fsSL https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.sh | bash" aria-label="Copiar comando alternativo para Linux e macOS">
+                  <svg class="ic-copy" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ic-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M20 6 9 17l-5-5"/></svg>
+                  <span class="copy-label">copiar</span>
+                </button>
+              </div>
+            </div>
+            <div class="cmd-row">
+              <div class="cmd-line">
+                <span class="prompt" aria-hidden="true">PS&gt;</span>
+                <code class="cmd">iwr -useb <span class="hl">https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.ps1</span> | iex</code>
+                <button class="copy-btn" type="button" data-copy="iwr -useb https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.ps1 | iex" aria-label="Copiar comando alternativo para Windows PowerShell">
+                  <svg class="ic-copy" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <svg class="ic-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M20 6 9 17l-5-5"/></svg>
+                  <span class="copy-label">copiar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
     </section>
 
-    <section>
-      <h2>Windows (PowerShell)</h2>
-      <pre><code>iwr -useb https://willsantos.github.io/Cutube/install.ps1 | iex</code></pre>
+    <section id="requisitos">
+      <div class="wrap">
+        <h2>O que vem incluído</h2>
+        <p class="section-lede">Zero configuração é o padrão do Cutube: as dependências difíceis já resolvem sozinhas.</p>
+        <ul class="status-list">
+          <li class="s-ok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8.5 12.2 2.4 2.4 4.8-5"/></svg>
+            <span><strong>yt-dlp incluído.</strong> <span class="hint">O downloader já vem no pacote e se atualiza sozinho — nenhuma instalação extra.</span></span>
+          </li>
+          <li class="s-ok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8.5 12.2 2.4 2.4 4.8-5"/></svg>
+            <span><strong>Corte por tempo nativo.</strong> <span class="hint">Informe início e fim e receba só o trecho que interessa, em vídeo ou MP3.</span></span>
+          </li>
+          <li class="s-warn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+            <span><strong>FFmpeg:</strong> <span class="hint">no Windows é baixado automaticamente no primeiro uso; em Linux e macOS, instale pelo gerenciador de pacotes (<code style="font-family:var(--font-mono);font-size:0.88em;">brew install ffmpeg</code> ou <code style="font-family:var(--font-mono);font-size:0.88em;">sudo apt install ffmpeg</code>).</span></span>
+          </li>
+        </ul>
+      </div>
     </section>
 
-    <section>
-      <h2>Fallback (Raw GitHub)</h2>
-      <pre><code>curl -fsSL https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.sh | bash</code></pre>
-      <pre style="margin-top: 10px;"><code>iwr -useb https://raw.githubusercontent.com/willsantos/Cutube/main/scripts/install.ps1 | iex</code></pre>
-    </section>
-
-    <section>
-      <h2>Proximos passos</h2>
-      <ul>
-        <li>Confirme com <code>cutube --version</code>.</li>
-        <li>Veja instalacao manual e troubleshooting na <a href="https://github.com/willsantos/Cutube/blob/main/docs/installation.md">documentacao completa</a>.</li>
-      </ul>
+    <section id="proximos-passos">
+      <div class="wrap">
+        <h2>Próximos passos</h2>
+        <p class="section-lede">Instalou? Confirme e comece a usar.</p>
+        <ol class="steps-list">
+          <li>Confirme a instalação com <code>cutube --version</code>.</li>
+          <li>Baixe um corte: <code>cutube download &lt;url&gt; -s 00:01:00 -e 00:05:30</code>.</li>
+          <li>Veja a instalação manual e o troubleshooting na <a href="https://github.com/willsantos/Cutube/blob/main/docs/installation.md">documentação completa</a> ou pegue o binário direto nas <a href="https://github.com/willsantos/Cutube/releases">releases</a>.</li>
+        </ol>
+      </div>
     </section>
   </main>
+
+  <footer>
+    <div class="wrap">
+      <span><span class="grad-dot" aria-hidden="true"></span>Cutube — uma ferramenta Oroborus</span>
+      <nav aria-label="Rodapé">
+        <a href="https://github.com/willsantos/Cutube">GitHub</a>
+        <a href="https://github.com/willsantos/Cutube/blob/main/docs/installation.md">Documentação</a>
+        <a href="https://github.com/willsantos/Cutube/releases">Releases</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var buttons = document.querySelectorAll('.copy-btn');
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var text = btn.getAttribute('data-copy');
+          var label = btn.querySelector('.copy-label');
+          var icCopy = btn.querySelector('.ic-copy');
+          var icCheck = btn.querySelector('.ic-check');
+          function done() {
+            btn.classList.add('copied');
+            label.textContent = 'copiado';
+            icCopy.style.display = 'none';
+            icCheck.style.display = '';
+            setTimeout(function () {
+              btn.classList.remove('copied');
+              label.textContent = 'copiar';
+              icCopy.style.display = '';
+              icCheck.style.display = 'none';
+            }, 2000);
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { selectFallback(); });
+          } else {
+            selectFallback();
+          }
+          function selectFallback() {
+            var cmd = btn.parentElement.querySelector('.cmd');
+            if (!cmd) return;
+            var range = document.createRange();
+            range.selectNodeContents(cmd);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
