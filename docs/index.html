@@ -468,6 +468,35 @@
       color: var(--primary);
     }
 
+    /* cli screenshots */
+
+    .cli-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 32px;
+      max-width: 820px;
+    }
+
+    .cli-shot { margin: 0; }
+
+    .cli-shot .terminal-body { padding: 0; }
+
+    .cli-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .cli-shot figcaption {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 10px;
+    }
+
+    .cli-shot figcaption strong { color: var(--ink); font-weight: 600; }
+
     /* footer */
 
     footer {
@@ -548,6 +577,8 @@
       .terminal-body { font-size: 0.85rem; }
       .btn { width: 100%; justify-content: center; }
       .cta-row { flex-direction: column; align-items: stretch; }
+      .cli-shot .terminal-body { overflow-x: auto; }
+      .cli-shot img { min-width: 660px; }
     }
   </style>
 </head>
@@ -705,6 +736,54 @@
             <span><strong>FFmpeg:</strong> <span class="hint">no Windows é baixado automaticamente no primeiro uso; em Linux e macOS, instale pelo gerenciador de pacotes (<code style="font-family:var(--font-mono);font-size:0.88em;">brew install ffmpeg</code> ou <code style="font-family:var(--font-mono);font-size:0.88em;">sudo apt install ffmpeg</code>).</span></span>
           </li>
         </ul>
+      </div>
+    </section>
+
+    <section id="cli-em-acao">
+      <div class="wrap">
+        <h2>A CLI em ação</h2>
+        <p class="section-lede">Capturas reais do terminal: títulos em lavanda, texto de apoio discreto e erros que saltam aos olhos — a mesma identidade visual do site, agora no seu terminal.</p>
+
+        <div class="cli-list">
+          <figure class="cli-shot">
+            <div class="terminal" role="group" aria-label="Saída do comando cutube --help">
+              <div class="terminal-bar" aria-hidden="true">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="label">$ cutube --help</span>
+              </div>
+              <div class="terminal-body">
+                <img src="assets/cli-help.png" width="1552" height="966" alt="Terminal exibindo o comando cutube --help: título em lavanda, seções Usage e Download options em cinza e a lista de comandos e opções" loading="lazy">
+              </div>
+            </div>
+            <figcaption><strong>cutube --help</strong> — todos os comandos e opções, com hierarquia visual clara.</figcaption>
+          </figure>
+
+          <figure class="cli-shot">
+            <div class="terminal" role="group" aria-label="Modo interativo do Cutube com validação de URL">
+              <div class="terminal-bar" aria-hidden="true">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="label">$ cutube</span>
+              </div>
+              <div class="terminal-body">
+                <img src="assets/cli-interactive.png" width="1552" height="864" alt="Modo interativo do Cutube: título Download de Cortes do YouTube em lavanda, perguntas sobre a URL do vídeo e mensagens de erro em vermelho com dicas de nova tentativa em cinza" loading="lazy">
+              </div>
+            </div>
+            <figcaption><strong>Modo interativo</strong> — validação amigável: erros em destaque e dicas do que corrigir.</figcaption>
+          </figure>
+
+          <figure class="cli-shot">
+            <div class="terminal" role="group" aria-label="Saída do comando cutube config show">
+              <div class="terminal-bar" aria-hidden="true">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="label">$ cutube config show</span>
+              </div>
+              <div class="terminal-body">
+                <img src="assets/cli-config.png" width="1552" height="558" alt="Saída do comando cutube config show: título em lavanda seguido do caminho do arquivo de configuração e dos valores ativos" loading="lazy">
+              </div>
+            </div>
+            <figcaption><strong>cutube config show</strong> — a configuração ativa, direto no terminal.</figcaption>
+          </figure>
+        </div>
       </div>
     </section>
 

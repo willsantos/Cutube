@@ -1,4 +1,5 @@
 using Cutube.Cli.ErrorHandling;
+using Cutube.Cli.Theming;
 
 namespace Cutube.Cli.Validation;
 
@@ -158,10 +159,10 @@ public static class InteractiveValidator
 
     private static void ShowError(IConsoleService console, string message, int attempt)
     {
-        console.WriteLine(message);
+        console.WriteError(message);
         if (attempt < MaxAttempts)
         {
-            console.WriteLine($"Tentativa {attempt} de {MaxAttempts}. Tente novamente.");
+            console.WriteInfo($"Tentativa {attempt} de {MaxAttempts}. Tente novamente.");
         }
     }
 }
